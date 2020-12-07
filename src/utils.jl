@@ -19,6 +19,11 @@ function shift_nodes(c)
     (c .+ 1) ./ 2
 end
 
+"Scale weights from the interval [-1,+1] to the interval [0,1]."
+function scale_weights(b)
+    b ./ 2
+end
+
 "Scale nodes and weights from the interval [-1,+1] to the interval [0,1]."
 function shift!(b,c)
     b .= b ./ 2

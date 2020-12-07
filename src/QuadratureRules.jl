@@ -22,12 +22,14 @@ module QuadratureRules
            TrapezoidalQuadrature
 
     include("chebyshev.jl")
+    include("clenshaw_curtis.jl")
     include("gauss_legendre.jl")
     include("lobatto_legendre.jl")
 
     export ChebyshevQuadrature,
            GaussChebyshevQuadrature,
            LobattoChebyshevQuadrature,
+           ClenshawCurtisQuadrature,
            GaussLegendreQuadrature,
            LobattoLegendreQuadrature
     
