@@ -1,4 +1,5 @@
 import QuadratureRules: @big, _big
+import QuadratureRules: scale_weights, shift_nodes, shift!, unshift!
 
 @testset "$(rpad("Utility Functions",80))" begin
     
@@ -14,5 +15,19 @@ import QuadratureRules: @big, _big
 
     @test x != y
     @test x == z
+
+
+    b = rand(5); b̃ = copy(b)
+    c = rand(5); c̃ = copy(c)
+
+    shift!(b̃, c̃)
+
+    @test b̃ == scale_weights(b)
+    @test c̃ == shift_nodes(c)
+
+    unshift!(b̃, c̃)
+
+    @test b̃ == b
+    @test c̃ == c
 
 end
