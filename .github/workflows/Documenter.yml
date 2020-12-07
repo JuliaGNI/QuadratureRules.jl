@@ -30,8 +30,8 @@ jobs:
         run: |
           julia --project=docs -e '
             using Documenter: doctest
-            using RungeKutta
-            doctest(RungeKutta)'
+            using QuadratureRules
+            doctest(QuadratureRules)'
       - name: Build and deploy Documentation
         run: julia --project make.jl
         working-directory: docs
