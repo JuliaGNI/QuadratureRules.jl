@@ -10,6 +10,9 @@ function _ShiftedLegendre(s, T=BigFloat)
     ShiftedLegendre(p)
 end
 
+"""
+Gauss-Legendre quadrature.
+"""
 function GaussLegendreQuadrature(::Type{T}, s::Integer; IT=BigFloat, fast=false) where {T}
     if fast
         return _gauss_legendre_fast(s, T)

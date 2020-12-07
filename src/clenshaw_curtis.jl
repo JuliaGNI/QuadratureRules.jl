@@ -1,4 +1,6 @@
-
+"""
+Clenshaw-Curtis quadrature.
+"""
 function ClenshawCurtisQuadrature(::Type{T}, s::Integer; IT=BigFloat) where {T}
     if s == 1
         throw(ErrorException("Clenshaw-Curtins quadrature is not defined for one stage."))

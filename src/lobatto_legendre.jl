@@ -6,6 +6,9 @@ function _lobatto_legendre_fast(s, T)
 end
 
 
+"""
+Lobatto-Legendre quadrature.
+"""
 function LobattoLegendreQuadrature(::Type{T}, s::Integer; IT=BigFloat, fast=false) where {T}
     if s == 1
         throw(ErrorException("Lobatto quadrature is not defined for one stage."))

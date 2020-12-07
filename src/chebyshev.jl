@@ -7,7 +7,9 @@ function chebyshev_points(::Type{T}, s::Integer, ::Val{2}) where {T}
     shift_nodes(T[ @big cos( π * (i-1) / (s-1) ) for i in s:-1:1 ])
 end
 
-
+"""
+Gauss-Chebyshev quadrature.
+"""
 function GaussChebyshevQuadrature(::Type{T}, s::Integer) where {T}
     local tj::BigFloat = 0
     local th::BigFloat = 0
@@ -29,6 +31,9 @@ end
 GaussChebyshevQuadrature(s) = GaussChebyshevQuadrature(Float64, s)
 
 
+"""
+Lobatto-Chebyshev quadrature.
+"""
 function LobattoChebyshevQuadrature(::Type{T}, s::Integer) where {T}
     if s == 1
         throw(ErrorException("Lobatto-Chebyshev quadrature is not defined for one stage."))
