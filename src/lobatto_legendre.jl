@@ -8,7 +8,7 @@ end
 
 function LobattoLegendreQuadrature(::Type{T}, s::Integer; IT=BigFloat, fast=false) where {T}
     if s == 1
-        throw(ErrorException("Lobatto nodes for one stage are not defined."))
+        throw(ErrorException("Lobatto quadrature is not defined for one stage."))
     end
 
     if fast

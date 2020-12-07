@@ -30,6 +30,10 @@ GaussChebyshevQuadrature(s) = GaussChebyshevQuadrature(Float64, s)
 
 
 function LobattoChebyshevQuadrature(::Type{T}, s::Integer) where {T}
+    if s == 1
+        throw(ErrorException("Lobatto-Chebyshev quadrature is not defined for one stage."))
+    end
+
     local tj::BigFloat = 0
     local th::BigFloat = 0
 
