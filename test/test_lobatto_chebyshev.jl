@@ -6,7 +6,7 @@ import QuadratureRules: shift_nodes
     @test_throws ErrorException LobattoChebyshevQuadrature(1)
 
     for s in 2:10
-        @test LobattoChebyshevQuadrature(s) == ChebyshevQuadrature(s, Val(2))
+        @test LobattoChebyshevQuadrature(s) == ChebyshevQuadrature(s, 2)
         @test LobattoChebyshevQuadrature(s) == ChebyshevQuadrature(Float64, s, Val(2))
         
         @test sum(weights(LobattoChebyshevQuadrature(s))) ≈ 1

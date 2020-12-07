@@ -1,10 +1,10 @@
 
 function chebyshev_points(::Type{T}, s::Integer, ::Val{1}) where {T}
-    shift_nodes(reverse(T[ @big sin( π*(s-2i+1) / (2s) ) for i in 1:s ]))
+    shift_nodes(T[ @big sin( π*(s-2i+1) / (2s) ) for i in s:-1:1 ])
 end
 
 function chebyshev_points(::Type{T}, s::Integer, ::Val{2}) where {T}
-    shift_nodes(reverse(T[ @big cos( π * (i-1) / (s-1) ) for i in 1:s ]))
+    shift_nodes(T[ @big cos( π * (i-1) / (s-1) ) for i in s:-1:1 ])
 end
 
 
@@ -57,4 +57,4 @@ LobattoChebyshevQuadrature(s) = LobattoChebyshevQuadrature(Float64, s)
 ChebyshevQuadrature(::Type{T}, s::Integer, ::Val{1}) where {T} = GaussChebyshevQuadrature(T,s)
 ChebyshevQuadrature(::Type{T}, s::Integer, ::Val{2}) where {T} = LobattoChebyshevQuadrature(T,s)
 
-ChebyshevQuadrature(s, ::Val{kind}) where {kind} = ChebyshevQuadrature(Float64, s, Val(kind))
+ChebyshevQuadrature(s, kind) = ChebyshevQuadrature(Float64, s, Val(kind))
