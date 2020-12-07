@@ -11,6 +11,7 @@
     @test weights(quad) == b
     @test nnodes(quad) == length(b)
     @test eachindex(quad) == 1:2
+    @test eltype(quad) == Float64
 
     @test quad(x -> 1)   == 1
     @test quad(x -> x)   == 1//2
@@ -19,6 +20,9 @@
 
     quad2 = QuadratureRule{Float64,2}(o, c, b)
     quadϵ = QuadratureRule{Float64,2}(o, c .+ 8eps() * rand(2), b .+ 8eps() * rand(2))
+
+    @test hash(quad) == hash(quad2)
+    @test hash(quad) != hash(quadϵ)
 
     @test  isequal(quad, quad2)
     @test !isequal(quad, quadϵ)
