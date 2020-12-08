@@ -6,7 +6,7 @@
 [![Coverage](https://codecov.io/gh/JuliaGNI/QuadratureRules.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaGNI/QuadratureRules.jl)
 
 
-This package provides quadrature rules for numerical integration. It provides a unified interface for quadrature rules from different sources and algorithms for the computation of quadrature rules in arbitrary precision.
+This package provides quadrature rules for numerical integration, e.g., in finite element methods or variational integrators. It provides a unified interface for quadrature rules from different sources and algorithms for the computation of quadrature rules with an arbitrary number of nodes and weights in arbitrary precision.
 
 ## Installation
 
@@ -23,7 +23,7 @@ julia> using QuadratureRules
 ```
 a `QuadratureRule` can be created by calling any one of the provided constructors, for example
 ```julia
-julia> TrapezoidalQuadrature()
+julia> quad = TrapezoidalQuadrature()
 QuadratureRule{Float64,2}(2, [0.0, 1.0], [0.5, 0.5])
 ```
 
@@ -32,7 +32,7 @@ The `QuadratureRule` type has the following fields:
 - `nodes` the nodes,
 - `weights` the weights.
 
-A functor is defined, which integrates some function `f(x)` using the quadrature rule:
+A functor is defined, which integrates functions `f(x)` using the quadrature rule:
 ```
 julia> quad(x -> x^2)
 0.5
