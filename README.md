@@ -62,3 +62,18 @@ as well as functions for generating quadrature rules with an arbitrary number of
 - `GaussLegendreQuadrature`
 - `LobattoChebyshevQuadrature`
 - `LobattoLegendreQuadrature`
+
+
+## References
+
+If you use QuadratureRules.jl in your work, please consider citing it by
+
+```
+@misc{Kraus:2020:QuadratureRules,
+  title={QuadratureRules.jl: A Collection of Quadrature Rules in Julia},
+  author={Kraus, Michael},
+  year={2020},
+  howpublished={\url{https://github.com/JuliaGNI/QuadratureRules.jl}},
+  doi={10.5281/zenodo.4310382}
+}
+```
