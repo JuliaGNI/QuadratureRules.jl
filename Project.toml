@@ -1,16 +1,18 @@
 name = "QuadratureRules"
 uuid = "a08977f5-a20d-4b99-b11f-f5ea535e0575"
 authors = ["Michael Kraus"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 FastGaussQuadrature = "442a2c76-b920-505d-bb47-c5924d526838"
+GenericLinearAlgebra = "14197337-ba66-59df-a3e3-ca00e7dcff7a"
 Polynomials = "f27b6e38-b328-58d1-80ce-0feddd5e7a45"
 SpecialPolynomials = "a25cea48-d430-424a-8ee7-0d3ad3742e9e"
 
 [compat]
 FastGaussQuadrature = "0.4"
-Polynomials = "^1.1.13"
+GenericLinearAlgebra = "0.2"
+Polynomials = "1"
 SpecialPolynomials = "0.1"
 julia = "1"
 

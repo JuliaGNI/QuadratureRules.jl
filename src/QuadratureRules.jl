@@ -1,6 +1,7 @@
 module QuadratureRules
 
     import FastGaussQuadrature
+    import GenericLinearAlgebra
     import Polynomials
     import Polynomials: Polynomial
     import SpecialPolynomials: ShiftedLegendre
