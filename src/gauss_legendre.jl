@@ -5,11 +5,6 @@ function _gauss_legendre_fast(s, T)
     QuadratureRule(2s, c, b, T)
 end
 
-function _ShiftedLegendre(s, T=BigFloat)
-    p = vcat([zero(T) for _ in 1:s], one(T))
-    ShiftedLegendre(p)
-end
-
 """
 Gauss-Legendre quadrature.
 """
@@ -18,7 +13,7 @@ function GaussLegendreQuadrature(::Type{T}, s::Integer; IT=BigFloat, fast=false)
         return _gauss_legendre_fast(s, T)
     end
 
-    P = convert(Polynomial, _ShiftedLegendre(s,IT))
+    P = _shifted_legendre(s,IT)
     D = Polynomials.derivative(P)
 
     c = sort(IT.(Polynomials.roots(P)))

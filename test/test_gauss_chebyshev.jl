@@ -9,7 +9,7 @@ import QuadratureRules: chebyshev_points, shift_nodes
         
         @test sum(weights(GaussChebyshevQuadrature(s))) ≈ 1
 
-        c = shift_nodes(reverse(FastTransforms.chebyshevpoints(Float64, s; kind=1)))
+        c = shift_nodes(reverse(FastTransforms.chebyshevpoints(Float64, s, Val(1))))
 
         @test chebyshev_points(Float64, s, Val(1)) ≈ c
         @test nodes(GaussChebyshevQuadrature(s))   ≈ c

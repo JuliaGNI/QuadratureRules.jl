@@ -4,7 +4,6 @@ module QuadratureRules
     import GenericLinearAlgebra
     import Polynomials
     import Polynomials: Polynomial
-    import SpecialPolynomials: ShiftedLegendre
 
     include("utils.jl")
 

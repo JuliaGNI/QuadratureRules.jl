@@ -11,7 +11,7 @@ import QuadratureRules: shift_nodes
         
         @test sum(weights(LobattoChebyshevQuadrature(s))) ≈ 1
 
-        c = shift_nodes(reverse(FastTransforms.chebyshevpoints(Float64, s; kind=2)))
+        c = shift_nodes(reverse(FastTransforms.chebyshevpoints(Float64, s, Val(2))))
 
         @test chebyshev_points(Float64, s, Val(2)) ≈ c
         @test nodes(LobattoChebyshevQuadrature(s)) ≈ c
