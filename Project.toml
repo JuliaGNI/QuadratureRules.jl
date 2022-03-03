@@ -10,7 +10,7 @@ Polynomials = "f27b6e38-b328-58d1-80ce-0feddd5e7a45"
 
 [compat]
 FastGaussQuadrature = "0.4"
-GenericLinearAlgebra = "0.2"
+GenericLinearAlgebra = "0.2, 0.3"
 Polynomials = "1, 2"
 julia = "1"
 
