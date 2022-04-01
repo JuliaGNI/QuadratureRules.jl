@@ -22,12 +22,12 @@ import QuadratureRules: scale_weights, shift_nodes, shift!, unshift!
 
     shift!(b̃, c̃)
 
-    @test b̃ == scale_weights(b)
-    @test c̃ == shift_nodes(c)
+    @test b̃ ≈ scale_weights(b)  atol=1E-14
+    @test c̃ ≈ shift_nodes(c)    atol=1E-14
 
     unshift!(b̃, c̃)
 
-    @test b̃ == b
-    @test c̃ == c
+    @test b̃ ≈ b  atol=1E-14
+    @test c̃ ≈ c  atol=1E-14
 
 end
