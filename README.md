@@ -1,10 +1,10 @@
 # Quadrature Rules
 
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://juliagni.github.io/QuadratureRules.jl/stable)
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://juliagni.github.io/QuadratureRules.jl/dev)
+[![Latest](https://img.shields.io/badge/docs-latest-blue.svg)](https://juliagni.github.io/QuadratureRules.jl/latest)
 [![PkgEval Status](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/Q/QuadratureRules.svg)](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/Q/QuadratureRules.html)
 [![Build Status](https://github.com/JuliaGNI/QuadratureRules.jl/workflows/CI/badge.svg)](https://github.com/JuliaGNI/QuadratureRules.jl/actions)
-[![Coverage](https://codecov.io/gh/JuliaGNI/QuadratureRules.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaGNI/QuadratureRules.jl)
+[![Coverage](https://codecov.io/gh/JuliaGNI/QuadratureRules.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/JuliaGNI/QuadratureRules.jl)
 [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.4310382.svg)](https://doi.org/10.5281/zenodo.4310382)
 
 
