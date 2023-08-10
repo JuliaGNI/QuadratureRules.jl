@@ -18,5 +18,7 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/JuliaGNI/QuadratureRules.jl",
+    repo   = "github.com/JuliaGNI/QuadratureRules.jl",
+    devurl = "latest",
+    devbranch = "main",
 )
