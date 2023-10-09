@@ -3,7 +3,7 @@ Clenshaw-Curtis quadrature.
 """
 function ClenshawCurtisQuadrature(::Type{T}, s::Integer; IT=BigFloat) where {T}
     if s == 1
-        throw(ErrorException("Clenshaw-Curtins quadrature is not defined for one stage."))
+        throw(ErrorException("Clenshaw-Curtis quadrature is not defined for one stage."))
     end
 
     mymapreduce(f, op, itr) = isempty(itr) ? zero(IT) : mapreduce(f, op, itr)
@@ -18,7 +18,7 @@ function ClenshawCurtisQuadrature(::Type{T}, s::Integer; IT=BigFloat) where {T}
     x = chebyshev_points(IT, s, Val(2))
     w = [ccsum(i-1,s-1) for i in 1:s]
 
-    QuadratureRule(s^2, x, w, T)
+    QuadratureRule(s, x, w, T)
 end
 
 ClenshawCurtisQuadrature(s) = ClenshawCurtisQuadrature(Float64, s)
