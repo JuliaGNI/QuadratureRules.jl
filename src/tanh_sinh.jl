@@ -16,8 +16,8 @@ function TanhSinhQuadrature(::Type{T}, n::Integer; IT=BigFloat) where {T}
         b ./= 2
 
         while true
-            w = IT(π) / 2 * h * cosh(k * h) / ( cosh(π / 2 * sinh(k * h) ) )^2
-            x = IT(1) / ( exp( π / 2 * sinh(k * h) ) * cosh( π / 2 * sinh(k * h) ) )
+            w = IT(π) / 2 * h * cosh(k * h) / ( cosh(IT(π) / 2 * sinh(k * h) ) )^2
+            x = IT(1) / ( exp( IT(π) / 2 * sinh(k * h) ) * cosh( IT(π) / 2 * sinh(k * h) ) )
 
             T(w) == 0 && break
             T(abs(1-x)) == 1 && break
