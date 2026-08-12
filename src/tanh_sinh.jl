@@ -17,7 +17,7 @@ u_k = \frac{\pi}{2} \sinh (k h) ,
 ```
 
 where ``\delta_k`` is the distance of the outer pair of nodes from the endpoints,
-``c_{\pm k} = \tfrac{1}{2} \mp (\tfrac{1}{2} - \delta_k)``. It is written through the
+``c_{\pm k} = \tfrac{1}{2} \pm (\tfrac{1}{2} - \delta_k)``. It is written through the
 logistic form on the right to avoid the cancellation that ``1 - \tanh u_k`` would suffer for
 large ``u_k`` — and it is those small numbers that the rule is all about.
 
