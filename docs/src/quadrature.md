@@ -186,6 +186,24 @@ reason is that convergence for non-polynomial integrands is governed by how well
 function is approximated by polynomials on the node set, not by degree of exactness
 alone, and Chebyshev interpolation is near-optimal in that respect.
 
+Two results make this precise [trefethen2008](@cite). First, because the Chebyshev weights
+are positive [imhof1963](@cite) and the rules are interpolatory, the quadrature error is
+bounded by $4 E_n^*$, where $E_n^*$ is the error of the best polynomial approximation of
+degree $n$; a Gauss rule satisfies the same bound with $E_{2n+1}^*$. Second, and less
+obviously, for integrands of finite smoothness Clenshaw-Curtis satisfies the same
+*algebraic* error bound as Gauss, with $2n$ in place of $n$.
+
+The mechanism behind the second result is aliasing. On a grid of Chebyshev points the
+polynomials $T_{n+p}$ and $T_{n-p}$ take identical values, so the rule cannot tell them
+apart and returns $I(T_{n-p})$ when handed $T_{n+p}$. Since those exact integrals are
+themselves $O(n^{-2})$ small, the Chebyshev coefficients just past the exactness limit
+contribute far less error than merely counting exact degrees would suggest. A Gauss rule,
+by contrast, is exact up to degree $2n+1$ and then fails abruptly. The upshot is that
+Gauss quadrature has a decisive advantage only for integrands analytic in a sizable
+neighbourhood of the interval — and there both methods converge geometrically, so the
+distinction is of little practical consequence. See the
+[Convergence](@ref) discussion for a numerical comparison.
+
 
 ## Composite rules and convergence
 

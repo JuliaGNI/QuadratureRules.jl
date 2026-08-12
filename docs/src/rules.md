@@ -92,8 +92,9 @@ both to evaluate $P_j$ at a number and to construct it as a `Polynomial`, by sta
 recurrence from the polynomial $x$ instead of a scalar.
 
 Its roots have no closed form. They are obtained by taking the double precision values
-from `FastGaussQuadrature.gausslegendre` as initial guesses and refining them with
-Newton's method in the working precision `IT`
+from `FastGaussQuadrature.gausslegendre` — which for small `s` computes them by the
+Golub-Welsch eigenvalue algorithm [golub1969](@cite) — as initial guesses, and refining
+them with Newton's method in the working precision `IT`
 ([`QuadratureRules._newton_roots`](@ref)), which iterates until the correction stops
 decreasing. This yields nodes accurate to full `BigFloat` precision.
 
@@ -208,8 +209,10 @@ chebyshev_points(5, 2)
 
 For both kinds the weights follow from expanding the integrand in a Chebyshev series
 instead of the Lagrange basis. Writing $x = \cos\theta$ turns the interpolation problem
-into a trigonometric one, the coefficients of the series follow from the sampled values
-by a discrete cosine transform, and the series is integrated term by term using
+into a trigonometric one — the correspondence between Chebyshev and Fourier series that
+underlies spectral methods generally [boyd2001](@cite) — the coefficients of the series
+follow from the sampled values by a discrete cosine transform, and the series is integrated
+term by term using
 
 ```math
 \int_{-1}^{+1} T_{2j} (x) \, dx = - \frac{2}{4 j^2 - 1} ,
@@ -219,6 +222,22 @@ by a discrete cosine transform, and the series is integrated term by term using
 
 Only the even-order Chebyshev polynomials contribute, and each contributes a term with
 denominator $4j^2-1$. This is the common origin of the weight formulae below.
+
+### Three variants
+
+Which node set is used distinguishes three classical rules [trefethen2008](@cite):
+
+| nodes | rule | provided by |
+|---|---|---|
+| Chebyshev roots, in $(-1,1)$ | Fejér's first rule [fejer1933](@cite) | [`GaussChebyshevQuadrature`](@ref) |
+| Chebyshev extrema, in $(-1,1)$ | Fejér's second rule [fejer1933](@cite) | — |
+| Chebyshev extrema, in $[-1,1]$ | Clenshaw-Curtis [clenshaw1960](@cite) | [`ClenshawCurtisQuadrature`](@ref) |
+
+The first and third are also called the *classical* and *practical* Clenshaw-Curtis
+formulae. Fejér's second rule uses the extrema of $T_{s+1}$ *excluding* the endpoints and
+is **not** provided by this package. Note that its weights are not interchangeable with
+those of Clenshaw-Curtis: applying the Fejér-2 weight formula to the endpoint-inclusive
+Chebyshev points gives a rule that is exact only for linear functions, regardless of `s`.
 
 
 ## Gauss-Chebyshev quadrature (Fejér's first rule)
@@ -271,16 +290,110 @@ half-period, and the highest mode of an even-length transform is not duplicated.
 always, a factor $1/2$ maps the rule to $[0,1]$.
 
 The rule is exact for polynomials of degree $\le s-1$, giving order `s`, with one bonus
-degree for odd `s`. All weights are positive. It requires $s \ge 2$.
+degree for odd `s`. All weights are positive [imhof1963](@cite). It requires $s \ge 2$.
+
+This is the explicit closed form derived in [reid2014](@citet), which is the form the
+implementation follows; the rule itself goes back to [clenshaw1960](@citet). Comparing the
+symbols with the code in `src/clenshaw_curtis.jl`: `n = s-1` is Reid's $N$, `c(k,n)` is
+$c_k$, `b(j,n)` is $b_j$, and `ϑ(k,n)` is $\vartheta_k$.
 
 ```@repl rules
 ClenshawCurtisQuadrature(3)          # Simpson's rule again
 ClenshawCurtisQuadrature(9)(x -> exp(x)) - (exp(1) - 1)
 ```
 
-Although its order is roughly half that of Gauss-Legendre with the same number of nodes,
-Clenshaw-Curtis converges at a comparable rate for smooth integrands, and its nodes are
-given in closed form.
+!!! warning "The factor $b_j$ is easy to lose"
+    Some presentations, including the sample tables in [reid2014](@citet), omit the factor
+    $b_j = 1$ on the final term of an even-length sum — equivalently, they do not halve the
+    last Chebyshev coefficient $a_N$. This matters only for even $N$, because the
+    coefficients of odd order integrate to zero anyway, but there it costs a degree of
+    exactness. For $N = 4$ the correct weights on $[-1,+1]$ are
+    $(\tfrac{1}{15}, \tfrac{8}{15}, \tfrac{12}{15}, \tfrac{8}{15}, \tfrac{1}{15})$, exact
+    to degree 5, whereas dropping the factor gives
+    $(0.05, 0.5667, 0.7667, 0.5667, 0.05)$, exact only to degree 3. Both sets sum to 2, so
+    the usual sanity check does not catch the difference. This package includes the factor
+    and is verified against Reid's explicit formula in the test suite.
+
+### Convergence
+
+Because all the weights are positive and the rule is interpolatory, the error is bounded
+by the best polynomial approximation error $E_n^*$ of degree $n = s-1$,
+
+```math
+| I - I_n | \le 4 \, E_n^* ,
+```
+
+which by the Weierstrass approximation theorem implies convergence for *every* continuous
+integrand [trefethen2008](@cite). Gauss-Legendre satisfies the same bound with
+$E_{2n+1}^*$, reflecting its doubled degree of exactness, and this is the origin of the
+folklore that Clenshaw-Curtis is "half as good".
+
+In practice it is not — an observation reported as early as [ohara1968](@citet), though it
+took a long time to become widely known. For an integrand whose $k$-th derivative has
+bounded variation, Clenshaw-Curtis obeys the *same* algebraic bound as Gauss, with $2n$
+rather than $n$ [trefethen2008](@cite):
+
+```math
+| I - I_n | \le \frac{32 \, V}{15 \, \pi \, k \, (2n+1-k)^{k}} .
+```
+
+The mechanism is aliasing. On the Chebyshev grid $T_{n+p}$ and $T_{n-p}$ are
+indistinguishable, so the rule returns $I(T_{n-p})$ when handed $T_{n+p}$; since
+$I(T_{n-p})$ is itself $O(n^{-2})$ small, the error contributed by the first Chebyshev
+coefficients beyond the exactness limit is far smaller than a naive count of exact degrees
+suggests. Gauss quadrature has a decisive advantage only when $f$ is analytic in a sizable
+neighbourhood of the interval, where it converges like $\rho^{-2n}$ against
+$\rho^{-n}$ — and there both methods reach machine precision so quickly that the
+difference rarely matters.
+
+The following reproduces the comparison of [trefethen2008](@citet), Figure 2, for three
+integrands of decreasing smoothness. The last column is the ratio of the Clenshaw-Curtis
+error to the Gauss-Legendre error at the same number of nodes:
+
+```@example rules
+using Printf
+symmetric(quad, f) = 2 * quad(ξ -> f(2ξ - 1))     # [0,1] rule applied on [-1,+1]
+
+#                                                  exact value of ∫₋₁¹ f(x) dx
+cases = [("1/(1+16x^2)", x -> 1/(1+16x^2),         atan(4)/2),
+         ("exp(-1/x^2)", x -> x == 0 ? zero(x) : exp(-1/x^2),
+                                                   2*(exp(-1) - sqrt(π)*0.15729920705028513)),
+         ("|x|^3",       x -> abs(x)^3,            0.5)]
+
+for (name, f, exact) in cases, n in (8, 16, 24)
+    eg = abs(symmetric(GaussLegendreQuadrature(n+1; fast=true), f) - exact)
+    ec = abs(symmetric(ClenshawCurtisQuadrature(n+1; IT=Float64), f) - exact)
+    @printf("%-12s n=%-3d Gauss %.2e   Clenshaw-Curtis %.2e   ratio %5.2f\n",
+            name, n, eg, ec, ec/eg)
+end
+```
+
+For $1/(1+16x^2)$, analytic but with poles at $\pm i/4$ close to the interval, the ratio
+sits at a little over two. For the two non-analytic integrands it hovers around one, and
+for $\exp(-1/x^2)$ Clenshaw-Curtis is at times the more accurate of the two. Individual
+entries are noisy — the $n = 24$ row for $\exp(-1/x^2)$ catches the Gauss error at a
+particularly favourable point — so it is the trend rather than any single ratio that
+matters. Nowhere does the asymptotic factor of two in the degree of exactness translate
+into a factor of two in accuracy.
+
+That factor becomes visible only for polynomials and entire functions: $x^{20}$ is
+integrated exactly by Gauss from $n \ge 10$ but by Clenshaw-Curtis only from $n \ge 20$,
+and for $e^x$ both reach machine precision well before $n = 16$.
+
+### Cost
+
+The weight sum above is evaluated directly, at a cost of $O(s^2)$ operations, and by
+default in `BigFloat`. Passing `IT=Float64` is about two orders of magnitude faster and is
+the appropriate choice whenever the result is wanted in `Float64`:
+
+```@repl rules
+ClenshawCurtisQuadrature(Float64, 64; IT=Float64) ≈ ClenshawCurtisQuadrature(64)
+```
+
+Computing the weights through a fast cosine transform instead reduces this to
+$O(s \log s)$; see [gentleman1972](@citet) and [waldvogel2006](@citet). That is not done
+here, because the package's priority is arbitrary-precision accuracy for moderate node
+counts rather than throughput at large $s$.
 
 
 ## Lobatto-Chebyshev quadrature
@@ -327,3 +440,6 @@ ChebyshevQuadrature(4, 2) == LobattoChebyshevQuadrature(4)
 
 The orders quoted for the Chebyshev-based rules are guaranteed values; for an odd number
 of nodes these rules integrate one additional degree exactly.
+
+Not provided: Radau rules, which fix one endpoint, and Fejér's second rule, the
+interpolatory rule on the Chebyshev extrema *excluding* the endpoints.
