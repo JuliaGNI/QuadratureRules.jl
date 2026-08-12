@@ -54,6 +54,23 @@ end
 
 gauss_legendre_nodes(s; kwargs...) = gauss_legendre_nodes(Float64, s; kwargs...)
 
+# The Gauss-Legendre weights on [-1,+1] belonging to the precomputed points `x`, in their
+# own arithmetic. Taking the points as an argument lets the constructor share the closed
+# form with gauss_legendre_point_weights without repeating the root find.
+function _gauss_legendre_point_weights(x::AbstractVector{IT}) where {IT}
+    s = length(x)
+
+    P = _legendre_polynomial(s, IT)
+    D = Polynomials.derivative(P)
+
+    inti(i) = begin
+        I = Polynomials.integrate( ( P ÷ Polynomial(IT[-x[i], 1]) )^2 )
+        I(1) - I(-1)
+    end
+
+    [ inti(i) / D(x[i])^2  for i in 1:s ]
+end
+
 @doc raw"""
     gauss_legendre_point_weights(s)
     gauss_legendre_point_weights(T, s; IT=BigFloat)
@@ -81,17 +98,7 @@ julia> gauss_legendre_point_weights(2)
 See also [`gauss_legendre_weights`](@ref) for the same weights on ``[0,1]``.
 """
 function gauss_legendre_point_weights(::Type{T}, s::Integer; IT=BigFloat) where {T}
-    P = _legendre_polynomial(s, IT)
-    D = Polynomials.derivative(P)
-
-    x = gauss_legendre_points(IT, s; IT=IT)
-
-    inti(i) = begin
-        I = Polynomials.integrate( ( P ÷ Polynomial(IT[-x[i], 1]) )^2 )
-        I(1) - I(-1)
-    end
-
-    T.([ inti(i) / D(x[i])^2  for i in 1:s ])
+    T.(_gauss_legendre_point_weights(gauss_legendre_points(IT, s; IT=IT)))
 end
 
 gauss_legendre_point_weights(s; kwargs...) = gauss_legendre_point_weights(Float64, s; kwargs...)
@@ -173,10 +180,10 @@ function GaussLegendreQuadrature(::Type{T}, s::Integer; IT=BigFloat, fast=false)
         return _gauss_legendre_fast(s, T)
     end
 
-    c = gauss_legendre_nodes(IT, s; IT=IT)
-    b = gauss_legendre_weights(IT, s; IT=IT)
+    x = gauss_legendre_points(IT, s; IT=IT)
+    w = _gauss_legendre_point_weights(x)
 
-    return QuadratureRule(2s, c, b, T)
+    return QuadratureRule(2s, shift_nodes(x), scale_weights(w), T)
 end
 
 GaussLegendreQuadrature(s; kwargs...) = GaussLegendreQuadrature(Float64, s; kwargs...)

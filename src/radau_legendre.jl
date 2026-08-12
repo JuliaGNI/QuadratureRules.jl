@@ -85,6 +85,31 @@ end
 
 radau_legendre_nodes(s, endpoint; kwargs...) = radau_legendre_nodes(Float64, s, Val(endpoint); kwargs...)
 
+# The left Radau-Legendre weights on [-1,+1] belonging to the precomputed left points `x`,
+# in their own arithmetic. Taking the points as an argument lets _radau_legendre share the
+# closed form with radau_legendre_point_weights without repeating the root find.
+function _radau_legendre_point_weights(x::AbstractVector{IT}) where {IT}
+    s = length(x)
+
+    [ (1 - x[i]) / ( s^2 * _legendre(s-1, x[i])^2 )  for i in 1:s ]
+end
+
+# Points and weights on [-1,+1] from a single root find, the right variant obtained by
+# reflecting the left one. Reflecting rather than evaluating the mirrored closed form is
+# what makes the two variants exact mirror images: the recurrence for P_{s-1}(-x) does not
+# reproduce P_{s-1}(x) bit for bit.
+function _radau_legendre(s, ::Val{:left}, IT)
+    x = radau_legendre_points(IT, s, Val(:left); IT=IT)
+
+    x, _radau_legendre_point_weights(x)
+end
+
+function _radau_legendre(s, ::Val{:right}, IT)
+    x, w = _radau_legendre(s, Val(:left), IT)
+
+    -reverse(x), reverse(w)
+end
+
 @doc raw"""
     radau_legendre_point_weights(s, endpoint; IT=BigFloat)
     radau_legendre_point_weights(T, s, ::Val{endpoint}; IT=BigFloat)
@@ -113,14 +138,10 @@ julia> radau_legendre_point_weights(2, :left)
 
 See also [`radau_legendre_weights`](@ref) for the same weights on ``[0,1]``.
 """
-function radau_legendre_point_weights(::Type{T}, s::Integer, ::Val{:left}; IT=BigFloat) where {T}
-    x = radau_legendre_points(IT, s, Val(:left); IT=IT)
+function radau_legendre_point_weights(::Type{T}, s::Integer, endpoint::Val; IT=BigFloat) where {T}
+    _, w = _radau_legendre(s, endpoint, IT)
 
-    T.([ (1 - x[i]) / ( s^2 * _legendre(s-1, x[i])^2 )  for i in 1:s ])
-end
-
-function radau_legendre_point_weights(::Type{T}, s::Integer, ::Val{:right}; IT=BigFloat) where {T}
-    T.(reverse(radau_legendre_point_weights(IT, s, Val(:left); IT=IT)))
+    T.(w)
 end
 
 radau_legendre_point_weights(s, endpoint; kwargs...) = radau_legendre_point_weights(Float64, s, Val(endpoint); kwargs...)
@@ -219,10 +240,9 @@ function RadauLegendreQuadrature(::Type{T}, s::Integer, endpoint::Val; IT=BigFlo
         return _radau_legendre_fast(s, T, endpoint)
     end
 
-    c = radau_legendre_nodes(IT, s, endpoint; IT=IT)
-    b = radau_legendre_weights(IT, s, endpoint; IT=IT)
+    x, w = _radau_legendre(s, endpoint, IT)
 
-    return QuadratureRule(2s-1, c, b, T)
+    return QuadratureRule(2s-1, shift_nodes(x), scale_weights(w), T)
 end
 
 RadauLegendreQuadrature(s, endpoint; kwargs...) = RadauLegendreQuadrature(Float64, s, Val(endpoint); kwargs...)

@@ -62,6 +62,15 @@ end
 
 lobatto_legendre_nodes(s; kwargs...) = lobatto_legendre_nodes(Float64, s; kwargs...)
 
+# The Lobatto-Legendre weights on [-1,+1] belonging to the precomputed points `x`, in their
+# own arithmetic. Taking the points as an argument lets the constructor share the closed
+# form with lobatto_legendre_point_weights without repeating the root find.
+function _lobatto_legendre_point_weights(x::AbstractVector{IT}) where {IT}
+    s = length(x)
+
+    [ 2 / ( s*(s-1) * _legendre(s-1, x[i])^2 )  for i in 1:s ]
+end
+
 @doc raw"""
     lobatto_legendre_point_weights(s)
     lobatto_legendre_point_weights(T, s; IT=BigFloat)
@@ -89,9 +98,7 @@ julia> lobatto_legendre_point_weights(3)
 See also [`lobatto_legendre_weights`](@ref) for the same weights on ``[0,1]``.
 """
 function lobatto_legendre_point_weights(::Type{T}, s::Integer; IT=BigFloat) where {T}
-    x = lobatto_legendre_points(IT, s; IT=IT)
-
-    T.([ 2 / ( s*(s-1) * _legendre(s-1, x[i])^2 )  for i in 1:s ])
+    T.(_lobatto_legendre_point_weights(lobatto_legendre_points(IT, s; IT=IT)))
 end
 
 lobatto_legendre_point_weights(s; kwargs...) = lobatto_legendre_point_weights(Float64, s; kwargs...)
@@ -174,10 +181,10 @@ function LobattoLegendreQuadrature(::Type{T}, s::Integer; IT=BigFloat, fast=fals
         return _lobatto_legendre_fast(s, T)
     end
 
-    c = lobatto_legendre_nodes(IT, s; IT=IT)
-    b = lobatto_legendre_weights(IT, s; IT=IT)
+    x = lobatto_legendre_points(IT, s; IT=IT)
+    w = _lobatto_legendre_point_weights(x)
 
-    return QuadratureRule(2s-2, c, b, T)
+    return QuadratureRule(2s-2, shift_nodes(x), scale_weights(w), T)
 end
 
 LobattoLegendreQuadrature(s; kwargs...) = LobattoLegendreQuadrature(Float64, s; kwargs...)

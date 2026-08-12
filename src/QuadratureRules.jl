@@ -71,5 +71,4 @@ module QuadratureRules
            radau_legendre_weights,
            tanh_sinh_weights
 
-
 end

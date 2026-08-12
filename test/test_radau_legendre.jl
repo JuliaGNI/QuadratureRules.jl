@@ -12,6 +12,7 @@ import QuadratureRules: scale_weights, unscale_weights, shift_nodes, unshift_nod
     @test_throws MethodError radau_legendre_points(4, :left; nosuchkeyword=1)
     @test_throws MethodError radau_legendre_nodes(4, :left; nosuchkeyword=1)
     @test_throws MethodError radau_legendre_weights(4, :left; nosuchkeyword=1)
+    @test_throws MethodError radau_legendre_point_weights(4, :left; nosuchkeyword=1)
     @test_throws MethodError RadauLegendreQuadrature(4, :left; nosuchkeyword=1)
 
     for endpoint in (:left, :right)
