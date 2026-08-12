@@ -1,3 +1,6 @@
+import FastGaussQuadrature
+import QuadratureRules: shift_nodes, unshift_nodes
+
 @testset "$(rpad("Gauß-Legendre",80))" begin
 
     for s in 1:10
@@ -5,6 +8,20 @@
         @test GaussLegendreQuadrature(s) == GaussLegendreQuadrature(Float64, s)
 
         @test sum(weights(GaussLegendreQuadrature(s))) ≈ 1
+
+        @test gauss_legendre_nodes(Float64, s) == nodes(GaussLegendreQuadrature(s))
+        @test gauss_legendre_nodes(s) == gauss_legendre_nodes(Float64, s)
+        @test gauss_legendre_points(s) == gauss_legendre_points(Float64, s)
+
+        # the points are primary and the nodes are derived from them, so the two agree
+        # exactly at equal working precision and up to rounding across precisions
+        @test shift_nodes(gauss_legendre_points(BigFloat, s)) == gauss_legendre_nodes(BigFloat, s)
+        @test shift_nodes(gauss_legendre_points(Float64, s))  ≈  gauss_legendre_nodes(Float64, s)
+        @test unshift_nodes(gauss_legendre_nodes(Float64, s)) ≈ gauss_legendre_points(Float64, s)
+        @test gauss_legendre_points(Float64, s) ≈ FastGaussQuadrature.gausslegendre(s)[1]
+
+        @test gauss_legendre_nodes(Float64, s; fast=true) ≈ gauss_legendre_nodes(Float64, s)
+        @test eltype(gauss_legendre_nodes(BigFloat, s)) == BigFloat
     end
 
     # The default constructor computes nodes and weights in arbitrary precision.

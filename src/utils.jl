@@ -25,9 +25,9 @@ function _legendre(j::Int, x::T) where {T}
     end
 end
 
-"Legendre polynomial of degree s shifted to the interval [0..1], i.e., P_s(2x-1)."
-function _shifted_legendre(s, T=BigFloat)
-    _legendre(s, Polynomial(T[-1, 2]))
+"Legendre polynomial P_s(x) of degree s on the interval [-1..+1]."
+function _legendre_polynomial(s, T=BigFloat)
+    _legendre(s, Polynomial(T[0, 1]))
 end
 
 
@@ -66,6 +66,11 @@ end
 "Shift and scale nodes from the interval [-1,+1] to the interval [0,1]."
 function shift_nodes(c)
     (c .+ 1) ./ 2
+end
+
+"Shift and scale nodes from the interval [0,1] to the interval [-1,+1]."
+function unshift_nodes(c)
+    2 .* c .- 1
 end
 
 "Scale weights from the interval [-1,+1] to the interval [0,1]."
