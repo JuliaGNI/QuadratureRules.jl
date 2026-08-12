@@ -1,7 +1,7 @@
 
 @doc raw"""
-    chebyshev_points(s, kind; IT)
-    chebyshev_points(T, s, ::Val{kind}; IT)
+    chebyshev_points(s, kind; IT=BigFloat)
+    chebyshev_points(T, s, ::Val{kind}; IT=_default_arithmetic(T))
 
 The `s` Chebyshev points of the first (`kind = 1`) or second (`kind = 2`) kind on the
 interval ``[-1,+1]``, in ascending order.
@@ -56,8 +56,8 @@ end
 chebyshev_points(s, kind; kwargs...) = chebyshev_points(Float64, s, Val(kind); kwargs...)
 
 @doc raw"""
-    chebyshev_nodes(s, kind; IT)
-    chebyshev_nodes(T, s, ::Val{kind}; IT)
+    chebyshev_nodes(s, kind; IT=BigFloat)
+    chebyshev_nodes(T, s, ::Val{kind}; IT=_default_arithmetic(T))
 
 The `s` Chebyshev nodes of the first (`kind = 1`) or second (`kind = 2`) kind on the
 interval ``[0,1]``, i.e., the Chebyshev points shifted and scaled from ``[-1,+1]``
@@ -81,8 +81,8 @@ end
 chebyshev_nodes(s, kind; kwargs...) = chebyshev_nodes(Float64, s, Val(kind); kwargs...)
 
 @doc raw"""
-    chebyshev_weights(s, kind; IT)
-    chebyshev_weights(T, s, ::Val{kind}; IT)
+    chebyshev_weights(s, kind; IT=BigFloat)
+    chebyshev_weights(T, s, ::Val{kind}; IT=_default_arithmetic(T))
 
 The `s` interpolatory weights for the interval ``[0,1]`` belonging to the Chebyshev nodes
 of the first (`kind = 1`) or second (`kind = 2`) kind, summing to ``1``.
@@ -131,8 +131,8 @@ chebyshev_weights(::Type{T}, s::Integer, ::Val{2}; kwargs...) where {T} = clensh
 chebyshev_weights(s, kind; kwargs...) = chebyshev_weights(Float64, s, Val(kind); kwargs...)
 
 @doc raw"""
-    chebyshev_point_weights(s, kind; IT)
-    chebyshev_point_weights(T, s, ::Val{kind}; IT)
+    chebyshev_point_weights(s, kind; IT=BigFloat)
+    chebyshev_point_weights(T, s, ::Val{kind}; IT=_default_arithmetic(T))
 
 The `s` interpolatory weights for the interval ``[-1,+1]`` belonging to the Chebyshev
 points of the first (`kind = 1`) or second (`kind = 2`) kind, i.e., the weights of
@@ -157,8 +157,8 @@ chebyshev_point_weights(s, kind; kwargs...) = chebyshev_point_weights(Float64, s
 
 
 """
-    gauss_chebyshev_points(s; IT)
-    gauss_chebyshev_points(T, s; IT)
+    gauss_chebyshev_points(s; IT=BigFloat)
+    gauss_chebyshev_points(T, s; IT=_default_arithmetic(T))
 
 The `s` Gauss-Chebyshev points on the interval ``[-1,+1]``, i.e., the Chebyshev points
 of the first kind, cf. [`chebyshev_points`](@ref).
@@ -169,8 +169,8 @@ gauss_chebyshev_points(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_p
 gauss_chebyshev_points(s; kwargs...) = gauss_chebyshev_points(Float64, s; kwargs...)
 
 """
-    gauss_chebyshev_nodes(s; IT)
-    gauss_chebyshev_nodes(T, s; IT)
+    gauss_chebyshev_nodes(s; IT=BigFloat)
+    gauss_chebyshev_nodes(T, s; IT=_default_arithmetic(T))
 
 The `s` Gauss-Chebyshev nodes on the interval ``[0,1]``, i.e., the Chebyshev nodes of
 the first kind, cf. [`chebyshev_nodes`](@ref).
@@ -179,8 +179,8 @@ gauss_chebyshev_nodes(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_no
 gauss_chebyshev_nodes(s; kwargs...) = gauss_chebyshev_nodes(Float64, s; kwargs...)
 
 """
-    gauss_chebyshev_weights(s; IT)
-    gauss_chebyshev_weights(T, s; IT)
+    gauss_chebyshev_weights(s; IT=BigFloat)
+    gauss_chebyshev_weights(T, s; IT=_default_arithmetic(T))
 
 The `s` Gauss-Chebyshev weights for the interval ``[0,1]``, i.e., the weights of Fejér's
 first rule, cf. [`chebyshev_weights`](@ref). They sum to `1`.
@@ -191,8 +191,8 @@ gauss_chebyshev_weights(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_
 gauss_chebyshev_weights(s; kwargs...) = gauss_chebyshev_weights(Float64, s; kwargs...)
 
 """
-    gauss_chebyshev_point_weights(s; IT)
-    gauss_chebyshev_point_weights(T, s; IT)
+    gauss_chebyshev_point_weights(s; IT=BigFloat)
+    gauss_chebyshev_point_weights(T, s; IT=_default_arithmetic(T))
 
 The `s` Gauss-Chebyshev weights for the interval ``[-1,+1]``, cf.
 [`chebyshev_point_weights`](@ref). They sum to `2`.
@@ -201,8 +201,8 @@ gauss_chebyshev_point_weights(::Type{T}, s::Integer; kwargs...) where {T} = cheb
 gauss_chebyshev_point_weights(s; kwargs...) = gauss_chebyshev_point_weights(Float64, s; kwargs...)
 
 """
-    lobatto_chebyshev_points(s; IT)
-    lobatto_chebyshev_points(T, s; IT)
+    lobatto_chebyshev_points(s; IT=BigFloat)
+    lobatto_chebyshev_points(T, s; IT=_default_arithmetic(T))
 
 The `s` Lobatto-Chebyshev points on the interval ``[-1,+1]``, i.e., the Chebyshev points
 of the second kind, cf. [`chebyshev_points`](@ref). They include both endpoints.
@@ -216,8 +216,8 @@ lobatto_chebyshev_points(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev
 lobatto_chebyshev_points(s; kwargs...) = lobatto_chebyshev_points(Float64, s; kwargs...)
 
 """
-    lobatto_chebyshev_nodes(s; IT)
-    lobatto_chebyshev_nodes(T, s; IT)
+    lobatto_chebyshev_nodes(s; IT=BigFloat)
+    lobatto_chebyshev_nodes(T, s; IT=_default_arithmetic(T))
 
 The `s` Lobatto-Chebyshev nodes on the interval ``[0,1]``, i.e., the Chebyshev nodes of
 the second kind, cf. [`chebyshev_nodes`](@ref). The first and last node are `0` and `1`.
@@ -228,8 +228,8 @@ lobatto_chebyshev_nodes(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_
 lobatto_chebyshev_nodes(s; kwargs...) = lobatto_chebyshev_nodes(Float64, s; kwargs...)
 
 """
-    lobatto_chebyshev_weights(s; IT)
-    lobatto_chebyshev_weights(T, s; IT)
+    lobatto_chebyshev_weights(s; IT=BigFloat)
+    lobatto_chebyshev_weights(T, s; IT=_default_arithmetic(T))
 
 The `s` Lobatto-Chebyshev weights for the interval ``[0,1]``, cf.
 [`chebyshev_weights`](@ref). They sum to `1`.
@@ -244,8 +244,8 @@ lobatto_chebyshev_weights(::Type{T}, s::Integer; kwargs...) where {T} = chebyshe
 lobatto_chebyshev_weights(s; kwargs...) = lobatto_chebyshev_weights(Float64, s; kwargs...)
 
 """
-    lobatto_chebyshev_point_weights(s; IT)
-    lobatto_chebyshev_point_weights(T, s; IT)
+    lobatto_chebyshev_point_weights(s; IT=BigFloat)
+    lobatto_chebyshev_point_weights(T, s; IT=_default_arithmetic(T))
 
 The `s` Lobatto-Chebyshev weights for the interval ``[-1,+1]``, cf.
 [`chebyshev_point_weights`](@ref). They sum to `2`.
@@ -256,8 +256,8 @@ lobatto_chebyshev_point_weights(::Type{T}, s::Integer; kwargs...) where {T} = ch
 lobatto_chebyshev_point_weights(s; kwargs...) = lobatto_chebyshev_point_weights(Float64, s; kwargs...)
 
 @doc raw"""
-    GaussChebyshevQuadrature(s; IT)
-    GaussChebyshevQuadrature(T, s; IT)
+    GaussChebyshevQuadrature(s; IT=BigFloat)
+    GaussChebyshevQuadrature(T, s; IT=_default_arithmetic(T))
 
 The Gauss-Chebyshev quadrature rule with `s` nodes on the interval ``[0,1]``, also known
 as **Fejér's first rule**.
@@ -319,8 +319,8 @@ GaussChebyshevQuadrature(s; kwargs...) = GaussChebyshevQuadrature(Float64, s; kw
 
 
 @doc raw"""
-    LobattoChebyshevQuadrature(s; IT)
-    LobattoChebyshevQuadrature(T, s; IT)
+    LobattoChebyshevQuadrature(s; IT=BigFloat)
+    LobattoChebyshevQuadrature(T, s; IT=_default_arithmetic(T))
 
 The Lobatto-Chebyshev quadrature rule with `s` nodes on the interval ``[0,1]``.
 

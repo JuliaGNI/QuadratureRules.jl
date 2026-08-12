@@ -13,11 +13,12 @@ downstream packages such as RungeKutta.jl request symbolic coefficients.
 """
 symtype() = typeof(SymPyPythonCall.Sym(1))
 
-# Convert a symbolic value to a float by evaluating it. SymPyPythonCall's
-# `convert(Float64, ::Sym)` uses `pyconvert`, which rejects unevaluated expressions such as
-# `1/2 - sqrt(3)/6`, whereas the `N` path evaluates them. This is what makes the
-# `symtype() ≈ Float64` comparisons below work, as their `isapprox` converts to `Float64`.
-Base.convert(::Type{T}, x::SymPyPythonCall.Sym) where {T<:AbstractFloat} = T(SymPyPythonCall.N(x))
+# Evaluate symbolic values numerically, so that they can be compared with the floating
+# point results. `convert(Float64, ::Sym)` is of no use here: it goes through `pyconvert`,
+# which rejects unevaluated expressions such as `1/2 - sqrt(3)/6`, whereas `N` evaluates
+# them first. Converting explicitly at the comparison sites keeps this out of `Base.convert`,
+# which neither this package nor its tests own.
+tofloat(x::AbstractVector) = Float64[SymPyPythonCall.N(xᵢ) for xᵢ in x]
 
 # Structural equality is not enough for algebraic numbers: `sqrt(3)^2 - 3` is zero but not
 # syntactically so. Every exactness assertion below therefore simplifies the difference.
@@ -44,10 +45,10 @@ function test_symbolic_family(points, nodes, point_weights, weights, s)
         @test length(y) == s
     end
 
-    @test x ≈ points(Float64, s)
-    @test c ≈ nodes(Float64, s)
-    @test v ≈ point_weights(Float64, s)
-    @test b ≈ weights(Float64, s)
+    @test tofloat(x) ≈ points(Float64, s)
+    @test tofloat(c) ≈ nodes(Float64, s)
+    @test tofloat(v) ≈ point_weights(Float64, s)
+    @test tofloat(b) ≈ weights(Float64, s)
 
     @test exactly(c, shift_nodes(x))
     @test exactly(b, scale_weights(v))
@@ -218,8 +219,11 @@ chebyshev_wts(kind)          = (T, s) -> chebyshev_weights(T, s, Val(kind))
         @test exactly(weights(GaussLegendreQuadrature(symtype(), 2)),
                       gauss_legendre_weights(symtype(), 2))
 
-        @test GaussLegendreQuadrature(symtype(), 2) ≈ GaussLegendreQuadrature(Float64, 2)
-        @test LobattoLegendreQuadrature(symtype(), 3) ≈ LobattoLegendreQuadrature(Float64, 3)
+        # evaluated numerically, a symbolic rule is the floating point rule
+        evaluated(q) = QuadratureRule(order(q), tofloat(nodes(q)), tofloat(weights(q)))
+
+        @test evaluated(GaussLegendreQuadrature(symtype(), 2)) ≈ GaussLegendreQuadrature(Float64, 2)
+        @test evaluated(LobattoLegendreQuadrature(symtype(), 3)) ≈ LobattoLegendreQuadrature(Float64, 3)
     end
 
     @testset "$(rpad("Working arithmetic",60))" begin
@@ -229,7 +233,7 @@ chebyshev_wts(kind)          = (T, s) -> chebyshev_weights(T, s, Val(kind))
         c = gauss_legendre_nodes(symtype(), 3; IT=BigFloat)
 
         @test eltype(c) == symtype()
-        @test c ≈ gauss_legendre_nodes(Float64, 3)
+        @test tofloat(c) ≈ gauss_legendre_nodes(Float64, 3)
 
         # what comes back that way are rounded numbers wearing symbolic clothing, so they
         # are not symbolically equal to the radicals the default arithmetic produces

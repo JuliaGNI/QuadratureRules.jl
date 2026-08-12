@@ -1,7 +1,7 @@
 
 @doc raw"""
     lobatto_legendre_points(s)
-    lobatto_legendre_points(T, s; IT)
+    lobatto_legendre_points(T, s; IT=_default_arithmetic(T))
 
 The `s` Lobatto-Legendre points on the interval ``[-1,+1]``, i.e., the two endpoints
 ``\pm 1`` together with the ``s-2`` roots of ``P_{s-1}'``.
@@ -40,7 +40,7 @@ lobatto_legendre_points(s; kwargs...) = lobatto_legendre_points(Float64, s; kwar
 
 @doc raw"""
     lobatto_legendre_nodes(s)
-    lobatto_legendre_nodes(T, s; IT)
+    lobatto_legendre_nodes(T, s; IT=_default_arithmetic(T))
 
 The `s` Lobatto-Legendre nodes on the interval ``[0,1]``, i.e., the Lobatto-Legendre
 points shifted and scaled from ``[-1,+1]`` to ``[0,1]``.
@@ -74,7 +74,7 @@ end
 
 @doc raw"""
     lobatto_legendre_point_weights(s)
-    lobatto_legendre_point_weights(T, s; IT)
+    lobatto_legendre_point_weights(T, s; IT=_default_arithmetic(T))
 
 The `s` Lobatto-Legendre weights for the interval ``[-1,+1]``, belonging to the points
 returned by [`lobatto_legendre_points`](@ref) and summing to ``2``.
@@ -106,7 +106,7 @@ lobatto_legendre_point_weights(s; kwargs...) = lobatto_legendre_point_weights(Fl
 
 @doc raw"""
     lobatto_legendre_weights(s)
-    lobatto_legendre_weights(T, s; IT)
+    lobatto_legendre_weights(T, s; IT=_default_arithmetic(T))
 
 The `s` Lobatto-Legendre weights for the interval ``[0,1]``, i.e., the weights of
 [`lobatto_legendre_point_weights`](@ref) halved so that they sum to ``1``.
@@ -137,8 +137,8 @@ end
 
 
 @doc raw"""
-    LobattoLegendreQuadrature(s; IT, fast=false)
-    LobattoLegendreQuadrature(T, s; IT, fast=false)
+    LobattoLegendreQuadrature(s; IT=BigFloat, fast=false)
+    LobattoLegendreQuadrature(T, s; IT=_default_arithmetic(T), fast=false)
 
 The Lobatto-Legendre quadrature rule with `s` nodes on the interval ``[0,1]``.
 

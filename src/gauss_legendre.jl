@@ -1,7 +1,7 @@
 
 @doc raw"""
     gauss_legendre_points(s)
-    gauss_legendre_points(T, s; IT)
+    gauss_legendre_points(T, s; IT=_default_arithmetic(T))
 
 The `s` Gauss-Legendre points on the interval ``[-1,+1]``, i.e., the roots of the
 Legendre polynomial ``P_s``.
@@ -38,7 +38,7 @@ gauss_legendre_points(s; kwargs...) = gauss_legendre_points(Float64, s; kwargs..
 
 @doc raw"""
     gauss_legendre_nodes(s)
-    gauss_legendre_nodes(T, s; IT)
+    gauss_legendre_nodes(T, s; IT=_default_arithmetic(T))
 
 The `s` Gauss-Legendre nodes on the interval ``[0,1]``, i.e., the Gauss-Legendre points
 shifted and scaled from ``[-1,+1]`` to ``[0,1]`` by ``c_i = (x_i + 1)/2``.
@@ -78,7 +78,7 @@ end
 
 @doc raw"""
     gauss_legendre_point_weights(s)
-    gauss_legendre_point_weights(T, s; IT)
+    gauss_legendre_point_weights(T, s; IT=_default_arithmetic(T))
 
 The `s` Gauss-Legendre weights for the interval ``[-1,+1]``, belonging to the points
 returned by [`gauss_legendre_points`](@ref) and summing to ``2``.
@@ -110,7 +110,7 @@ gauss_legendre_point_weights(s; kwargs...) = gauss_legendre_point_weights(Float6
 
 @doc raw"""
     gauss_legendre_weights(s)
-    gauss_legendre_weights(T, s; IT)
+    gauss_legendre_weights(T, s; IT=_default_arithmetic(T))
 
 The `s` Gauss-Legendre weights for the interval ``[0,1]``, i.e., the weights of
 [`gauss_legendre_point_weights`](@ref) halved so that they sum to ``1``.
@@ -139,8 +139,8 @@ function _gauss_legendre_fast(s, T)
 end
 
 @doc raw"""
-    GaussLegendreQuadrature(s; IT, fast=false)
-    GaussLegendreQuadrature(T, s; IT, fast=false)
+    GaussLegendreQuadrature(s; IT=BigFloat, fast=false)
+    GaussLegendreQuadrature(T, s; IT=_default_arithmetic(T), fast=false)
 
 The Gauss-Legendre quadrature rule with `s` nodes on the interval ``[0,1]``.
 

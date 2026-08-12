@@ -1,7 +1,7 @@
 
 @doc raw"""
-    radau_legendre_points(s, endpoint; IT)
-    radau_legendre_points(T, s, ::Val{endpoint}; IT)
+    radau_legendre_points(s, endpoint; IT=BigFloat)
+    radau_legendre_points(T, s, ::Val{endpoint}; IT=_default_arithmetic(T))
 
 The `s` Radau-Legendre points on the interval ``[-1,+1]``, i.e., one prescribed endpoint
 together with the ``s-1`` free points that maximise the degree of exactness.
@@ -58,8 +58,8 @@ end
 radau_legendre_points(s, endpoint; kwargs...) = radau_legendre_points(Float64, s, Val(endpoint); kwargs...)
 
 @doc raw"""
-    radau_legendre_nodes(s, endpoint; IT)
-    radau_legendre_nodes(T, s, ::Val{endpoint}; IT)
+    radau_legendre_nodes(s, endpoint; IT=BigFloat)
+    radau_legendre_nodes(T, s, ::Val{endpoint}; IT=_default_arithmetic(T))
 
 The `s` Radau-Legendre nodes on the interval ``[0,1]``, i.e., the Radau-Legendre points
 shifted and scaled from ``[-1,+1]`` to ``[0,1]``.
@@ -113,8 +113,8 @@ function _radau_legendre(s, ::Val{:right}, IT)
 end
 
 @doc raw"""
-    radau_legendre_point_weights(s, endpoint; IT)
-    radau_legendre_point_weights(T, s, ::Val{endpoint}; IT)
+    radau_legendre_point_weights(s, endpoint; IT=BigFloat)
+    radau_legendre_point_weights(T, s, ::Val{endpoint}; IT=_default_arithmetic(T))
 
 The `s` Radau-Legendre weights for the interval ``[-1,+1]``, belonging to the points
 returned by [`radau_legendre_points`](@ref) and summing to ``2``.
@@ -149,8 +149,8 @@ end
 radau_legendre_point_weights(s, endpoint; kwargs...) = radau_legendre_point_weights(Float64, s, Val(endpoint); kwargs...)
 
 @doc raw"""
-    radau_legendre_weights(s, endpoint; IT)
-    radau_legendre_weights(T, s, ::Val{endpoint}; IT)
+    radau_legendre_weights(s, endpoint; IT=BigFloat)
+    radau_legendre_weights(T, s, ::Val{endpoint}; IT=_default_arithmetic(T))
 
 The `s` Radau-Legendre weights for the interval ``[0,1]``, i.e., the weights of
 [`radau_legendre_point_weights`](@ref) halved so that they sum to ``1``.
@@ -188,8 +188,8 @@ end
 
 
 @doc raw"""
-    RadauLegendreQuadrature(s, endpoint; IT, fast=false)
-    RadauLegendreQuadrature(T, s, ::Val{endpoint}; IT, fast=false)
+    RadauLegendreQuadrature(s, endpoint; IT=BigFloat, fast=false)
+    RadauLegendreQuadrature(T, s, ::Val{endpoint}; IT=_default_arithmetic(T), fast=false)
 
 The Radau-Legendre quadrature rule with `s` nodes on the interval ``[0,1]``.
 
