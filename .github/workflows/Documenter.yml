@@ -29,8 +29,9 @@ jobs:
       - name: Run doctests
         run: |
           julia --project=docs -e '
-            using Documenter: doctest
+            using Documenter
             using QuadratureRules
+            DocMeta.setdocmeta!(QuadratureRules, :DocTestSetup, :(using QuadratureRules); recursive=true)
             doctest(QuadratureRules)'
       - name: Build and deploy Documentation
         run: julia --project make.jl

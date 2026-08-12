@@ -1,10 +1,12 @@
 using QuadratureRules
 using Documenter
 
+DocMeta.setdocmeta!(QuadratureRules, :DocTestSetup, :(using QuadratureRules); recursive=true)
+
 makedocs(;
     modules=[QuadratureRules],
     authors="Michael Kraus",
-    repo="https://github.com/juliagni/QuadratureRules.jl/blob/{commit}{path}#L{line}",
+    repo=Remotes.GitHub("JuliaGNI", "QuadratureRules.jl"),
     sitename="QuadratureRules.jl",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
@@ -12,8 +14,10 @@ makedocs(;
         assets=String[],
     ),
     pages=[
-        "Home"    => "index.md",
-        "Library" => "library.md",
+        "Home"                 => "index.md",
+        "Numerical Quadrature" => "quadrature.md",
+        "Quadrature Rules"     => "rules.md",
+        "Library"              => "library.md",
     ],
 )
 

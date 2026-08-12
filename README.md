@@ -26,7 +26,7 @@ julia> using QuadratureRules
 a `QuadratureRule` can be created by calling any one of the provided constructors, for example
 ```julia
 julia> quad = TrapezoidalQuadrature()
-QuadratureRule{Float64,2}(2, [0.0, 1.0], [0.5, 0.5])
+QuadratureRule{Float64, 2}(2, [0.0, 1.0], [0.5, 0.5])
 ```
 
 The `QuadratureRule` type has the following fields:
@@ -34,7 +34,7 @@ The `QuadratureRule` type has the following fields:
 - `nodes` the nodes,
 - `weights` the weights.
 
-A functor is defined, which integrates functions `f(x)` using the quadrature rule:
+A functor is defined, which integrates functions `f(x)` over the interval `[0,1]` using the quadrature rule:
 ```
 julia> quad(x -> x^2)
 0.5
@@ -49,6 +49,9 @@ There are several convenience functions for accessing the fields:
 as well as a function for looping over all nodes and weights:
 - `Base.eachindex(quad::QuadratureRule) = eachindex(quad.nodes, quad.weights)`
 
+All rules are defined on the reference interval `[0,1]` and their weights sum to one.
+A rule of order `p` integrates polynomials of degree `≤ p-1` exactly.
+
 
 ## Quadrature Rules
 
@@ -59,11 +62,41 @@ There are several pre-tabulated quadrature rules:
 - `TrapezoidalQuadrature`
 
 as well as functions for generating quadrature rules with an arbitrary number of nodes on the fly:
+- `ChebyshevQuadrature`
 - `ClenshawCurtisQuadrature`
 - `GaussChebyshevQuadrature`
 - `GaussLegendreQuadrature`
 - `LobattoChebyshevQuadrature`
 - `LobattoLegendreQuadrature`
+
+Each of these takes the number of nodes `s` and, optionally, the element type of the
+resulting rule, e.g. `GaussLegendreQuadrature(BigFloat, 5)`. Nodes and weights are
+computed in an internal working precision, controlled by the keyword argument `IT` and
+defaulting to `BigFloat`, and converted to the requested element type only at the end.
+The Legendre rules additionally accept `fast=true`, which takes nodes and weights
+directly from FastGaussQuadrature.jl in double precision.
+
+
+## Points and Nodes
+
+The nodes of each rule are also available without the corresponding weights. Functions
+named `*_points` return them on the interval `[-1,+1]`, functions named `*_nodes` on the
+interval `[0,1]`:
+```julia
+julia> gauss_legendre_points(2)
+2-element Vector{Float64}:
+ -0.5773502691896257
+  0.5773502691896257
+
+julia> gauss_legendre_nodes(2)
+2-element Vector{Float64}:
+ 0.2113248654051871
+ 0.7886751345948129
+```
+
+These exist for all rules, i.e., as `gauss_legendre_points`, `lobatto_legendre_points`,
+`chebyshev_points`, `gauss_chebyshev_points`, `lobatto_chebyshev_points` and
+`clenshaw_curtis_points`, together with the corresponding `*_nodes` functions.
 
 
 ## References
