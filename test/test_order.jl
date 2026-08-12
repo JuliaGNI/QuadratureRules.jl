@@ -71,8 +71,13 @@
             quad = TanhSinhQuadrature(BigFloat, n)
 
             @test order(quad) == 0
-            @test moment(quad, 0) != 1        # never exact, however close it gets
             @test moment(quad, 0) ≈ 1  atol = 1E-5
+
+            # Never exact, however close it gets — but only asserted while the truncation
+            # error is still above the round-off of the moment sum. From level 5 the two are
+            # of the same size, a few ulps of 1, so the inequality would test the arithmetic
+            # rather than the rule.
+            n ≤ 4 && @test moment(quad, 0) != 1
 
             # From level 4 the truncation error falls below the 1E-60 tolerance that
             # `exact_to` uses throughout this file, so the moment machinery can no longer
