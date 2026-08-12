@@ -1,14 +1,18 @@
-import QuadratureRules: unshift_nodes
+import QuadratureRules: scale_weights, unscale_weights, unshift_nodes
 
 @testset "$(rpad("Tanh-Sinh",80))" begin
 
     @test_throws ErrorException TanhSinhQuadrature(0)
     @test_throws ErrorException TanhSinhQuadrature(-1)
+    @test_throws ErrorException tanh_sinh_weights(0)
+    @test_throws ErrorException tanh_sinh_point_weights(0)
 
     for n in 1:6
-        @test TanhSinhQuadrature(n) == TanhSinhQuadrature(Float64, n)
-        @test tanh_sinh_nodes(n)    == tanh_sinh_nodes(Float64, n)
-        @test tanh_sinh_points(n)   == tanh_sinh_points(Float64, n)
+        @test TanhSinhQuadrature(n)      == TanhSinhQuadrature(Float64, n)
+        @test tanh_sinh_nodes(n)         == tanh_sinh_nodes(Float64, n)
+        @test tanh_sinh_points(n)        == tanh_sinh_points(Float64, n)
+        @test tanh_sinh_weights(n)       == tanh_sinh_weights(Float64, n)
+        @test tanh_sinh_point_weights(n) == tanh_sinh_point_weights(Float64, n)
     end
 
 
@@ -63,6 +67,17 @@ import QuadratureRules: unshift_nodes
             @test tanh_sinh_nodes(T, n) == c
             @test unshift_nodes(tanh_sinh_nodes(T, n)) ≈ x
             @test length(x) == length(c)
+
+            # the same holds for the weights, which are primary on [0,1] here, so that the
+            # weights for [-1,+1] must be derived from them and truncate alike
+            w = tanh_sinh_point_weights(T, n)
+            @test tanh_sinh_weights(T, n) == b
+            @test length(w) == length(b)
+            @test w == reverse(w)
+            @test all(wᵢ > 0 for wᵢ in w)
+            @test unscale_weights(tanh_sinh_weights(T, n)) == w
+            @test scale_weights(w) ≈ b
+            @test sum(w) ≈ 2one(T)  atol = 2 * max(4 * eps(T), T(10)^(-5 * 2^(n-1)))
         end
     end
 
@@ -161,13 +176,17 @@ import QuadratureRules: unshift_nodes
     # the IT keyword selects the working precision; all choices must agree
     @testset "$(rpad("working precision",60))" begin
         for n in 1:5
-            @test TanhSinhQuadrature(Float64, n; IT=Float64) ≈ TanhSinhQuadrature(n)
-            @test tanh_sinh_nodes(Float64, n; IT=Float64)    ≈ tanh_sinh_nodes(n)
-            @test tanh_sinh_points(Float64, n; IT=Float64)   ≈ tanh_sinh_points(n)
+            @test TanhSinhQuadrature(Float64, n; IT=Float64)        ≈ TanhSinhQuadrature(n)
+            @test tanh_sinh_nodes(Float64, n; IT=Float64)           ≈ tanh_sinh_nodes(n)
+            @test tanh_sinh_points(Float64, n; IT=Float64)          ≈ tanh_sinh_points(n)
+            @test tanh_sinh_weights(Float64, n; IT=Float64)         ≈ tanh_sinh_weights(n)
+            @test tanh_sinh_point_weights(Float64, n; IT=Float64)   ≈ tanh_sinh_point_weights(n)
 
-            @test eltype(TanhSinhQuadrature(Float32, n; IT=Float32)) == Float32
-            @test eltype(tanh_sinh_nodes(Float32, n; IT=Float32))    == Float32
-            @test eltype(tanh_sinh_points(Float32, n; IT=Float32))   == Float32
+            @test eltype(TanhSinhQuadrature(Float32, n; IT=Float32))      == Float32
+            @test eltype(tanh_sinh_nodes(Float32, n; IT=Float32))         == Float32
+            @test eltype(tanh_sinh_points(Float32, n; IT=Float32))        == Float32
+            @test eltype(tanh_sinh_weights(Float32, n; IT=Float32))       == Float32
+            @test eltype(tanh_sinh_point_weights(Float32, n; IT=Float32)) == Float32
         end
     end
 

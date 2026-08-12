@@ -68,6 +68,7 @@ as well as functions for generating quadrature rules with an arbitrary number of
 - `GaussLegendreQuadrature`
 - `LobattoChebyshevQuadrature`
 - `LobattoLegendreQuadrature`
+- `RadauLegendreQuadrature`
 - `TanhSinhQuadrature`
 
 Each of these takes the number of nodes `s` and, optionally, the element type of the
@@ -84,11 +85,13 @@ the endpoints, which makes it the rule to use for an integrand singular there, s
 `TanhSinhQuadrature(3)(log) ≈ -1`.
 
 
-## Points and Nodes
+## Points, Nodes and Weights
 
-The nodes of each rule are also available without the corresponding weights. Functions
-named `*_points` return them on the interval `[-1,+1]`, functions named `*_nodes` on the
-interval `[0,1]`:
+The nodes and weights of each rule are also available without constructing the rule.
+Functions named `*_points` and `*_point_weights` work on the interval `[-1,+1]`, where the
+weights sum to `2`, and functions named `*_nodes` and `*_weights` on the interval `[0,1]`,
+where they sum to `1` — for every rule but tanh-sinh, which reaches those sums only up to
+its truncation error:
 ```julia
 julia> gauss_legendre_points(2)
 2-element Vector{Float64}:
@@ -99,12 +102,26 @@ julia> gauss_legendre_nodes(2)
 2-element Vector{Float64}:
  0.2113248654051871
  0.7886751345948129
+
+julia> gauss_legendre_weights(2)
+2-element Vector{Float64}:
+ 0.5
+ 0.5
 ```
 
 These exist for all rules, i.e., as `gauss_legendre_points`, `lobatto_legendre_points`,
-`chebyshev_points`, `gauss_chebyshev_points`, `lobatto_chebyshev_points`,
-`clenshaw_curtis_points` and `tanh_sinh_points`, together with the corresponding `*_nodes`
-functions.
+`radau_legendre_points`, `chebyshev_points`, `gauss_chebyshev_points`,
+`lobatto_chebyshev_points`, `clenshaw_curtis_points` and `tanh_sinh_points`, together with
+the corresponding `*_nodes`, `*_point_weights` and `*_weights` functions.
+
+The Radau rules take the prescribed endpoint as a further argument, `:left` or `:right`,
+since the two variants are different rules:
+```julia
+julia> radau_legendre_nodes(2, :right)
+2-element Vector{Float64}:
+ 0.3333333333333333
+ 1.0
+```
 
 
 ## References

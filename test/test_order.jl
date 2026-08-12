@@ -36,10 +36,15 @@
             test_order(ClenshawCurtisQuadrature(BigFloat, s))
             test_order(GaussChebyshevQuadrature(BigFloat, s))
             test_order(LobattoChebyshevQuadrature(BigFloat, s))
+            test_order(RadauLegendreQuadrature(BigFloat, s, Val(:left)))
+            test_order(RadauLegendreQuadrature(BigFloat, s, Val(:right)))
         end
 
-        # Gauss-Chebyshev is the only generated rule defined for a single node
+        # Gauss-Chebyshev and the Radau rules are the generated rules defined for a
+        # single node
         test_order(GaussChebyshevQuadrature(BigFloat, 1))
+        test_order(RadauLegendreQuadrature(BigFloat, 1, Val(:left)))
+        test_order(RadauLegendreQuadrature(BigFloat, 1, Val(:right)))
     end
 
 
@@ -47,6 +52,11 @@
         for s in 2:12
             @test order(GaussLegendreQuadrature(s))     == 2s
             @test order(LobattoLegendreQuadrature(s))   == 2s-2
+
+            # Radau prescribes one endpoint, so it sits halfway between the Gauss
+            # rules, which prescribe none, and the Lobatto rules, which prescribe both
+            @test order(RadauLegendreQuadrature(s, :left))  == 2s-1
+            @test order(RadauLegendreQuadrature(s, :right)) == 2s-1
 
             # the Chebyshev rules pick up one degree for an odd number of nodes,
             # because the monomial of degree s they would otherwise fail on is odd
@@ -57,6 +67,8 @@
         end
 
         @test order(GaussChebyshevQuadrature(1)) == 2
+        @test order(RadauLegendreQuadrature(1, :left))  == 1
+        @test order(RadauLegendreQuadrature(1, :right)) == 1
     end
 
 
@@ -100,6 +112,10 @@
         @test GaussChebyshevQuadrature(1)   == MidpointQuadrature()
         @test GaussChebyshevQuadrature(1)   == GaussLegendreQuadrature(1)
         @test MidpointQuadrature()          == GaussLegendreQuadrature(1)
+
+        # a one-node Radau rule is its prescribed endpoint carrying the whole weight
+        @test RadauLegendreQuadrature(1, :left)  == RiemannQuadratureLeft()
+        @test RadauLegendreQuadrature(1, :right) == RiemannQuadratureRight()
 
         for T in (Float32, Float64)
             @test isequal(ClenshawCurtisQuadrature(T, 3), LobattoLegendreQuadrature(T, 3))

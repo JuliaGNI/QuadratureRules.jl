@@ -33,6 +33,78 @@ julia> clenshaw_curtis_nodes(5)
 clenshaw_curtis_nodes(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_nodes(T, s, Val(2); kwargs...)
 clenshaw_curtis_nodes(s; kwargs...) = clenshaw_curtis_nodes(Float64, s; kwargs...)
 
+@doc raw"""
+    clenshaw_curtis_weights(s; IT=BigFloat)
+    clenshaw_curtis_weights(T, s; IT=BigFloat)
+
+The `s` Clenshaw-Curtis weights for the interval ``[0,1]``, belonging to the nodes
+returned by [`clenshaw_curtis_nodes`](@ref) and summing to ``1``.
+
+They are the weights of the interpolatory rule through the Chebyshev points of the second
+kind, given explicitly by
+
+```math
+w_k = \frac{c_k}{2n} \left( 1 - \sum_{j=1}^{\lfloor n/2 \rfloor}
+      \frac{b_j}{4 j^2 - 1} \cos ( j \vartheta_k ) \right) ,
+      \qquad \vartheta_k = \frac{2 \pi k}{n} , \qquad n = s-1 ,
+```
+
+with ``c_k = 1`` at the endpoints and ``2`` otherwise, and ``b_j = 1`` for the last term
+of an even sum and ``2`` otherwise. All weights are positive. See
+[`ClenshawCurtisQuadrature`](@ref) for the derivation, the literature and the arguments.
+
+Throws an `ErrorException` for `s == 1`.
+
+```jldoctest
+julia> clenshaw_curtis_weights(3)
+3-element Vector{Float64}:
+ 0.16666666666666666
+ 0.6666666666666666
+ 0.16666666666666666
+```
+
+See also [`clenshaw_curtis_point_weights`](@ref) for the same weights on ``[-1,+1]``.
+"""
+function clenshaw_curtis_weights(::Type{T}, s::Integer; IT=BigFloat) where {T}
+    if s == 1
+        throw(ErrorException("Clenshaw-Curtis quadrature is not defined for one stage."))
+    end
+
+    b(j,n) = fld(n,2) == j == cld(n,2) ? IT(1) : IT(2)
+    c(k,n) = mod(k,n) == 0 ? IT(1) : IT(2)
+    ϑ(k,n) = 2 * IT(π) * k / n
+
+    cctrm(k,j,n) = b(j,n) / IT( 4 * j^2 - 1 ) * cos(j * ϑ(k,n))
+    ccsum(k,n) = c(k,n) / IT(2n) * ( IT(1) - mapreduce(j -> cctrm(k,j,n), +, 1:div(n,2); init = zero(IT)) )
+
+    T.([ccsum(i-1,s-1) for i in 1:s])
+end
+
+clenshaw_curtis_weights(s; kwargs...) = clenshaw_curtis_weights(Float64, s; kwargs...)
+
+@doc raw"""
+    clenshaw_curtis_point_weights(s; IT=BigFloat)
+    clenshaw_curtis_point_weights(T, s; IT=BigFloat)
+
+The `s` Clenshaw-Curtis weights for the interval ``[-1,+1]``, i.e., the weights of
+[`clenshaw_curtis_weights`](@ref) doubled so that they sum to ``2``.
+
+Throws an `ErrorException` for `s == 1`.
+
+```jldoctest
+julia> clenshaw_curtis_point_weights(3)
+3-element Vector{Float64}:
+ 0.3333333333333333
+ 1.3333333333333333
+ 0.3333333333333333
+```
+"""
+function clenshaw_curtis_point_weights(::Type{T}, s::Integer; IT=BigFloat) where {T}
+    T.(unscale_weights(clenshaw_curtis_weights(IT, s; IT=IT)))
+end
+
+clenshaw_curtis_point_weights(s; kwargs...) = clenshaw_curtis_point_weights(Float64, s; kwargs...)
+
 
 @doc raw"""
     ClenshawCurtisQuadrature(s; IT=BigFloat)
@@ -57,7 +129,8 @@ with ``c_k = 1`` at the endpoints and ``2`` otherwise, and ``b_j = 1`` for the l
 of an even sum and ``2`` otherwise; a further factor ``1/2`` maps the rule to ``[0,1]``.
 This is the explicit form given by Reid; see the
 [Clenshaw-Curtis](@ref "Clenshaw-Curtis quadrature") section of the manual for the
-derivation and for the literature.
+derivation and for the literature. Nodes and weights are also available on their own as
+[`clenshaw_curtis_nodes`](@ref) and [`clenshaw_curtis_weights`](@ref).
 
 Being an interpolatory rule on `s` nodes, it is exact for polynomials of degree
 ``\le s-1``. For odd `s` it gains one further degree, because the monomial of degree `s`
@@ -106,15 +179,8 @@ function ClenshawCurtisQuadrature(::Type{T}, s::Integer; IT=BigFloat) where {T}
         throw(ErrorException("Clenshaw-Curtis quadrature is not defined for one stage."))
     end
 
-    b(j,n) = fld(n,2) == j == cld(n,2) ? IT(1) : IT(2)
-    c(k,n) = mod(k,n) == 0 ? IT(1) : IT(2)
-    ϑ(k,n) = 2 * IT(π) * k / n
-
-    cctrm(k,j,n) = b(j,n) / IT( 4 * j^2 - 1 ) * cos(j * ϑ(k,n))
-    ccsum(k,n) = c(k,n) / IT(2n) * ( IT(1) - mapreduce(j -> cctrm(k,j,n), +, 1:div(n,2); init = zero(IT)) )
-
     x = clenshaw_curtis_nodes(IT, s; IT=IT)
-    w = [ccsum(i-1,s-1) for i in 1:s]
+    w = clenshaw_curtis_weights(IT, s; IT=IT)
 
     QuadratureRule(isodd(s) ? s+1 : s, x, w, T)
 end

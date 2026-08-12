@@ -1,5 +1,5 @@
 import FastTransforms
-import QuadratureRules: shift_nodes, unshift_nodes
+import QuadratureRules: scale_weights, unscale_weights, shift_nodes, unshift_nodes
 
 @testset "$(rpad("Gauß-Chebyshev",80))" begin
 
@@ -24,6 +24,19 @@ import QuadratureRules: shift_nodes, unshift_nodes
         @test chebyshev_nodes(s, 1)  == chebyshev_nodes(Float64, s, Val(1))
 
         @test unshift_nodes(chebyshev_nodes(Float64, s, Val(1))) ≈ chebyshev_points(Float64, s, Val(1))
+
+        @test chebyshev_weights(Float64, s, Val(1)) == weights(GaussChebyshevQuadrature(s))
+        @test gauss_chebyshev_weights(Float64, s)       == chebyshev_weights(Float64, s, Val(1))
+        @test gauss_chebyshev_point_weights(Float64, s) == chebyshev_point_weights(Float64, s, Val(1))
+        @test gauss_chebyshev_weights(s)       == gauss_chebyshev_weights(Float64, s)
+        @test gauss_chebyshev_point_weights(s) == gauss_chebyshev_point_weights(Float64, s)
+        @test chebyshev_weights(s, 1)       == chebyshev_weights(Float64, s, Val(1))
+        @test chebyshev_point_weights(s, 1) == chebyshev_point_weights(Float64, s, Val(1))
+
+        # here the weights for [0,1] are primary and those for [-1,+1] are derived
+        @test unscale_weights(chebyshev_weights(BigFloat, s, Val(1))) == chebyshev_point_weights(BigFloat, s, Val(1))
+        @test scale_weights(chebyshev_point_weights(Float64, s, Val(1))) ≈ chebyshev_weights(Float64, s, Val(1))
+        @test sum(chebyshev_point_weights(Float64, s, Val(1))) ≈ 2
 
         # Gauss-Chebyshev is Fejér's first rule: an interpolatory rule on the s
         # Chebyshev points of the first kind, hence exact up to degree s-1, and one
@@ -60,5 +73,7 @@ import QuadratureRules: shift_nodes, unshift_nodes
     @test_throws MethodError ChebyshevQuadrature(4, 1; nosuchkeyword=1)
     @test_throws MethodError ChebyshevQuadrature(4, 2; nosuchkeyword=1)
     @test_throws MethodError GaussChebyshevQuadrature(4; nosuchkeyword=1)
+    @test_throws MethodError chebyshev_weights(4, 1; nosuchkeyword=1)
+    @test_throws MethodError gauss_chebyshev_weights(4; nosuchkeyword=1)
 
 end

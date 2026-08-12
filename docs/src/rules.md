@@ -186,6 +186,78 @@ As for the Gauss rule, `fast=true` selects the double precision path through
 FastGaussQuadrature.jl.
 
 
+## Radau-Legendre quadrature
+
+[`RadauLegendreQuadrature`](@ref) constrains exactly one endpoint of the interval to be a
+node, so it sits between the Gauss rules, which constrain none, and the Lobatto rules,
+which constrain both. With $s-1$ free nodes the degree of exactness is $2s-2$ and the order
+$2s-1$. Unlike the Lobatto rules it is defined for `s == 1`, where the single node is the
+prescribed endpoint carrying the whole weight, so the rule degenerates into a Riemann sum.
+
+Which endpoint is prescribed changes the rule, so it is not defaulted but passed explicitly
+as `:left` (the node $-1$, or $0$ after rescaling) or `:right` (the node $+1$, or $1$). The
+two variants are mirror images of one another. They are the node families underlying the
+Radau IA and Radau IIA collocation methods respectively; the asymmetry is the point, since
+prescribing the right endpoint is what makes an implicit Runge-Kutta method stiffly
+accurate. The rules go back to [radau1880](@citet); see [gautschi2000](@citet) for the
+modern treatment of the Jacobi-weighted case and [hairer1996](@citet) for their use in the
+numerical solution of stiff and differential-algebraic equations.
+
+### Nodes
+
+The left Radau points are the $s$ roots of
+
+```math
+R(x) = P_{s-1} (x) + P_s (x) ,
+```
+
+one of which is exactly $-1$, since $P_k(-1) = (-1)^k$ makes the two terms cancel there. To
+see that the remaining $s-1$ roots are the right ones, note that
+
+```math
+\frac{P_{s-1} (x) + P_s (x)}{1 + x} \; \propto \; P^{(0,1)}_{s-1} (x) ,
+```
+
+the Jacobi polynomial for the weight $1+x$ on $[-1,+1]$. Its roots are precisely the free
+nodes of the Gauss rule for that weight, which is what remains after the factor $1+x$ has
+absorbed the prescribed endpoint — exactly the construction
+`FastGaussQuadrature.gaussradau` performs, and the reason $R$ recovers the whole node set
+from a single polynomial, as $D$ does in the Lobatto case.
+
+The roots are Newton-refined from the double precision guesses of
+`FastGaussQuadrature.gaussradau` and the prescribed endpoint is then set to $-1$ exactly, so
+that [`radau_legendre_nodes`](@ref) returns exactly `0` there. The right points are obtained
+by reflection, $x \mapsto -x$, which makes the two variants exact mirror images rather than
+two independent root finds.
+
+```@repl rules
+radau_legendre_points(3, :left)
+radau_legendre_points(3, :right)
+```
+
+### Weights
+
+The weights, too, are available in closed form,
+
+```math
+w_i = \frac{1 \mp x_i}{s^2 \, \big[ P_{s-1} (x_i) \big]^{2}} ,
+```
+
+with the upper sign for the left variant and the lower one for the right. As in the Lobatto
+case the single formula covers the prescribed endpoint as well: there
+$\big[ P_{s-1} (\mp 1) \big]^2 = 1$, so it collapses to the familiar $2/s^2$.
+
+```@repl rules
+RadauLegendreQuadrature(2, :right)
+RadauLegendreQuadrature(3, :right)(x -> x^4)      # exact, degree 4 = 2s-2
+RadauLegendreQuadrature(3, :right)(x -> x^5)      # not exact, degree 5
+RadauLegendreQuadrature(1, :left) == RiemannQuadratureLeft()
+```
+
+As for the Gauss and Lobatto rules, `fast=true` selects the double precision path through
+FastGaussQuadrature.jl.
+
+
 ## Chebyshev points
 
 The Chebyshev-based rules all sample at points that are known in closed form, so no root
@@ -654,6 +726,7 @@ node in the working precision `IT`; unlike the Chebyshev rules there is no summa
 | [`TrapezoidalQuadrature`](@ref) | $0, 1$ | both | 2 | |
 | [`GaussLegendreQuadrature`](@ref) | roots of $P_s$ | no | $2s$ | |
 | [`LobattoLegendreQuadrature`](@ref) | roots of $P_{s-1}'$ and $\pm 1$ | both | $2s-2$ | $s \ge 2$ |
+| [`RadauLegendreQuadrature`](@ref) | roots of $P_{s-1} + P_s$ | one | $2s-1$ | |
 | [`GaussChebyshevQuadrature`](@ref) | Chebyshev, first kind | no | $s$ / $s+1$ | |
 | [`ClenshawCurtisQuadrature`](@ref) | Chebyshev, second kind | both | $s$ / $s+1$ | $s \ge 2$ |
 | [`LobattoChebyshevQuadrature`](@ref) | Chebyshev, second kind | both | $s$ / $s+1$ | $s \ge 2$ |
@@ -662,13 +735,18 @@ node in the working precision `IT`; unlike the Chebyshev rules there is no summa
 The two orders quoted for the Chebyshev-based rules are for an even and an odd number of
 nodes respectively; these rules integrate one additional degree exactly when `s` is odd.
 Every order in the table is sharp, so rules that coincide agree in their order too:
-`ClenshawCurtisQuadrature(3) == LobattoLegendreQuadrature(3)` and
-`GaussChebyshevQuadrature(1) == MidpointQuadrature()`.
+`ClenshawCurtisQuadrature(3) == LobattoLegendreQuadrature(3)`,
+`GaussChebyshevQuadrature(1) == MidpointQuadrature()` and
+`RadauLegendreQuadrature(1, :left) == RiemannQuadratureLeft()`.
+
+The nodes of the Radau rule are stated for the left variant; the right variant is its
+reflection, and which one is meant is selected by the `endpoint` argument rather than
+defaulted.
 
 The dash in the last row is not an omission. Tanh-sinh is the one rule here with no degree of
 exactness whatever, so [`order`](@ref) reports `0` and its accuracy is described by the
 convergence rate discussed above instead. It also differs in taking a level `n` rather than a
 node count `s`; the number of nodes follows from the truncation and grows like $2^n$.
 
-Not provided: Radau rules, which fix one endpoint, and Fejér's second rule, the
-interpolatory rule on the Chebyshev extrema *excluding* the endpoints.
+Not provided: Fejér's second rule, the interpolatory rule on the Chebyshev extrema
+*excluding* the endpoints.

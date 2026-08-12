@@ -79,6 +79,7 @@ as well as functions for generating quadrature rules with an arbitrary number of
 - [`GaussLegendreQuadrature`](@ref)
 - [`LobattoChebyshevQuadrature`](@ref)
 - [`LobattoLegendreQuadrature`](@ref)
+- [`RadauLegendreQuadrature`](@ref)
 - [`TanhSinhQuadrature`](@ref)
 
 Each generated rule accepts the number of nodes `s` and, optionally, the element type of
@@ -116,11 +117,13 @@ true
 See [Quadrature Rules](@ref) for a derivation of each rule.
 
 
-## Accessing Nodes Directly
+## Accessing Nodes and Weights Directly
 
-The nodes of each rule are also available without the corresponding weights. Functions
-named `*_points` return them on the interval ``[-1,+1]``, functions named `*_nodes` on
-the interval ``[0,1]``:
+The nodes and weights of each rule are also available without constructing the rule.
+Functions named `*_points` and `*_point_weights` work on the interval ``[-1,+1]``, where
+the weights sum to ``2``, and functions named `*_nodes` and `*_weights` on the interval
+``[0,1]``, where they sum to ``1`` — for every rule but tanh-sinh, which reaches those
+sums only up to its truncation error:
 ```jldoctest intro
 julia> gauss_legendre_points(2)
 2-element Vector{Float64}:
@@ -131,13 +134,28 @@ julia> gauss_legendre_nodes(2)
 2-element Vector{Float64}:
  0.2113248654051871
  0.7886751345948129
+
+julia> gauss_legendre_weights(2)
+2-element Vector{Float64}:
+ 0.5
+ 0.5
 ```
 
 These exist for all rules, i.e., as [`gauss_legendre_points`](@ref),
-[`lobatto_legendre_points`](@ref), [`chebyshev_points`](@ref),
-[`gauss_chebyshev_points`](@ref), [`lobatto_chebyshev_points`](@ref),
-[`clenshaw_curtis_points`](@ref) and [`tanh_sinh_points`](@ref), together with the
-corresponding `*_nodes` functions.
+[`lobatto_legendre_points`](@ref), [`radau_legendre_points`](@ref),
+[`chebyshev_points`](@ref), [`gauss_chebyshev_points`](@ref),
+[`lobatto_chebyshev_points`](@ref), [`clenshaw_curtis_points`](@ref) and
+[`tanh_sinh_points`](@ref), together with the corresponding `*_nodes`, `*_point_weights`
+and `*_weights` functions.
+
+The Radau family takes the prescribed endpoint as a further argument, `:left` or `:right`,
+since the two variants are different rules:
+```jldoctest intro
+julia> radau_legendre_nodes(2, :right)
+2-element Vector{Float64}:
+ 0.3333333333333333
+ 1.0
+```
 
 
 ## References

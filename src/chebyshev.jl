@@ -78,6 +78,81 @@ end
 
 chebyshev_nodes(s, kind; kwargs...) = chebyshev_nodes(Float64, s, Val(kind); kwargs...)
 
+@doc raw"""
+    chebyshev_weights(s, kind; IT=BigFloat)
+    chebyshev_weights(T, s, ::Val{kind}; IT=BigFloat)
+
+The `s` interpolatory weights for the interval ``[0,1]`` belonging to the Chebyshev nodes
+of the first (`kind = 1`) or second (`kind = 2`) kind, summing to ``1``.
+
+For `kind = 1` these are the weights of Fejér's first rule,
+
+```math
+w_i = \frac{1}{s} \left( 1 - 2 \sum_{j=1}^{\lfloor s/2 \rfloor}
+      \frac{\cos (2 j \vartheta_i)}{4 j^2 - 1} \right) ,
+      \qquad \vartheta_i = \frac{(2i-1) \pi}{2s} ,
+```
+
+already normalised to ``[0,1]``. For `kind = 2` the nodes coincide with the
+Clenshaw-Curtis nodes, so the weights are those of
+[`clenshaw_curtis_weights`](@ref), to which this function delegates.
+
+See [`chebyshev_points`](@ref) for the definition of the two kinds and for the arguments.
+`kind = 2` requires `s ≥ 2`.
+
+```jldoctest
+julia> chebyshev_weights(3, 1)
+3-element Vector{Float64}:
+ 0.2222222222222222
+ 0.5555555555555556
+ 0.2222222222222222
+```
+
+See also [`chebyshev_point_weights`](@ref) for the same weights on ``[-1,+1]``.
+"""
+function chebyshev_weights(::Type{T}, s::Integer, ::Val{1}; IT=BigFloat) where {T}
+    b = zeros(IT, s)
+    for i in eachindex(b)
+        tj = zero(IT)
+        th = IT(π) * (2i-1) / (2s)
+        for j in 1:div(s,2)
+            tj += cos(2j*th) / IT(4j^2 - 1)
+        end
+        b[i] = (1 - 2tj) / IT(s)
+    end
+
+    T.(b)
+end
+
+chebyshev_weights(::Type{T}, s::Integer, ::Val{2}; kwargs...) where {T} = clenshaw_curtis_weights(T, s; kwargs...)
+
+chebyshev_weights(s, kind; kwargs...) = chebyshev_weights(Float64, s, Val(kind); kwargs...)
+
+@doc raw"""
+    chebyshev_point_weights(s, kind; IT=BigFloat)
+    chebyshev_point_weights(T, s, ::Val{kind}; IT=BigFloat)
+
+The `s` interpolatory weights for the interval ``[-1,+1]`` belonging to the Chebyshev
+points of the first (`kind = 1`) or second (`kind = 2`) kind, i.e., the weights of
+[`chebyshev_weights`](@ref) doubled so that they sum to ``2``.
+
+See [`chebyshev_points`](@ref) for the definition of the two kinds and for the arguments.
+`kind = 2` requires `s ≥ 2`.
+
+```jldoctest
+julia> chebyshev_point_weights(3, 1)
+3-element Vector{Float64}:
+ 0.4444444444444444
+ 1.1111111111111112
+ 0.4444444444444444
+```
+"""
+function chebyshev_point_weights(::Type{T}, s::Integer, kind::Val; IT=BigFloat) where {T}
+    T.(unscale_weights(chebyshev_weights(IT, s, kind; IT=IT)))
+end
+
+chebyshev_point_weights(s, kind; kwargs...) = chebyshev_point_weights(Float64, s, Val(kind); kwargs...)
+
 
 """
     gauss_chebyshev_points(s; IT=BigFloat)
@@ -100,6 +175,28 @@ the first kind, cf. [`chebyshev_nodes`](@ref).
 """
 gauss_chebyshev_nodes(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_nodes(T, s, Val(1); kwargs...)
 gauss_chebyshev_nodes(s; kwargs...) = gauss_chebyshev_nodes(Float64, s; kwargs...)
+
+"""
+    gauss_chebyshev_weights(s; IT=BigFloat)
+    gauss_chebyshev_weights(T, s; IT=BigFloat)
+
+The `s` Gauss-Chebyshev weights for the interval ``[0,1]``, i.e., the weights of Fejér's
+first rule, cf. [`chebyshev_weights`](@ref). They sum to `1`.
+
+These are the weights of [`GaussChebyshevQuadrature`](@ref).
+"""
+gauss_chebyshev_weights(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_weights(T, s, Val(1); kwargs...)
+gauss_chebyshev_weights(s; kwargs...) = gauss_chebyshev_weights(Float64, s; kwargs...)
+
+"""
+    gauss_chebyshev_point_weights(s; IT=BigFloat)
+    gauss_chebyshev_point_weights(T, s; IT=BigFloat)
+
+The `s` Gauss-Chebyshev weights for the interval ``[-1,+1]``, cf.
+[`chebyshev_point_weights`](@ref). They sum to `2`.
+"""
+gauss_chebyshev_point_weights(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_point_weights(T, s, Val(1); kwargs...)
+gauss_chebyshev_point_weights(s; kwargs...) = gauss_chebyshev_point_weights(Float64, s; kwargs...)
 
 """
     lobatto_chebyshev_points(s; IT=BigFloat)
@@ -127,6 +224,34 @@ Requires `s ≥ 2`.
 """
 lobatto_chebyshev_nodes(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_nodes(T, s, Val(2); kwargs...)
 lobatto_chebyshev_nodes(s; kwargs...) = lobatto_chebyshev_nodes(Float64, s; kwargs...)
+
+"""
+    lobatto_chebyshev_weights(s; IT=BigFloat)
+    lobatto_chebyshev_weights(T, s; IT=BigFloat)
+
+The `s` Lobatto-Chebyshev weights for the interval ``[0,1]``, cf.
+[`chebyshev_weights`](@ref). They sum to `1`.
+
+As the nodes coincide with the Clenshaw-Curtis nodes, so do the weights: these are
+identical to [`clenshaw_curtis_weights`](@ref), and they are the weights of
+[`LobattoChebyshevQuadrature`](@ref).
+
+Requires `s ≥ 2`.
+"""
+lobatto_chebyshev_weights(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_weights(T, s, Val(2); kwargs...)
+lobatto_chebyshev_weights(s; kwargs...) = lobatto_chebyshev_weights(Float64, s; kwargs...)
+
+"""
+    lobatto_chebyshev_point_weights(s; IT=BigFloat)
+    lobatto_chebyshev_point_weights(T, s; IT=BigFloat)
+
+The `s` Lobatto-Chebyshev weights for the interval ``[-1,+1]``, cf.
+[`chebyshev_point_weights`](@ref). They sum to `2`.
+
+Requires `s ≥ 2`.
+"""
+lobatto_chebyshev_point_weights(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_point_weights(T, s, Val(2); kwargs...)
+lobatto_chebyshev_point_weights(s; kwargs...) = lobatto_chebyshev_point_weights(Float64, s; kwargs...)
 
 @doc raw"""
     GaussChebyshevQuadrature(s; IT=BigFloat)
@@ -183,15 +308,7 @@ See also [`ClenshawCurtisQuadrature`](@ref) and [`ChebyshevQuadrature`](@ref).
 """
 function GaussChebyshevQuadrature(::Type{T}, s::Integer; IT=BigFloat) where {T}
     c = chebyshev_nodes(IT, s, Val(1); IT=IT)
-    b = zero(c)
-    for i in eachindex(b)
-        tj = zero(IT)
-        th = IT(π) * (2i-1) / (2s)
-        for j in 1:div(s,2)
-            tj += cos(2j*th) / IT(4j^2 - 1)
-        end
-        b[i] = (1 - 2tj) / IT(s)
-    end
+    b = chebyshev_weights(IT, s, Val(1); IT=IT)
 
     QuadratureRule(isodd(s) ? s+1 : s, c, b, T)
 end
