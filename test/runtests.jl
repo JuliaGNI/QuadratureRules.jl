@@ -14,12 +14,9 @@ include("test_tabulated_quadratures.jl")
 include("test_order.jl")
 include("test_precision.jl")
 
-# The symbolic tests need SymPyPythonCall, which brings a private Python installation with it.
-# It is therefore not part of the package's test target but of test/symbolic/Project.toml, and
-# the tests run whenever the active environment provides it, i.e. in that environment.
-if isnothing(Base.identify_package("SymPyPythonCall"))
-    @info "SymPyPythonCall is not available in this environment, skipping the symbolic tests. " *
-          "Run them with --project=test/symbolic."
-else
-    include("test_symbolic.jl")
-end
+# test_symbolic.jl is deliberately not included here. It needs SymPyPythonCall, which brings a
+# private Python installation with it, so it is not part of this package's test target but of
+# test/symbolic/Project.toml, and runs on its own:
+#
+#     julia --project=test/symbolic -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+#     julia --project=test/symbolic test/test_symbolic.jl

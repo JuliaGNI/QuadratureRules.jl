@@ -1,23 +1,21 @@
-# Environment for the test suite including the symbolic tests, which need SymPyPythonCall and,
-# through it, a private Python installation with sympy. Keeping that out of the package's own
-# test target lets `Pkg.test()` run the numerical suite without the Python stack; the symbolic
-# job in .github/workflows/CI.yml runs the suite in this environment instead, where
-# test/runtests.jl picks the symbolic tests up.
+# Environment for test/test_symbolic.jl, which needs SymPyPythonCall and, through it, a private
+# Python installation with sympy. Keeping that out of the package's test target lets
+# `Pkg.test()` run without the Python stack; the symbolic job in .github/workflows/CI.yml runs
+# the symbolic tests in this environment instead.
 #
-# QuadratureRules itself is deliberately not resolved here: `Pkg.develop(PackageSpec(path=pwd()))`
-# adds it from the checkout, as it does for docs/Project.toml. A committed `[sources]` entry
-# would either name an absolute path or need Julia 1.11.
+# The deps are those of test/test_symbolic.jl alone, deliberately not a copy of the package's
+# test target: a copy would have to be kept in step with it by hand.
+#
+# QuadratureRules itself is not resolved here — `Pkg.develop(PackageSpec(path=pwd()))` adds it
+# from the checkout, as it does for docs/Project.toml. A committed `[sources]` entry would
+# either name an absolute path or need Julia 1.11.
 
 [deps]
-FastGaussQuadrature = "442a2c76-b920-505d-bb47-c5924d526838"
-FastTransforms = "057dd010-8810-581a-b7be-e3fc3b93f78c"
 QuadratureRules = "a08977f5-a20d-4b99-b11f-f5ea535e0575"
 SymPyPythonCall = "bc8888f7-b21e-4b7c-a06a-5d9c9496438c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
-FastGaussQuadrature = "1"
-FastTransforms = "0.17"
 SymPyPythonCall = "0.5"
 Test = "1"
 julia = "1.10"

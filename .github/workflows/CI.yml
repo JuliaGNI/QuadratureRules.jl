@@ -61,7 +61,7 @@ jobs:
         # The symbolic tests are not part of the test target above, since SymPyPythonCall
         # provisions a private Python environment with sympy on first use, which the matrix
         # would pay for in every one of its entries. They run here instead, in the environment
-        # of test/symbolic/Project.toml, which test/runtests.jl detects.
+        # of test/symbolic/Project.toml.
         name: Symbolic - Julia ${{ matrix.version }} - ${{ matrix.os }}
         runs-on: ${{ matrix.os }}
         strategy:
@@ -86,4 +86,4 @@ jobs:
                     Pkg.instantiate()
                     Pkg.precompile()'
             - name: Run tests
-              run: julia --project=test/symbolic test/runtests.jl
+              run: julia --project=test/symbolic test/test_symbolic.jl
