@@ -90,7 +90,8 @@ the endpoints, which makes it the rule to use for an integrand singular there, s
 The nodes and weights of each rule are also available without constructing the rule.
 Functions named `*_points` and `*_point_weights` work on the interval `[-1,+1]`, where the
 weights sum to `2`, and functions named `*_nodes` and `*_weights` on the interval `[0,1]`,
-where they sum to `1`:
+where they sum to `1` — for every rule but tanh-sinh, which reaches those sums only up to
+its truncation error:
 ```julia
 julia> gauss_legendre_points(2)
 2-element Vector{Float64}:

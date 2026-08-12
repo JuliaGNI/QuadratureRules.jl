@@ -168,6 +168,67 @@ end
 
 tanh_sinh_nodes(n; kwargs...) = tanh_sinh_nodes(Float64, n; kwargs...)
 
+@doc raw"""
+    tanh_sinh_weights(n; IT=BigFloat)
+    tanh_sinh_weights(T, n; IT=BigFloat)
+
+The tanh-sinh weights of level `n` for the interval ``[0,1]``, belonging to the nodes
+returned by [`tanh_sinh_nodes`](@ref), i.e. the trapezoidal weights ``h`` times the
+Jacobian of the tanh-sinh transformation,
+
+```math
+b_k = \frac{\pi h}{4} \, \frac{\cosh (k h)}{\cosh^2 \big( \tfrac{\pi}{2} \sinh (k h) \big)} ,
+\qquad h = 2^{-n} .
+```
+
+They are symmetric about the centre weight bit for bit, and all of them are positive.
+
+Unlike every other family in this package these weights sum to ``1`` only up to the
+truncation error, since the rule is not exact for the constant — see
+[`TanhSinhQuadrature`](@ref), whose weights these are, for the arguments and for the
+truncation criterion.
+
+```jldoctest
+julia> b = tanh_sinh_weights(1);
+
+julia> b == reverse(b)
+true
+
+julia> isapprox(sum(b), 1; atol = 1E-5)
+true
+```
+
+See also [`tanh_sinh_point_weights`](@ref) for the same weights on ``[-1,+1]``.
+"""
+function tanh_sinh_weights(::Type{T}, n::Integer; IT=BigFloat) where {T}
+    _, b = _tanh_sinh(T, n; IT=IT)
+    T.(b)
+end
+
+tanh_sinh_weights(n; kwargs...) = tanh_sinh_weights(Float64, n; kwargs...)
+
+@doc raw"""
+    tanh_sinh_point_weights(n; IT=BigFloat)
+    tanh_sinh_point_weights(T, n; IT=BigFloat)
+
+The tanh-sinh weights of level `n` for the interval ``[-1,+1]``, i.e. the weights of
+[`tanh_sinh_weights`](@ref) doubled, belonging to the points returned by
+[`tanh_sinh_points`](@ref). They sum to ``2`` only up to the truncation error.
+
+See [`TanhSinhQuadrature`](@ref) for the arguments.
+
+```jldoctest
+julia> isapprox(sum(tanh_sinh_point_weights(1)), 2; atol = 1E-5)
+true
+```
+"""
+function tanh_sinh_point_weights(::Type{T}, n::Integer; IT=BigFloat) where {T}
+    _, b = _tanh_sinh(T, n; IT=IT)
+    T.(unscale_weights(b))
+end
+
+tanh_sinh_point_weights(n; kwargs...) = tanh_sinh_point_weights(Float64, n; kwargs...)
+
 
 @doc raw"""
     TanhSinhQuadrature(n; IT=BigFloat)
@@ -254,7 +315,8 @@ julia> isfinite(quad(x -> 1 / sqrt(x * (1 - x))))  # no node sits on an endpoint
 true
 ```
 
-See also [`tanh_sinh_nodes`](@ref) and [`tanh_sinh_points`](@ref) for the nodes alone, and
+See also [`tanh_sinh_nodes`](@ref) and [`tanh_sinh_points`](@ref) for the nodes alone,
+[`tanh_sinh_weights`](@ref) and [`tanh_sinh_point_weights`](@ref) for the weights, and
 [`GaussLegendreQuadrature`](@ref), which is the better choice for an integrand that is
 smooth up to and including the endpoints.
 """

@@ -147,6 +147,16 @@
                 @test issorted(x, lt = <=)
                 @test allunique(x)
             end
+
+            # its weights truncate with the nodes, so they too must match in length; they
+            # are only asserted positive, the sum being subject to the truncation error
+            for accessor in (tanh_sinh_point_weights, tanh_sinh_weights)
+                w = accessor(T, n; IT=IT)
+                @test eltype(w) == T
+                @test length(w) == nnodes(quad)
+                @test all(wᵢ > 0 for wᵢ in w)
+                @test w == reverse(w)
+            end
         end
     end
 

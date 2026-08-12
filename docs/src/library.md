@@ -100,8 +100,11 @@ Within each family one convention is primary and the other is derived from it, s
 two agree exactly at equal working precision and up to rounding across precisions. The
 nodes are always derived from the points. For the weights it depends on the family: the
 Legendre closed forms are formulated on ``[-1,+1]``, so there the `*_point_weights` are
-primary, whereas the Chebyshev and Clenshaw-Curtis formulas already carry the
+primary, whereas the Chebyshev, Clenshaw-Curtis and tanh-sinh formulas already carry the
 normalisation to ``[0,1]``, so there the `*_weights` are.
+
+The weight sums quoted above hold for every family except tanh-sinh, which is exact for no
+polynomial at all and therefore attains them only up to its truncation error.
 
 ### Legendre
 
@@ -146,6 +149,8 @@ clenshaw_curtis_weights
 ```@docs
 tanh_sinh_points
 tanh_sinh_nodes
+tanh_sinh_point_weights
+tanh_sinh_weights
 ```
 
 
