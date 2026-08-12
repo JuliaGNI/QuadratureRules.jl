@@ -1,5 +1,8 @@
 ```@meta
 CurrentModule = QuadratureRules
+DocTestSetup = quote
+    using QuadratureRules
+end
 ```
 
 # QuadratureRules
@@ -20,10 +23,10 @@ After loading the Quadrature Rule module by
 ```julia
 julia> using QuadratureRules
 ```
-a `QuadratureRule` can be created by calling any one of the provided constructors, for example
-```julia
+a [`QuadratureRule`](@ref) can be created by calling any one of the provided constructors, for example
+```jldoctest intro
 julia> quad = TrapezoidalQuadrature()
-QuadratureRule{Float64,2}(2, [0.0, 1.0], [0.5, 0.5])
+QuadratureRule{Float64, 2}(2, [0.0, 1.0], [0.5, 0.5])
 ```
 
 The `QuadratureRule` type has the following fields:
@@ -31,23 +34,37 @@ The `QuadratureRule` type has the following fields:
 - `nodes` the nodes,
 - `weights` the weights.
 
-A functor is defined, which integrates functions `f(x)` using the quadrature rule:
-```
+A functor is defined, which integrates functions `f(x)` over the interval ``[0,1]`` using the quadrature rule:
+```jldoctest intro
 julia> quad(x -> x^2)
 0.5
 ```
 
 There are several convenience functions for accessing the fields:
-- `nnodes(::QuadratureRule{T,N}) where {T,N} = N`
-- `nodes(quad::QuadratureRule) = quad.nodes`
-- `order(quad::QuadratureRule) = quad.order`
-- `weights(quad::QuadratureRule) = quad.weights`
+- [`nnodes`](@ref) the number of nodes,
+- [`nodes`](@ref) the nodes,
+- [`order`](@ref) the order,
+- [`weights`](@ref) the weights,
 
 as well as a function for looping over all nodes and weights:
 - `Base.eachindex(quad::QuadratureRule) = eachindex(quad.nodes, quad.weights)`
 
+All rules are defined on the reference interval ``[0,1]`` and their weights sum to one.
+An integral over a general interval ``[a,b]`` is obtained by rescaling the argument:
+```jldoctest intro
+julia> a, b = 0.0, 2.0;
 
-## Quadrature Rules
+julia> quad = GaussLegendreQuadrature(8);
+
+julia> (b - a) * quad(ξ -> exp(a + (b - a) * ξ))   # ∫₀² exp(x) dx = e² - 1
+6.38905609893065
+
+julia> exp(2) - 1
+6.38905609893065
+```
+
+
+## Available Rules
 
 There are several pre-tabulated quadrature rules:
 - [`RiemannQuadratureLeft`](@ref)
@@ -55,12 +72,60 @@ There are several pre-tabulated quadrature rules:
 - [`MidpointQuadrature`](@ref)
 - [`TrapezoidalQuadrature`](@ref)
 
-as well as functions for generating quadrature rules on the fly:
+as well as functions for generating quadrature rules with an arbitrary number of nodes on the fly:
+- [`ChebyshevQuadrature`](@ref)
 - [`ClenshawCurtisQuadrature`](@ref)
 - [`GaussChebyshevQuadrature`](@ref)
 - [`GaussLegendreQuadrature`](@ref)
 - [`LobattoChebyshevQuadrature`](@ref)
 - [`LobattoLegendreQuadrature`](@ref)
+
+Each generated rule accepts the number of nodes `s` and, optionally, the element type of
+the resulting rule:
+```jldoctest intro
+julia> GaussLegendreQuadrature(2)
+QuadratureRule{Float64, 2}(4, [0.2113248654051871, 0.7886751345948129], [0.5, 0.5])
+
+julia> eltype(GaussLegendreQuadrature(BigFloat, 2))
+BigFloat
+```
+
+Nodes and weights are computed in an internal working precision, controlled by the
+keyword argument `IT` and defaulting to `BigFloat`, and converted to the requested
+element type only at the end, so that the result is accurate to full precision. Where
+this is not needed, the Legendre rules accept `fast=true`, which takes the nodes and
+weights directly from
+[FastGaussQuadrature.jl](https://github.com/JuliaApproximation/FastGaussQuadrature.jl)
+in double precision:
+```jldoctest intro
+julia> GaussLegendreQuadrature(5) ≈ GaussLegendreQuadrature(5; fast=true)
+true
+```
+
+See [Quadrature Rules](@ref) for a derivation of each rule.
+
+
+## Accessing Nodes Directly
+
+The nodes of each rule are also available without the corresponding weights. Functions
+named `*_points` return them on the interval ``[-1,+1]``, functions named `*_nodes` on
+the interval ``[0,1]``:
+```jldoctest intro
+julia> gauss_legendre_points(2)
+2-element Vector{Float64}:
+ -0.5773502691896257
+  0.5773502691896257
+
+julia> gauss_legendre_nodes(2)
+2-element Vector{Float64}:
+ 0.2113248654051871
+ 0.7886751345948129
+```
+
+These exist for all rules, i.e., as [`gauss_legendre_points`](@ref),
+[`lobatto_legendre_points`](@ref), [`chebyshev_points`](@ref),
+[`gauss_chebyshev_points`](@ref), [`lobatto_chebyshev_points`](@ref) and
+[`clenshaw_curtis_points`](@ref), together with the corresponding `*_nodes` functions.
 
 
 ## References
