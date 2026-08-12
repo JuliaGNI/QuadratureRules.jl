@@ -103,8 +103,9 @@ b_i = \bigg( \frac{dP}{dx} (c_i) \bigg)^{-2}
       \qquad P(x) = P_s (2x-1) ,
 ```
 
-the two forms agreeing because the substitution contributes a factor ``2`` from ``dx`` and a
-factor ``4`` from ``P'^2``. See [`gauss_legendre_nodes`](@ref) for the arguments.
+the two forms agreeing because the substitution multiplies the integral by ``2`` — four from
+the squared denominator, one half from ``dx`` — and ``P'^2`` by ``4``, which leaves the
+halving. See [`gauss_legendre_nodes`](@ref) for the arguments.
 
 ```jldoctest
 julia> gauss_legendre_weights(2)

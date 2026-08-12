@@ -24,15 +24,27 @@ Julia reading of `0.x`: a bump of the *minor* version may break.
   exact mirror images.
 - **The Rodrigues formula for the Legendre polynomial** is documented alongside the three-term
   recurrence, in both `QuadratureRules._legendre` and the manual, with the reason the
-  recurrence is used for evaluation instead. It is what relates ``P_{s-1}'`` to the
-  derivative form of the Lobatto nodes, a step the manual previously asserted without stating
-  the identity it rests on.
+  recurrence is used for evaluation instead. It is what identifies the derivative form of the
+  Lobatto nodes as an antiderivative of ``P_{s-1}``, a step the manual previously asserted
+  without stating the identity it rests on. The Rodrigues formula for the Jacobi polynomial
+  ``P^{(0,1)}_{s-1}`` is now stated in the Radau section for the same reason: it is what the
+  unit-interval Radau polynomials rest on, and it makes explicit that the differentiated
+  product is its *numerator*, the division by ``1+x`` being what removes the prescribed
+  endpoint.
 - **The moment conditions are described as a construction, not only as a test.** For a
   prescribed node set they are a transposed-Vandermonde system in the weights; the manual now
   says so, notes that this package uses closed forms instead because that system is badly
   conditioned for larger `s`, and mentions that the Runge-Kutta literature defines several
   families through exactly these conditions under the name of the simplifying assumption
   ``B(s)``.
+
+### Fixed
+
+- **`QuadratureRules._legendre` now carries the three-term recurrence upwards in a loop.** It
+  recursed on ``j-1`` and ``j-2``, so it re-evaluated the same ``P_k`` exponentially often —
+  a degree ``30`` polynomial cost almost three million calls — which made building the node
+  polynomial the dominant cost for larger `s`. The arithmetic is unchanged and performed in
+  the same order, so every node and weight the package returns is identical bit for bit.
 
 ## [0.2.0] – 2026-08-13
 

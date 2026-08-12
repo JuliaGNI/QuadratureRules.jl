@@ -74,11 +74,19 @@ default [`UnitInterval`](@ref) they are the roots of
 \qquad \text{for } \texttt{:right} ,
 ```
 
-each of degree ``s``. These agree with ``P_{s-1} + P_s`` because dividing that sum by ``1+x``
-leaves the Jacobi polynomial ``P^{(0,1)}_{s-1}``, whose Rodrigues formula is exactly the
-differentiated product above once the interval is mapped; the factor absorbed by the division
-is the prescribed endpoint. The two expressions are mirror images of one another under
-``x \mapsto 1-x``, as the node sets are.
+each of degree ``s``. These agree with ``P_{s-1} + P_s`` through the Rodrigues formula for the
+Jacobi polynomial ``P^{(0,1)}_{s-1}``,
+
+```math
+P^{(0,1)}_{s-1} (x) \; \propto \; \frac{1}{1+x} \, \frac{d^{\,s-1}}{dx^{\,s-1}}
+    \big( (1-x)^{s-1} (1+x)^{s} \big) ,
+```
+
+whose *numerator* is what the differentiated product above becomes under the map to
+``[-1,+1]``. That numerator is therefore proportional to ``P_{s-1} + P_s`` itself, of degree
+``s``, and the division by ``1+x`` is precisely what strips the prescribed endpoint off to
+leave the degree ``s-1`` Jacobi polynomial whose roots are the free nodes. The two
+expressions are mirror images of one another under ``x \mapsto 1-x``, as the node sets are.
 
 # Arguments
 - `T`: element type of the returned vector, `Float64` if omitted.

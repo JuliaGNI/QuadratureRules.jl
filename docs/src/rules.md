@@ -101,8 +101,8 @@ P_j (x) = \frac{1}{j! \, 2^j} \, \frac{d^j}{dx^j} \big( x^2 - 1 \big)^j
 ```
 
 is not used for evaluation — it would build and differentiate a polynomial of degree $2j$
-where the recurrence costs $O(j)$ operations — but it is what relates $P_{s-1}'$ to the
-derivative form of the Lobatto nodes below.
+where the recurrence costs $O(j)$ operations — but it is what identifies the derivative form
+of the Lobatto nodes below as an antiderivative of $P_{s-1}$.
 
 Its roots have no closed form. They are obtained by taking the double precision values
 from `FastGaussQuadrature.gausslegendre` — which for small `s` computes them by the
@@ -136,8 +136,8 @@ b_i = \bigg( \frac{dP}{dx} (c_i) \bigg)^{-2}
       \qquad P(x) = P_s (2x-1) ,
 ```
 
-the halving being accounted for by the factor $2$ that $dx$ contributes and the factor $4$
-that $P'^2$ does.
+the halving coming out of the substitution, which multiplies the integral by $2$ — four from
+the squared denominator, one half from $dx$ — and $P'^2$ by $4$.
 
 ```@repl rules
 quad = GaussLegendreQuadrature(3)
@@ -260,15 +260,27 @@ absorbed the prescribed endpoint — exactly the construction
 `FastGaussQuadrature.gaussradau` performs, and the reason $R$ recovers the whole node set
 from a single polynomial, as $D$ does in the Lobatto case.
 
+Its Rodrigues formula, the $(\alpha,\beta) = (0,1)$ case of the Jacobi one already used for
+$P^{(1,1)}_{s-2}$ above, reads
+
+```math
+P^{(0,1)}_{s-1} (x) \; \propto \; \frac{1}{1+x} \,
+    \frac{d^{\,s-1}}{dx^{\,s-1}} \big( (1-x)^{s-1} (1+x)^{s} \big) ,
+```
+
+so that the differentiated product alone — of degree $s$, one higher than the Jacobi
+polynomial, the difference being the factor $1+x$ that carries the prescribed endpoint — is
+proportional to $R$ itself.
+
 The roots are Newton-refined from the double precision guesses of
 `FastGaussQuadrature.gaussradau` and the prescribed endpoint is then set to $-1$ exactly, so
 that [`radau_legendre_nodes`](@ref) returns exactly `0` there. The right points are obtained
 by reflection, $x \mapsto -x$, which makes the two variants exact mirror images rather than
 two independent root finds.
 
-Feeding the Jacobi-Rodrigues formula above through the map to $[0,1]$ turns $R$ into a
-differentiated product, which is the form in which the Radau nodes are usually stated in the
-Runge-Kutta literature: on $[0,1]$ they are the roots of
+Feeding that differentiated product through the map to $[0,1]$, under which $1 - \xi = 2(1-x)$
+and $1 + \xi = 2x$ for $\xi = 2x - 1$, gives the form in which the Radau nodes are usually
+stated in the Runge-Kutta literature: on $[0,1]$ they are the roots of
 
 ```math
 \frac{d^{\,s-1}}{dx^{\,s-1}} \big( x^s (x - 1)^{s-1} \big)
