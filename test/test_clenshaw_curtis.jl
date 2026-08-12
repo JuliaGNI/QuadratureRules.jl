@@ -1,9 +1,11 @@
 import FastTransforms
-import QuadratureRules: scale_weights, shift_nodes, unshift_nodes
+import QuadratureRules: scale_weights, unscale_weights, shift_nodes, unshift_nodes
 
 @testset "$(rpad("Clenshaw-Curtis",80))" begin
 
     @test_throws ErrorException ClenshawCurtisQuadrature(1)
+    @test_throws ErrorException clenshaw_curtis_weights(1)
+    @test_throws ErrorException clenshaw_curtis_point_weights(1)
 
     for s in 2:10
         @test ClenshawCurtisQuadrature(s) == ClenshawCurtisQuadrature(Float64, s)
@@ -40,6 +42,20 @@ import QuadratureRules: scale_weights, shift_nodes, unshift_nodes
 
         @test clenshaw_curtis_points(s) == clenshaw_curtis_points(Float64, s)
         @test clenshaw_curtis_nodes(s)  == clenshaw_curtis_nodes(Float64, s)
+
+        # the same holds for the weights, which are primary on [0,1] here
+        @test clenshaw_curtis_weights(Float64, s) ≈ b
+        @test clenshaw_curtis_weights(Float64, s)  ==  weights(ClenshawCurtisQuadrature(s))
+        @test clenshaw_curtis_weights(Float32, s)  ==  weights(ClenshawCurtisQuadrature(Float32, s))
+        @test clenshaw_curtis_weights(Float64, s; IT=Float64) == weights(ClenshawCurtisQuadrature(Float64, s; IT=Float64))
+        @test clenshaw_curtis_weights(BigFloat, s) == weights(ClenshawCurtisQuadrature(BigFloat, s))
+
+        @test clenshaw_curtis_weights(s)       == clenshaw_curtis_weights(Float64, s)
+        @test clenshaw_curtis_point_weights(s) == clenshaw_curtis_point_weights(Float64, s)
+
+        @test unscale_weights(clenshaw_curtis_weights(BigFloat, s)) == clenshaw_curtis_point_weights(BigFloat, s)
+        @test scale_weights(clenshaw_curtis_point_weights(Float64, s)) ≈ clenshaw_curtis_weights(Float64, s)
+        @test sum(clenshaw_curtis_point_weights(Float64, s)) ≈ 2
 
         # all Clenshaw-Curtis weights are positive (Imhof, 1963); this is what
         # guarantees convergence for every continuous integrand

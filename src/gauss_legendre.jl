@@ -54,6 +54,78 @@ end
 
 gauss_legendre_nodes(s; kwargs...) = gauss_legendre_nodes(Float64, s; kwargs...)
 
+# The Gauss-Legendre weights on [-1,+1] belonging to the precomputed points `x`, in their
+# own arithmetic. Taking the points as an argument lets the constructor share the closed
+# form with gauss_legendre_point_weights without repeating the root find.
+function _gauss_legendre_point_weights(x::AbstractVector{IT}) where {IT}
+    s = length(x)
+
+    P = _legendre_polynomial(s, IT)
+    D = Polynomials.derivative(P)
+
+    inti(i) = begin
+        I = Polynomials.integrate( ( P ÷ Polynomial(IT[-x[i], 1]) )^2 )
+        I(1) - I(-1)
+    end
+
+    [ inti(i) / D(x[i])^2  for i in 1:s ]
+end
+
+@doc raw"""
+    gauss_legendre_point_weights(s)
+    gauss_legendre_point_weights(T, s; IT=BigFloat)
+
+The `s` Gauss-Legendre weights for the interval ``[-1,+1]``, belonging to the points
+returned by [`gauss_legendre_points`](@ref) and summing to ``2``.
+
+They are computed from the closed form
+
+```math
+w_i = \frac{1}{P_s'(x_i)^2} \int_{-1}^{+1} \left( \frac{P_s(x)}{x - x_i} \right)^2 dx ,
+```
+
+where the integrand is the square of the (unnormalised) Lagrange basis polynomial
+associated with ``x_i``, evaluated by exact polynomial division and integration in the
+arithmetic `IT`. See [`gauss_legendre_points`](@ref) for the arguments.
+
+```jldoctest
+julia> gauss_legendre_point_weights(2)
+2-element Vector{Float64}:
+ 1.0
+ 1.0
+```
+
+See also [`gauss_legendre_weights`](@ref) for the same weights on ``[0,1]``.
+"""
+function gauss_legendre_point_weights(::Type{T}, s::Integer; IT=BigFloat) where {T}
+    T.(_gauss_legendre_point_weights(gauss_legendre_points(IT, s; IT=IT)))
+end
+
+gauss_legendre_point_weights(s; kwargs...) = gauss_legendre_point_weights(Float64, s; kwargs...)
+
+@doc raw"""
+    gauss_legendre_weights(s)
+    gauss_legendre_weights(T, s; IT=BigFloat)
+
+The `s` Gauss-Legendre weights for the interval ``[0,1]``, i.e., the weights of
+[`gauss_legendre_point_weights`](@ref) halved so that they sum to ``1``.
+
+These are the weights of [`GaussLegendreQuadrature`](@ref). See
+[`gauss_legendre_points`](@ref) for the arguments.
+
+```jldoctest
+julia> gauss_legendre_weights(2)
+2-element Vector{Float64}:
+ 0.5
+ 0.5
+```
+"""
+function gauss_legendre_weights(::Type{T}, s::Integer; IT=BigFloat) where {T}
+    T.(scale_weights(gauss_legendre_point_weights(IT, s; IT=IT)))
+end
+
+gauss_legendre_weights(s; kwargs...) = gauss_legendre_weights(Float64, s; kwargs...)
+
 
 function _gauss_legendre_fast(s, T)
     c, b = FastGaussQuadrature.gausslegendre(s)
@@ -80,7 +152,9 @@ w_i = \frac{1}{P_s'(x_i)^2} \int_{-1}^{+1} \left( \frac{P_s(x)}{x - x_i} \right)
 
 where the integrand is the square of the (unnormalised) Lagrange basis polynomial
 associated with ``x_i``, evaluated by exact polynomial division and integration in the
-arithmetic `IT`. The nodes and weights are finally shifted and scaled to ``[0,1]``.
+arithmetic `IT`. The nodes and weights are finally shifted and scaled to ``[0,1]``, and
+are also available on their own as [`gauss_legendre_nodes`](@ref) and
+[`gauss_legendre_weights`](@ref).
 
 # Arguments
 - `T`: element type of the resulting rule, `Float64` if omitted.
@@ -106,17 +180,8 @@ function GaussLegendreQuadrature(::Type{T}, s::Integer; IT=BigFloat, fast=false)
         return _gauss_legendre_fast(s, T)
     end
 
-    P = _legendre_polynomial(s, IT)
-    D = Polynomials.derivative(P)
-
-    x = sort(_newton_roots(P, FastGaussQuadrature.gausslegendre(s)[1]))
-
-    inti(i) = begin
-        I = Polynomials.integrate( ( P ÷ Polynomial(IT[-x[i], 1]) )^2 )
-        I(1) - I(-1)
-    end
-
-    w = [ inti(i) / D(x[i])^2  for i in 1:s ]
+    x = gauss_legendre_points(IT, s; IT=IT)
+    w = _gauss_legendre_point_weights(x)
 
     return QuadratureRule(2s, shift_nodes(x), scale_weights(w), T)
 end

@@ -62,6 +62,71 @@ end
 
 lobatto_legendre_nodes(s; kwargs...) = lobatto_legendre_nodes(Float64, s; kwargs...)
 
+# The Lobatto-Legendre weights on [-1,+1] belonging to the precomputed points `x`, in their
+# own arithmetic. Taking the points as an argument lets the constructor share the closed
+# form with lobatto_legendre_point_weights without repeating the root find.
+function _lobatto_legendre_point_weights(x::AbstractVector{IT}) where {IT}
+    s = length(x)
+
+    [ 2 / ( s*(s-1) * _legendre(s-1, x[i])^2 )  for i in 1:s ]
+end
+
+@doc raw"""
+    lobatto_legendre_point_weights(s)
+    lobatto_legendre_point_weights(T, s; IT=BigFloat)
+
+The `s` Lobatto-Legendre weights for the interval ``[-1,+1]``, belonging to the points
+returned by [`lobatto_legendre_points`](@ref) and summing to ``2``.
+
+They are given in closed form by
+
+```math
+w_i = \frac{2}{s \, (s-1) \, \big[ P_{s-1}(x_i) \big]^2} ,
+```
+
+which holds for the interior points and for the two endpoints alike. Throws an
+`ErrorException` for `s == 1`. See [`lobatto_legendre_points`](@ref) for the arguments.
+
+```jldoctest
+julia> lobatto_legendre_point_weights(3)
+3-element Vector{Float64}:
+ 0.3333333333333333
+ 1.3333333333333333
+ 0.3333333333333333
+```
+
+See also [`lobatto_legendre_weights`](@ref) for the same weights on ``[0,1]``.
+"""
+function lobatto_legendre_point_weights(::Type{T}, s::Integer; IT=BigFloat) where {T}
+    T.(_lobatto_legendre_point_weights(lobatto_legendre_points(IT, s; IT=IT)))
+end
+
+lobatto_legendre_point_weights(s; kwargs...) = lobatto_legendre_point_weights(Float64, s; kwargs...)
+
+@doc raw"""
+    lobatto_legendre_weights(s)
+    lobatto_legendre_weights(T, s; IT=BigFloat)
+
+The `s` Lobatto-Legendre weights for the interval ``[0,1]``, i.e., the weights of
+[`lobatto_legendre_point_weights`](@ref) halved so that they sum to ``1``.
+
+These are the weights of [`LobattoLegendreQuadrature`](@ref). Throws an `ErrorException`
+for `s == 1`. See [`lobatto_legendre_points`](@ref) for the arguments.
+
+```jldoctest
+julia> lobatto_legendre_weights(3)
+3-element Vector{Float64}:
+ 0.16666666666666666
+ 0.6666666666666666
+ 0.16666666666666666
+```
+"""
+function lobatto_legendre_weights(::Type{T}, s::Integer; IT=BigFloat) where {T}
+    T.(scale_weights(lobatto_legendre_point_weights(IT, s; IT=IT)))
+end
+
+lobatto_legendre_weights(s; kwargs...) = lobatto_legendre_weights(Float64, s; kwargs...)
+
 
 function _lobatto_legendre_fast(s, T)
     c, b = FastGaussQuadrature.gausslobatto(s)
@@ -91,7 +156,8 @@ w_i = \frac{2}{s \, (s-1) \, \big[ P_{s-1}(x_i) \big]^2} ,
 ```
 
 which holds for the endpoints as well. Nodes and weights are computed in the arithmetic
-`IT` and then shifted and scaled to ``[0,1]``.
+`IT` and then shifted and scaled to ``[0,1]``, and are also available on their own as
+[`lobatto_legendre_nodes`](@ref) and [`lobatto_legendre_weights`](@ref).
 
 Throws an `ErrorException` for `s == 1`. See [`GaussLegendreQuadrature`](@ref) for the
 meaning of `T`, `IT` and `fast`.
@@ -116,7 +182,8 @@ function LobattoLegendreQuadrature(::Type{T}, s::Integer; IT=BigFloat, fast=fals
     end
 
     x = lobatto_legendre_points(IT, s; IT=IT)
-    w = [ 2 / ( s*(s-1) * _legendre(s-1, x[i])^2 ) for i in 1:s ]
+    w = _lobatto_legendre_point_weights(x)
+
     return QuadratureRule(2s-2, shift_nodes(x), scale_weights(w), T)
 end
 

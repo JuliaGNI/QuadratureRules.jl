@@ -16,6 +16,9 @@ makedocs(;
         prettyurls=get(ENV, "CI", "false") == "true",
         canonical="https://juliagni.github.io/QuadratureRules.jl",
         assets=String[],
+        # the library reference documents four accessors per family and so exceeds the
+        # 100 KiB the default warning threshold allows, well short of the 200 KiB limit
+        size_threshold_warn=150 * 1024,
     ),
     pages=[
         "Home"                 => "index.md",
