@@ -1,0 +1,21 @@
+# Environment for test/test_symbolic.jl, which needs SymPyPythonCall and, through it, a private
+# Python installation with sympy. Keeping that out of the package's test target lets
+# `Pkg.test()` run without the Python stack; the symbolic job in .github/workflows/CI.yml runs
+# the symbolic tests in this environment instead.
+#
+# The deps are those of test/test_symbolic.jl alone, deliberately not a copy of the package's
+# test target: a copy would have to be kept in step with it by hand.
+#
+# QuadratureRules itself is not resolved here — `Pkg.develop(PackageSpec(path=pwd()))` adds it
+# from the checkout, as it does for docs/Project.toml. A committed `[sources]` entry would
+# either name an absolute path or need Julia 1.11.
+
+[deps]
+QuadratureRules = "a08977f5-a20d-4b99-b11f-f5ea535e0575"
+SymPyPythonCall = "bc8888f7-b21e-4b7c-a06a-5d9c9496438c"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[compat]
+SymPyPythonCall = "0.5"
+Test = "1"
+julia = "1.10"

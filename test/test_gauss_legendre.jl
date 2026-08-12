@@ -55,4 +55,16 @@ import QuadratureRules: scale_weights, unscale_weights, shift_nodes, unshift_nod
         end
     end
 
+    # Element types from the numeric tower other than the floating point ones are computed in
+    # BigFloat like those, and not in themselves as a symbolic type would be: their arithmetic
+    # is of no help for an algebraic number, and the exact root find needs `eigvals`, which
+    # they do not have.
+    for s in 1:10
+        @test gauss_legendre_points(ComplexF64, s) == ComplexF64.(gauss_legendre_points(BigFloat, s))
+        @test gauss_legendre_weights(ComplexF64, s) == ComplexF64.(gauss_legendre_weights(BigFloat, s))
+
+        @test gauss_legendre_points(Rational{BigInt}, s) == Rational{BigInt}.(gauss_legendre_points(BigFloat, s))
+        @test gauss_legendre_weights(Rational{BigInt}, s) == Rational{BigInt}.(gauss_legendre_weights(BigFloat, s))
+    end
+
 end

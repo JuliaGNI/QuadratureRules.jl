@@ -30,10 +30,21 @@ Level `n` uses ``h = 2^{-n}``, so the nodes of level `n` are contained in those 
 `n+1`. The single loop over ``k = 1, 2, \dots`` at the finest step is equivalent to refining
 level by level: the truncation criterion is a threshold in ``t``, shared by all levels, so the
 union of the level grids is exactly the multiples of ``2^{-n}`` below that threshold.
+
+`T` must be a floating point type: unlike the other rules, tanh-sinh has no exact variant,
+as it is the rounding in `T` that decides where the infinite sum is cut off. So must `IT`,
+which is not checked, since every candidate is rounded from `IT` to `T` along the way.
 """
 function _tanh_sinh(::Type{T}, n::Integer; IT=BigFloat) where {T}
     if n < 1
         throw(ErrorException("Tanh-Sinh quadrature is not defined for less than one level."))
+    end
+
+    if !(T <: AbstractFloat)
+        throw(ArgumentError("Tanh-Sinh quadrature requires a floating point element type, " *
+                            "got $T. Its node count is not given in advance but follows from " *
+                            "where the nodes and weights become indistinguishable from the " *
+                            "endpoints in T, which has no counterpart in exact arithmetic."))
     end
 
     h = IT(1) / IT(2)^n
@@ -94,6 +105,11 @@ The number of points is *not* a free parameter: the grid is truncated where the 
 no longer be distinguished from ``\pm 1`` in the target precision, so it depends on `n`, on
 `T` and, through the weights, on `IT`. See [`TanhSinhQuadrature`](@ref) for the arguments
 and for the truncation criterion.
+
+For the same reason `T` must be a floating point type here, whereas the other families also
+accept exact and symbolic ones: it is the rounding in `T` that decides where the infinite
+sum is cut off, so there is nothing to compute for a type that does not round. Anything else
+throws an `ArgumentError`.
 
 ```jldoctest
 julia> x = tanh_sinh_points(1)
@@ -272,11 +288,15 @@ of correct digits** until the precision of `T` is reached. For `Float64` that po
 reached at level 3; a `BigFloat` rule at the default precision needs level 5.
 
 # Arguments
-- `T`: element type of the resulting rule, `Float64` if omitted.
+- `T`: element type of the resulting rule, `Float64` if omitted. Unlike the other families,
+  this rule accepts floating point types only, since the truncation below is defined in
+  terms of rounding in `T`.
 - `n`: the level, i.e. the number of halvings of the step size, so that ``h = 2^{-n}``.
   This is **not** a node count — the number of nodes follows from the truncation below and
   grows like ``2^n``, e.g. 13, 25, 51, 101, 203 for levels 1 to 5 at `T=Float64`.
-- `IT`: arithmetic in which nodes and weights are computed, `BigFloat` by default.
+- `IT`: arithmetic in which nodes and weights are computed, `BigFloat` by default. It must be
+  a floating point type as well, as every candidate node and weight is rounded to `T` from it
+  to test the truncation criterion.
 
 The grid is truncated at the first `k` whose weight rounds to zero in `T` or whose node
 rounds to an endpoint — of either ``[0,1]`` or ``[-1,+1]``, so that neither representation
@@ -285,7 +305,7 @@ folded into that predecessor instead of being added, which leaves the quadrature
 unchanged and keeps the nodes strictly increasing. Consequently no node ever coincides with
 an endpoint, and integrands that are singular there may be passed in directly.
 
-Throws an `ErrorException` for `n < 1`.
+Throws an `ErrorException` for `n < 1` and an `ArgumentError` for a non-floating point `T`.
 
 !!! note "Endpoint singularities and the precision of `T`"
     Tanh-sinh is the method of choice for an integrand with a singularity at an endpoint,
