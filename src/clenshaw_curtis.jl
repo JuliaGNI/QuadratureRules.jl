@@ -1,3 +1,12 @@
+"Clenshaw-Curtis points on the interval [-1,+1]."
+clenshaw_curtis_points(::Type{T}, s::Integer) where {T} = chebyshev_points(T, s, Val(2))
+clenshaw_curtis_points(s) = clenshaw_curtis_points(Float64, s)
+
+"Clenshaw-Curtis nodes on the interval [0,1]."
+clenshaw_curtis_nodes(::Type{T}, s::Integer) where {T} = chebyshev_nodes(T, s, Val(2))
+clenshaw_curtis_nodes(s) = clenshaw_curtis_nodes(Float64, s)
+
+
 """
 Clenshaw-Curtis quadrature.
 """
@@ -13,7 +22,7 @@ function ClenshawCurtisQuadrature(::Type{T}, s::Integer; IT=BigFloat) where {T}
     cctrm(k,j,n) = @big b(j,n) / ( 4 * j^2 - 1 ) * cos(j * ϑ(k,n))
     ccsum(k,n) = c(k,n) / IT(2n) * ( IT(1) - mapreduce(j -> cctrm(k,j,n), +, 1:div(n,2); init = zero(IT)) )
 
-    x = chebyshev_points(IT, s, Val(2))
+    x = clenshaw_curtis_nodes(IT, s)
     w = [ccsum(i-1,s-1) for i in 1:s]
 
     QuadratureRule(s, x, w, T)

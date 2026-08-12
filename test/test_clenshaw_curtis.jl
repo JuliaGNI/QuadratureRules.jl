@@ -1,5 +1,5 @@
 import FastTransforms
-import QuadratureRules: scale_weights, shift_nodes
+import QuadratureRules: scale_weights, shift_nodes, unshift_nodes
 
 @testset "$(rpad("Clenshaw-Curtis",80))" begin
 
@@ -16,6 +16,19 @@ import QuadratureRules: scale_weights, shift_nodes
 
         @test nodes(ClenshawCurtisQuadrature(s)) ≈ c
         @test weights(ClenshawCurtisQuadrature(s)) ≈ b
+
+        @test clenshaw_curtis_nodes(Float64, s) ≈ c
+
+        # the quadrature computes its nodes in IT = BigFloat and rounds to T,
+        # whereas clenshaw_curtis_nodes(Float64, s) computes them in Float64,
+        # so the two agree exactly only at equal working precision
+        @test clenshaw_curtis_nodes(Float64, s)  ≈  nodes(ClenshawCurtisQuadrature(s))
+        @test clenshaw_curtis_nodes(BigFloat, s) == nodes(ClenshawCurtisQuadrature(BigFloat, s))
+        @test clenshaw_curtis_points(Float64, s) ≈ reverse(FastTransforms.clenshawcurtisnodes(Float64, s))
+        @test unshift_nodes(clenshaw_curtis_nodes(Float64, s)) ≈ clenshaw_curtis_points(Float64, s)
+
+        @test clenshaw_curtis_points(s) == clenshaw_curtis_points(Float64, s)
+        @test clenshaw_curtis_nodes(s)  == clenshaw_curtis_nodes(Float64, s)
     end
 
 end

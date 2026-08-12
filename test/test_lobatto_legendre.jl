@@ -1,12 +1,37 @@
+import FastGaussQuadrature
+import QuadratureRules: shift_nodes, unshift_nodes
+
 @testset "$(rpad("Lobatto-Legendre",80))" begin
 
     @test_throws ErrorException LobattoLegendreQuadrature(1)
+    @test_throws ErrorException lobatto_legendre_nodes(1)
+    @test_throws ErrorException lobatto_legendre_points(1)
 
     for s in 2:10
         @test LobattoLegendreQuadrature(s) ≈  LobattoLegendreQuadrature(s; fast=true)
         @test LobattoLegendreQuadrature(s) == LobattoLegendreQuadrature(Float64, s)
 
         @test sum(weights(LobattoLegendreQuadrature(s))) ≈ 1
+
+        @test lobatto_legendre_nodes(Float64, s) == nodes(LobattoLegendreQuadrature(s))
+        @test lobatto_legendre_nodes(s) == lobatto_legendre_nodes(Float64, s)
+        @test lobatto_legendre_points(s) == lobatto_legendre_points(Float64, s)
+
+        # the points are primary and the nodes are derived from them, so the two agree
+        # exactly at equal working precision and up to rounding across precisions
+        @test shift_nodes(lobatto_legendre_points(BigFloat, s)) == lobatto_legendre_nodes(BigFloat, s)
+        @test shift_nodes(lobatto_legendre_points(Float64, s))  ≈  lobatto_legendre_nodes(Float64, s)
+        @test unshift_nodes(lobatto_legendre_nodes(Float64, s)) ≈ lobatto_legendre_points(Float64, s)
+        @test lobatto_legendre_points(Float64, s) ≈ FastGaussQuadrature.gausslobatto(s)[1]
+
+        # the endpoints of the points are pinned exactly, and shift_nodes maps them
+        # to exactly 0 and 1
+        @test lobatto_legendre_points(Float64, s)[begin] == -1
+        @test lobatto_legendre_points(Float64, s)[end]   == +1
+        @test lobatto_legendre_nodes(Float64, s)[begin]  == 0
+        @test lobatto_legendre_nodes(Float64, s)[end]    == 1
+
+        @test eltype(lobatto_legendre_nodes(BigFloat, s)) == BigFloat
     end
 
     # The default constructor computes nodes and weights in arbitrary precision.
