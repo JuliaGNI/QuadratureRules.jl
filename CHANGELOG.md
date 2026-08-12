@@ -8,6 +8,14 @@ Julia reading of `0.x`: a bump of the *minor* version may break.
 
 ## [Unreleased]
 
+## [0.2.1] – 2026-08-13
+
+A documentation release, with one performance fix. Nothing about the API changes, and every
+node and weight the package returns is identical bit for bit to 0.2.0. The manual and the
+docstrings now state the node and weight closed forms on the unit interval, the way the
+Runge-Kutta literature gives them, alongside the symmetric-interval forms they were stated in
+before; and the Legendre recurrence no longer evaluates itself exponentially often.
+
 ### Added
 
 - **The nodes and weights are now documented on the unit interval as well as the symmetric
@@ -264,7 +272,8 @@ Initial release: the `QuadratureRule` type and its functor, the tabulated rules 
 right Riemann, midpoint, trapezoidal), and the Clenshaw-Curtis, Chebyshev and Legendre
 rules.
 
-[Unreleased]: https://github.com/JuliaGNI/QuadratureRules.jl/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/JuliaGNI/QuadratureRules.jl/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/JuliaGNI/QuadratureRules.jl/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/JuliaGNI/QuadratureRules.jl/compare/v0.1.10...v0.2.0
 [0.1.10]: https://github.com/JuliaGNI/QuadratureRules.jl/compare/v0.1.9...v0.1.10
 [0.1.9]: https://github.com/JuliaGNI/QuadratureRules.jl/compare/v0.1.8...v0.1.9
