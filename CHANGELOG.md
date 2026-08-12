@@ -8,7 +8,12 @@ Julia reading of `0.x`: a bump of the *minor* version may break.
 
 ## [Unreleased]
 
-The accumulated breaking changes below warrant a **0.2.0** release.
+## [0.2.0] – 2026-08-13
+
+The first release since the package was substantially reworked. It is **breaking**: the
+accessors are renamed, three rules report a different order, one returns different weights,
+and four functions are now GeometricBase generics. Each change is listed below with the
+reason and, where numbers moved, what they moved from and to.
 
 ### ⚠️ Breaking
 
@@ -221,7 +226,8 @@ Initial release: the `QuadratureRule` type and its functor, the tabulated rules 
 right Riemann, midpoint, trapezoidal), and the Clenshaw-Curtis, Chebyshev and Legendre
 rules.
 
-[Unreleased]: https://github.com/JuliaGNI/QuadratureRules.jl/compare/v0.1.10...HEAD
+[Unreleased]: https://github.com/JuliaGNI/QuadratureRules.jl/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/JuliaGNI/QuadratureRules.jl/compare/v0.1.10...v0.2.0
 [0.1.10]: https://github.com/JuliaGNI/QuadratureRules.jl/compare/v0.1.9...v0.1.10
 [0.1.9]: https://github.com/JuliaGNI/QuadratureRules.jl/compare/v0.1.8...v0.1.9
 [0.1.8]: https://github.com/JuliaGNI/QuadratureRules.jl/compare/v0.1.7...v0.1.8
