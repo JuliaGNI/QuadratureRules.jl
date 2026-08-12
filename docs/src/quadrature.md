@@ -5,7 +5,7 @@ CurrentModule = QuadratureRules
 # Numerical Quadrature
 
 The need for numerical quadrature often arises for evaluating the definite integral of a function that has no explicit antiderivative (indefinite integral) or whose antiderivative is not easy to obtain.
-The idea of numerical quadrature is to approximate $\int_{a}^{b} f(x) \, dx$ by a sum $\sum_{i=0}^{n} b_{i} f(x_{i})$.
+The idea of numerical quadrature is to approximate $\int_{a}^{b} f(x) \, dx$ by a sum $\sum_{i=1}^{s} b_{i} f(x_{i})$.
 
 The points $x_i$ at which the integrand is sampled are called the *nodes* of the rule and
 the coefficients $b_i$ its *weights*. A quadrature rule is thus completely described by
@@ -216,7 +216,8 @@ For a fixed rule of order $p$, subdividing $[a,b]$ into $n$ subintervals of leng
 $h = (b-a)/n$ and applying the rule on each gives a composite rule with error
 
 ```math
-\Bigg| \int_a^b f(x) \, dx - \sum_{\text{subintervals}} \Bigg|
+\Bigg| \int_a^b f(x) \, dx
+     - h \sum_{j=1}^{n} \sum_{i=1}^{s} b_i \, f \big( a + (j-1) \, h + h \, c_i \big) \Bigg|
 = \mathcal{O} \big( h^{p} \big)
 ```
 

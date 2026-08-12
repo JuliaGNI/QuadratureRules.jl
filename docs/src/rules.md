@@ -138,14 +138,27 @@ order to $2s-2$. At least two nodes are required; `s == 1` throws an `ErrorExcep
 ### Nodes
 
 The interior nodes are the roots of $P_{s-1}'$, together with the endpoints $\pm 1$.
-Instead of differentiating the Legendre polynomial, the implementation exploits
-Rodrigues' formula: $P_{s-1}$ is proportional to the $(s-1)$-st derivative of
-$(x^2-1)^{s-1}$, so $P_{s-1}'$ has the same roots as the $(s-2)$-nd derivative of
-$(1-x^2)^{s-1}$. That derivative is formed directly with `Polynomials.derivative`, which
-avoids building and differentiating the Legendre polynomial itself.
+Instead of differentiating the Legendre polynomial, the implementation forms
+
+```math
+D(x) = \frac{d^{\,s-2}}{dx^{\,s-2}} \, \big( 1 - x^2 \big)^{s-1}
+```
+
+directly with `Polynomials.derivative`. By Rodrigues' formula for the Jacobi polynomials,
+
+```math
+P^{(1,1)}_{s-2} (x) \; \propto \; \big( 1 - x^2 \big)^{-1} \,
+    \frac{d^{\,s-2}}{dx^{\,s-2}} \, \big( 1 - x^2 \big)^{s-1} ,
+```
+
+and $P_{s-1}' \propto P^{(1,1)}_{s-2}$, so $D$ has the $s-2$ interior Lobatto points among
+its roots — *and*, from the factor $(1-x^2)$ it retains, the two endpoints as well. $D$ has
+degree $s$ and its $s$ roots are therefore exactly the $s$ Lobatto points, which is why the
+whole node set is recovered from this single polynomial.
 
 The roots are again Newton-refined from the double precision guesses of
-`FastGaussQuadrature.gausslobatto`. Since the endpoints are known exactly, they are set
+`FastGaussQuadrature.gausslobatto`, all `s` of them at once. Since the endpoints are known
+exactly, they are set
 to $\mp 1$ afterwards rather than left to the root finder, so that
 [`lobatto_legendre_nodes`](@ref) returns exactly `0` and `1` at the ends.
 
@@ -198,7 +211,8 @@ and include both endpoints, which makes them the Chebyshev analogue of a Lobatto
 set. They require $s \ge 2$.
 
 Both are generated in reverse index order so that the resulting vectors are ascending,
-and both are evaluated in `BigFloat` arithmetic before being converted to `T`.
+and both are evaluated in the working precision `IT`, `BigFloat` by default, before being
+converted to `T`.
 
 ```@repl rules
 chebyshev_points(5, 1)
