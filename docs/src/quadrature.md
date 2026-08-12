@@ -337,10 +337,10 @@ takes the nodes and weights directly from FastGaussQuadrature.jl in double preci
 
 ## Exact and symbolic arithmetic
 
-Everything said so far describes what happens for a floating point element type. High
-precision is a workaround for arithmetic that rounds, though, and if `T` does not round
-there is nothing to work around: the working precision then defaults to `T` itself, and
-nodes and weights come out exactly.
+Everything said so far describes what happens for a numeric element type. High precision is a
+workaround for arithmetic that rounds, though, and if `T` does not round there is nothing to
+work around: for an element type from outside the numeric tower the working precision defaults
+to `T` itself, and nodes and weights come out exactly.
 
 This is what happens with the element type of a computer algebra system such as
 [SymPy.jl](https://github.com/JuliaPy/SymPy.jl) or
@@ -372,17 +372,21 @@ Downstream this is what lets a package like
 [RungeKutta.jl](https://github.com/JuliaGNI/RungeKutta.jl) tabulate its methods symbolically,
 by asking for the coefficients at a symbolic element type and typesetting the result.
 
-Two caveats. Exact node computation is only as good as the algebra system behind it; SymPy
+Three caveats. Exact node computation is only as good as the algebra system behind it; SymPy
 resolves the roots as radicals up to the quartic and falls back on implicit representations
 beyond it, so this is a facility for the small stage numbers that tableaus use, not a
-replacement for the numerical path. And [`TanhSinhQuadrature`](@ref) does not take part: its
-node count is not given in advance but follows from where nodes and weights stop being
+replacement for the numerical path. It also needs `eigvals` for the element type, which is
+what a computer algebra system supplies and what the exact members of the numeric tower do
+not: `Rational` and `Complex` element types are therefore counted as numeric and computed in
+`BigFloat` like the floating point ones, since a quadrature node is an algebraic number that
+no rational can represent to begin with. And [`TanhSinhQuadrature`](@ref) does not take part:
+its node count is not given in advance but follows from where nodes and weights stop being
 resolvable in `T`, which a type that does not round cannot answer, so it accepts floating
 point element types only and throws an `ArgumentError` for anything else.
 
 For an element type that merely *wraps* numbers rather than computing exactly, pass `IT`
 explicitly — `gauss_legendre_nodes(T, s; IT=BigFloat)` computes the rule in `BigFloat` as
-usual and converts at the end, exactly as it does for a floating point `T`.
+usual and converts at the end, exactly as it does for a numeric `T`.
 
 ```@example
 using QuadratureRules

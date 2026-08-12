@@ -6,20 +6,20 @@
 The `s` Gauss-Legendre points on the interval ``[-1,+1]``, i.e., the roots of the
 Legendre polynomial ``P_s``.
 
-The roots are computed in the arithmetic `IT` and then converted to `T`. For a floating
-point `IT` they are obtained by refining the double precision approximations of
-`FastGaussQuadrature.gausslegendre` with Newton's method, so that `IT=BigFloat`, the
-default whenever `T` is a floating point type, yields points that are accurate to full
-`BigFloat` precision independently of `T`. For an exact `IT`, in particular a symbolic
-one, they are instead obtained exactly as the eigenvalues of the companion matrix of
-``P_s``; this is the default whenever `T` is not a floating point type, so that
-`gauss_legendre_points(T, s)` with a symbolic `T` returns exact expressions.
+The roots are computed in the arithmetic `IT` and then converted to `T`. For a numeric `IT`
+they are obtained by refining the double precision approximations of
+`FastGaussQuadrature.gausslegendre` with Newton's method, so that `IT=BigFloat`, the default
+whenever `T` is a numeric type, yields points that are accurate to full `BigFloat` precision
+independently of `T`. For any other `IT`, in particular a symbolic one, they are instead
+obtained exactly as the eigenvalues of the companion matrix of ``P_s``; this is the default
+whenever `T` is not a numeric type, so that `gauss_legendre_points(T, s)` with a symbolic `T`
+returns exact expressions.
 
 # Arguments
 - `T`: element type of the returned vector, `Float64` if omitted.
 - `s`: number of points.
-- `IT`: arithmetic in which the roots are computed, `BigFloat` for a floating point `T`
-  and `T` itself otherwise.
+- `IT`: arithmetic in which the roots are computed, `BigFloat` for a numeric `T` and `T`
+  itself otherwise, cf. [`QuadratureRules._default_arithmetic`](@ref).
 
 ```jldoctest
 julia> gauss_legendre_points(2)
@@ -31,7 +31,7 @@ julia> gauss_legendre_points(2)
 See also [`gauss_legendre_nodes`](@ref) for the same points on ``[0,1]``.
 """
 function gauss_legendre_points(::Type{T}, s::Integer; IT=_default_arithmetic(T)) where {T}
-    T.(sort(_roots(_legendre_polynomial(s, IT), FastGaussQuadrature.gausslegendre(s)[1])))
+    T.(sort(_roots(_legendre_polynomial(s, IT), () -> FastGaussQuadrature.gausslegendre(s)[1])))
 end
 
 gauss_legendre_points(s; kwargs...) = gauss_legendre_points(Float64, s; kwargs...)
@@ -164,10 +164,10 @@ are also available on their own as [`gauss_legendre_nodes`](@ref) and
 # Arguments
 - `T`: element type of the resulting rule, `Float64` if omitted.
 - `s`: number of nodes.
-- `IT`: arithmetic in which nodes and weights are computed. For a floating point `T` this
-  defaults to `BigFloat`, so that the result is accurate to full precision in `T`; for any
-  other `T`, in particular a symbolic one, it defaults to `T` itself, so that the rule is
-  computed exactly.
+- `IT`: arithmetic in which nodes and weights are computed. For a numeric `T` this defaults
+  to `BigFloat`, so that the result is accurate to full precision in `T`; for any other `T`,
+  in particular a symbolic one, it defaults to `T` itself, so that the rule is computed
+  exactly, cf. [`QuadratureRules._default_arithmetic`](@ref).
 - `fast`: if `true`, take the nodes and weights directly from
   `FastGaussQuadrature.gausslegendre`, which is much faster but computes in double
   precision, so the result is only accurate to about `Float64` precision.

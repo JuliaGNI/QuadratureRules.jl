@@ -22,12 +22,13 @@ x_i = \cos \left( \frac{(i-1) \, \pi}{s-1} \right) , \qquad i = 1, \dots, s ,
 
 and include both endpoints ``\pm 1``.
 
-The points are evaluated in the arithmetic `IT` and then converted to `T`. For a floating
-point `T` the default is `IT=BigFloat`, so that the closed forms above are evaluated to
-full precision whatever `T` is and the returned values are correctly rounded; see
+The points are evaluated in the arithmetic `IT` and then converted to `T`. For a numeric `T`
+the default is `IT=BigFloat`, so that the closed forms above are evaluated to full precision
+whatever `T` is and the returned values are correctly rounded; see
 [`ClenshawCurtisQuadrature`](@ref) for the trade-off involved in choosing a lower working
-precision. For any other `T` the default is `IT=T`, so that with a symbolic `T` the
-closed forms are evaluated exactly, ``\pi`` included.
+precision. For any other `T` the default is `IT=T`, so that with a symbolic `T` the closed
+forms are evaluated exactly, ``\pi`` included; cf.
+[`QuadratureRules._default_arithmetic`](@ref).
 
 Points of the second kind require `s ≥ 2` and throw an `ErrorException` otherwise.
 
@@ -288,7 +289,8 @@ the midpoint of the interval and its error therefore cancels. The **order is `s`
 # Arguments
 - `T`: element type of the resulting rule, `Float64` if omitted.
 - `s`: number of nodes.
-- `IT`: arithmetic in which nodes and weights are computed, `BigFloat` by default. As for
+- `IT`: arithmetic in which nodes and weights are computed, `BigFloat` for a numeric `T` and
+  `T` itself otherwise, cf. [`QuadratureRules._default_arithmetic`](@ref). As for
   [`ClenshawCurtisQuadrature`](@ref), the weight sum costs ``O(s^2)`` operations, so a lower
   working precision is faster but accumulates round-off in the intermediate terms; see the
   note there.

@@ -32,7 +32,8 @@ level by level: the truncation criterion is a threshold in ``t``, shared by all 
 union of the level grids is exactly the multiples of ``2^{-n}`` below that threshold.
 
 `T` must be a floating point type: unlike the other rules, tanh-sinh has no exact variant,
-as it is the rounding in `T` that decides where the infinite sum is cut off.
+as it is the rounding in `T` that decides where the infinite sum is cut off. So must `IT`,
+which is not checked, since every candidate is rounded from `IT` to `T` along the way.
 """
 function _tanh_sinh(::Type{T}, n::Integer; IT=BigFloat) where {T}
     if n < 1
@@ -293,7 +294,9 @@ reached at level 3; a `BigFloat` rule at the default precision needs level 5.
 - `n`: the level, i.e. the number of halvings of the step size, so that ``h = 2^{-n}``.
   This is **not** a node count — the number of nodes follows from the truncation below and
   grows like ``2^n``, e.g. 13, 25, 51, 101, 203 for levels 1 to 5 at `T=Float64`.
-- `IT`: arithmetic in which nodes and weights are computed, `BigFloat` by default.
+- `IT`: arithmetic in which nodes and weights are computed, `BigFloat` by default. It must be
+  a floating point type as well, as every candidate node and weight is rounded to `T` from it
+  to test the truncation criterion.
 
 The grid is truncated at the first `k` whose weight rounds to zero in `T` or whose node
 rounds to an endpoint — of either ``[0,1]`` or ``[-1,+1]``, so that neither representation

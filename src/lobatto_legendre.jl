@@ -10,7 +10,7 @@ Rather than differentiating the Legendre polynomial, the interior points are obt
 as the roots of the ``(s-2)``-nd derivative of ``(1-x^2)^{s-1}``, which has the same
 roots by Rodrigues' formula. The roots are computed in the arithmetic `IT`, either
 Newton-refined from the double precision approximations of
-`FastGaussQuadrature.gausslobatto` or, for an exact `IT` such as a symbolic one,
+`FastGaussQuadrature.gausslobatto` or, for a non-numeric `IT` such as a symbolic one,
 exactly from the companion matrix, and the endpoints are set to exactly ``\pm 1``.
 
 Throws an `ErrorException` for `s == 1`, as a Lobatto rule needs at least the two
@@ -30,7 +30,7 @@ function lobatto_legendre_points(::Type{T}, s::Integer; IT=_default_arithmetic(T
     end
 
     D = Polynomials.derivative(Polynomial(IT[1, 0, -1])^(s-1), s-2)
-    x = sort(_roots(D, FastGaussQuadrature.gausslobatto(s)[1]))
+    x = sort(_roots(D, () -> FastGaussQuadrature.gausslobatto(s)[1]))
     x[begin] = -1; x[end] = 1
 
     T.(x)

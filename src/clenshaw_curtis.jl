@@ -149,8 +149,8 @@ Throws an `ErrorException` for `s == 1`.
 # Arguments
 - `T`: element type of the resulting rule, `Float64` if omitted.
 - `s`: number of nodes.
-- `IT`: arithmetic in which nodes and weights are computed, `BigFloat` for a floating point
-  `T` and `T` itself otherwise.
+- `IT`: arithmetic in which nodes and weights are computed, `BigFloat` for a numeric `T` and
+  `T` itself otherwise, cf. [`QuadratureRules._default_arithmetic`](@ref).
 
 !!! note "Why `BigFloat` is the default"
     The weight sum costs ``O(s^2)`` operations, so a lower working precision such as

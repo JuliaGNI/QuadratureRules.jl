@@ -14,10 +14,10 @@ Which endpoint is prescribed is selected by `endpoint`:
 
 The left points are the ``s`` roots of ``P_{s-1} + P_s``, one of which is exactly ``-1``.
 They are computed in the arithmetic `IT`, either Newton-refined from the double precision
-approximations of `FastGaussQuadrature.gaussradau` or, for an exact `IT` such as a symbolic
-one, exactly from the companion matrix, and the prescribed endpoint is then set to exactly
-``-1``. The right points are obtained by reflection, ``x \mapsto -x``, which makes the two
-variants exact mirror images of each other.
+approximations of `FastGaussQuadrature.gaussradau` or, for a non-numeric `IT` such as a
+symbolic one, exactly from the companion matrix, and the prescribed endpoint is then set
+to exactly ``-1``. The right points are obtained by reflection, ``x \mapsto -x``, which
+makes the two variants exact mirror images of each other.
 
 There is deliberately no default for `endpoint`: the two variants are not interchangeable,
 and silently choosing one would be easy to overlook.
@@ -26,8 +26,8 @@ and silently choosing one would be easy to overlook.
 - `T`: element type of the returned vector, `Float64` if omitted.
 - `s`: number of points.
 - `endpoint`: `:left` or `:right`, the endpoint included among the points.
-- `IT`: arithmetic in which the roots are computed, `BigFloat` for a floating point `T` and
-  `T` itself otherwise.
+- `IT`: arithmetic in which the roots are computed, `BigFloat` for a numeric `T` and `T`
+  itself otherwise, cf. [`QuadratureRules._default_arithmetic`](@ref).
 
 ```jldoctest
 julia> radau_legendre_points(2, :left)
@@ -45,7 +45,7 @@ See also [`radau_legendre_nodes`](@ref) for the same points on ``[0,1]``.
 """
 function radau_legendre_points(::Type{T}, s::Integer, ::Val{:left}; IT=_default_arithmetic(T)) where {T}
     P = _legendre_polynomial(s-1, IT) + _legendre_polynomial(s, IT)
-    x = sort(_roots(P, FastGaussQuadrature.gaussradau(s)[1]))
+    x = sort(_roots(P, () -> FastGaussQuadrature.gaussradau(s)[1]))
     x[begin] = -1
 
     T.(x)

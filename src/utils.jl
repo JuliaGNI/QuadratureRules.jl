@@ -1,12 +1,22 @@
 
+# The element types that are computed in BigFloat and rounded at the end, i.e. the numeric
+# tower, whose exact members cannot represent the algebraic numbers a quadrature node is in
+# general anyway. Everything outside it is taken to compute exactly by itself; see
+# _default_arithmetic and _roots.
+const _FloatLike = Union{AbstractFloat, Rational, Integer, Complex}
+
 """
 The arithmetic in which nodes and weights are computed by default for the element type `T`.
 
-Floating point types are computed in `BigFloat` and rounded to `T` at the very end, so that
-the result is accurate to full precision in `T`. Every other type, in particular a symbolic
-one, is computed in itself, so that exact arithmetic stays exact.
+Types from the numeric tower — floating point, rational, integer and complex ones — are
+computed in `BigFloat` and rounded to `T` at the very end, so that the result is accurate to
+full precision in `T`. Every other type is computed in itself, on the assumption that it does
+its own arithmetic exactly, so that a symbolic `T` yields nodes and weights in closed form.
+
+Should that assumption not hold for some element type, `IT=BigFloat` recovers the behaviour
+of the numeric tower for it.
 """
-_default_arithmetic(::Type{T}) where {T<:AbstractFloat} = BigFloat
+_default_arithmetic(::Type{T}) where {T<:_FloatLike} = BigFloat
 _default_arithmetic(::Type{T}) where {T} = T
 
 
@@ -62,14 +72,19 @@ end
 """
 The roots of the polynomial `p`, all assumed to be real and simple.
 
-For floating point coefficients the double precision approximations `x₀` are refined with
-Newton's method in the arithmetic of `p`. For exact coefficients, in particular symbolic
-ones, the roots are computed exactly as the eigenvalues of the companion matrix and `x₀` is
-ignored. In both cases they come out in no particular order, so the caller sorts them.
-"""
-_roots(p::Polynomial{T}, x₀) where {T<:AbstractFloat} = _newton_roots(p, x₀)
+For coefficients from the numeric tower the double precision approximations `x₀()` are
+refined with Newton's method in the arithmetic of `p`. For any other coefficient type, in
+particular a symbolic one, the roots are computed exactly as the eigenvalues of the companion
+matrix; this needs `eigvals` for that type, which a computer algebra system supplies and which
+resolves the roots into radicals. In both cases they come out in no particular order, so the
+caller sorts them.
 
-_roots(p::Polynomial{T}, x₀) where {T} = Polynomials.roots(p)
+`x₀` is a thunk rather than a vector so that the initial guess, which the exact branch has no
+use for, is only computed where it is actually needed.
+"""
+_roots(p::Polynomial{T}, x₀) where {T<:_FloatLike} = _newton_roots(p, x₀())
+
+_roots(p::Polynomial, x₀) = Polynomials.roots(p)
 
 
 "Shift and scale nodes from the interval [-1,+1] to the interval [0,1]."

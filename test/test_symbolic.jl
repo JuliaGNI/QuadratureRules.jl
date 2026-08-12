@@ -1,3 +1,10 @@
+# The helpers below carry names general enough to collide with those of another test file, so
+# they live in a module of their own rather than in `Main`.
+module TestSymbolic
+
+using QuadratureRules
+using Test
+
 import SymPyPythonCall
 import SymPyPythonCall: simplify
 import QuadratureRules: scale_weights, shift_nodes
@@ -209,10 +216,16 @@ chebyshev_wts(kind)          = (T, s) -> chebyshev_weights(T, s, Val(kind))
                      RadauLegendreQuadrature(symtype(), 2, Val(:right)),
                      GaussChebyshevQuadrature(symtype(), 3),
                      LobattoChebyshevQuadrature(symtype(), 3),
-                     ClenshawCurtisQuadrature(symtype(), 3))
+                     ClenshawCurtisQuadrature(symtype(), 3),
+                     ChebyshevQuadrature(symtype(), 3, Val(1)),
+                     ChebyshevQuadrature(symtype(), 3, Val(2)))
             @test eltype(quad) == symtype()
             @test exactly(sum(weights(quad)), 1)
         end
+
+        # the umbrella constructor forwards to the two Chebyshev rules unchanged
+        @test ChebyshevQuadrature(symtype(), 3, Val(1)) == GaussChebyshevQuadrature(symtype(), 3)
+        @test ChebyshevQuadrature(symtype(), 3, Val(2)) == LobattoChebyshevQuadrature(symtype(), 3)
 
         @test exactly(nodes(GaussLegendreQuadrature(symtype(), 2)),
                       gauss_legendre_nodes(symtype(), 2))
@@ -256,3 +269,5 @@ chebyshev_wts(kind)          = (T, s) -> chebyshev_weights(T, s, Val(kind))
     end
 
 end
+
+end # module TestSymbolic
