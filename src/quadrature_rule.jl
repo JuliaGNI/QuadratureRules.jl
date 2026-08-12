@@ -14,7 +14,7 @@ end
 Integrate a function `f(x)` over the interval [0,1] using the quadrature.
 """
 function (quad::QuadratureRule)(f::Function)
-    mapreduce(i -> quad.weights[i] * f(quad.nodes[i]), +, eachindex(quad))
+    sum(w * f(x) for (w, x) in zip(quad.weights, quad.nodes))
 end
 
 
