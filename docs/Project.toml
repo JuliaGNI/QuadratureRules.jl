@@ -1,3 +1,9 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 QuadratureRules = "a08977f5-a20d-4b99-b11f-f5ea535e0575"
+
+[sources]
+QuadratureRules = {path = ".."}
+
+[compat]
+Documenter = "1"
