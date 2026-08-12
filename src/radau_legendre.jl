@@ -64,6 +64,30 @@ prescribed endpoint is exact, so is the corresponding node after the mapping.
 Note that only the *interval* of `SymmetricInterval` is symmetric: the Radau nodes are
 asymmetric by construction on either interval, which is the whole point of the family.
 
+Equivalently, and as the Radau nodes are usually stated in the Runge-Kutta literature, on the
+default [`UnitInterval`](@ref) they are the roots of
+
+```math
+\frac{d^{\,s-1}}{dx^{\,s-1}} \big( x^s (x - 1)^{s-1} \big)
+\qquad \text{for } \texttt{:left} , \qquad
+\frac{d^{\,s-1}}{dx^{\,s-1}} \big( x^{s-1} (x - 1)^s \big)
+\qquad \text{for } \texttt{:right} ,
+```
+
+each of degree ``s``. These agree with ``P_{s-1} + P_s`` through the Rodrigues formula for the
+Jacobi polynomial ``P^{(0,1)}_{s-1}``,
+
+```math
+P^{(0,1)}_{s-1} (x) \; \propto \; \frac{1}{1+x} \, \frac{d^{\,s-1}}{dx^{\,s-1}}
+    \big( (1-x)^{s-1} (1+x)^{s} \big) ,
+```
+
+whose *numerator* is what the differentiated product above becomes under the map to
+``[-1,+1]``. That numerator is therefore proportional to ``P_{s-1} + P_s`` itself, of degree
+``s``, and the division by ``1+x`` is precisely what strips the prescribed endpoint off to
+leave the degree ``s-1`` Jacobi polynomial whose roots are the free nodes. The two
+expressions are mirror images of one another under ``x \mapsto 1-x``, as the node sets are.
+
 # Arguments
 - `T`: element type of the returned vector, `Float64` if omitted.
 - `s`: number of nodes.
@@ -118,6 +142,14 @@ the corresponding Lobatto formula this holds for the free nodes and for the pres
 endpoint alike, where ``P_{s-1}(\mp 1)^2 = 1`` reduces it to ``2/s^2``. Being formulated on
 ``[-1,+1]``, where the weights sum to ``2``, it is the `SymmetricInterval` weights that are
 primary here; those on ``[0,1]`` are obtained as ``b_i = w_i / 2`` and sum to ``1``.
+
+In terms of the [`UnitInterval`](@ref) nodes ``c_i`` the same weights read
+
+```math
+b_i = \frac{1 \mp (2 c_i - 1)}{2 \, s^2 \, \big[ P_{s-1}(2 c_i - 1) \big]^2} ,
+```
+
+with the signs as above, so that the prescribed endpoint again carries ``1/s^2``.
 
 See [`radau_legendre_nodes`](@ref) for the arguments.
 

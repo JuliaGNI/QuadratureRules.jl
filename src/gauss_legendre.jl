@@ -11,6 +11,16 @@ end
 The `s` Gauss-Legendre nodes, i.e., the roots of the Legendre polynomial ``P_s`` mapped to
 `interval`. They lie in the interior of the interval.
 
+On the default [`UnitInterval`](@ref) they are equivalently the roots of the *shifted*
+Legendre polynomial
+
+```math
+P_s (2x - 1) ,
+```
+
+which is the form in which they are usually stated in the Runge-Kutta literature, ``2x-1``
+being the inverse of the map to ``[0,1]``.
+
 The roots are computed on ``[-1,+1]`` in the arithmetic `IT`, mapped to `interval` in that
 same arithmetic and converted to `T` only at the very end. For a numeric `IT` they are
 obtained by refining the double precision approximations of
@@ -83,7 +93,19 @@ where the integrand is the square of the (unnormalised) Lagrange basis polynomia
 associated with ``x_i``, evaluated by exact polynomial division and integration in the
 arithmetic `IT`. Being formulated on ``[-1,+1]``, where the weights sum to ``2``, it is the
 `SymmetricInterval` weights that are primary here; those on ``[0,1]`` are obtained as
-``b_i = w_i / 2`` and sum to ``1``. See [`gauss_legendre_nodes`](@ref) for the arguments.
+``b_i = w_i / 2`` and sum to ``1``.
+
+In terms of the [`UnitInterval`](@ref) nodes ``c_i`` themselves the same weights read
+
+```math
+b_i = \bigg( \frac{dP}{dx} (c_i) \bigg)^{-2}
+      \int \limits_0^1 \bigg( \frac{P(x)}{x - c_i} \bigg)^2 dx ,
+      \qquad P(x) = P_s (2x-1) ,
+```
+
+the two forms agreeing because the substitution multiplies the integral by ``2`` — four from
+the squared denominator, one half from ``dx`` — and ``P'^2`` by ``4``, which leaves the
+halving. See [`gauss_legendre_nodes`](@ref) for the arguments.
 
 ```jldoctest
 julia> gauss_legendre_weights(2)

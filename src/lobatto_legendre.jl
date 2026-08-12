@@ -23,9 +23,20 @@ The `s` Lobatto-Legendre nodes, i.e., the two endpoints of the interval together
 
 Rather than differentiating the Legendre polynomial, the interior nodes are obtained as the
 roots of the ``(s-2)``-nd derivative of ``(1-x^2)^{s-1}``, which has the same roots by
-Rodrigues' formula. The roots are computed in the arithmetic `IT`, either Newton-refined from
-the double precision approximations of `FastGaussQuadrature.gausslobatto` or, for a
-non-numeric `IT` such as a symbolic one, exactly from the companion matrix.
+Rodrigues' formula. That derivative has degree ``s``, and its ``s`` roots are therefore the
+whole node set, endpoints included. The roots are computed in the arithmetic `IT`, either
+Newton-refined from the double precision approximations of
+`FastGaussQuadrature.gausslobatto` or, for a non-numeric `IT` such as a symbolic one, exactly
+from the companion matrix.
+
+On the default [`UnitInterval`](@ref) the corresponding polynomial is
+
+```math
+\frac{d^{\,s-2}}{dx^{\,s-2}} \big( (x - x^2)^{s-1} \big) ,
+```
+
+since ``x - x^2 = (1 - \xi^2)/4`` under ``x = (\xi+1)/2``; this is the form in which the
+Lobatto nodes are usually stated in the Runge-Kutta literature.
 
 The endpoints are set to exactly ``\mp 1`` before the mapping, so the first and last node
 come out as exactly `-1` and `+1` on the symmetric interval and exactly `0` and `1` on the
@@ -80,6 +91,15 @@ w_i = \frac{2}{s \, (s-1) \, \big[ P_{s-1}(x_i) \big]^2} ,
 which holds for the interior nodes and for the two endpoints alike. Being formulated on
 ``[-1,+1]``, where the weights sum to ``2``, it is the `SymmetricInterval` weights that are
 primary here; those on ``[0,1]`` are obtained as ``b_i = w_i / 2`` and sum to ``1``.
+
+In terms of the [`UnitInterval`](@ref) nodes ``c_j`` the halving cancels the numerator, so the
+same weights read
+
+```math
+b_j = \frac{1}{s \, (s-1) \, \big[ P_{s-1}(2 c_j - 1) \big]^2} ,
+```
+
+which is the form in which they are usually tabulated for the Lobatto Runge-Kutta methods.
 
 Throws an `ErrorException` for `s == 1`. See [`gauss_legendre_nodes`](@ref) for the
 arguments.
