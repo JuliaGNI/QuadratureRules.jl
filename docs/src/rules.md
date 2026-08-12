@@ -231,8 +231,8 @@ by reflection, $x \mapsto -x$, which makes the two variants exact mirror images 
 two independent root finds.
 
 ```@repl rules
-radau_legendre_points(3, :left)
-radau_legendre_points(3, :right)
+radau_legendre_nodes(3, :left; interval = SymmetricInterval())
+radau_legendre_nodes(3, :right; interval = SymmetricInterval())
 ```
 
 ### Weights
@@ -261,8 +261,8 @@ FastGaussQuadrature.jl.
 ## Chebyshev points
 
 The Chebyshev-based rules all sample at points that are known in closed form, so no root
-finding is needed. [`chebyshev_points`](@ref) provides the two kinds, and
-[`chebyshev_nodes`](@ref) their images in $[0,1]$.
+finding is needed. [`chebyshev_nodes`](@ref) provides the two kinds, on the symmetric
+interval $[-1,+1]$ or, by default, on $[0,1]$.
 
 The points of the **first kind** are the roots of the Chebyshev polynomial $T_s$,
 
@@ -290,8 +290,8 @@ and both are evaluated in the working precision `IT`, `BigFloat` by default, bef
 converted to `T`.
 
 ```@repl rules
-chebyshev_points(5, 1)
-chebyshev_points(5, 2)
+chebyshev_nodes(5, 1; interval = SymmetricInterval())
+chebyshev_nodes(5, 2; interval = SymmetricInterval())
 ```
 
 ### Deriving the weights
@@ -509,7 +509,7 @@ implementation delegates accordingly:
 
 ```@repl rules
 LobattoChebyshevQuadrature(6) == ClenshawCurtisQuadrature(6)
-lobatto_chebyshev_points(6) == clenshaw_curtis_points(6)
+lobatto_chebyshev_nodes(6) == clenshaw_curtis_nodes(6)
 ```
 
 The separate name is retained because it is the natural counterpart to
@@ -520,7 +520,7 @@ Gauss/Lobatto distinction of the Legendre family.
 ## Umbrella constructor
 
 [`ChebyshevQuadrature`](@ref) selects between the two Chebyshev rules by the kind of the
-underlying points, in the same way that [`chebyshev_points`](@ref) does:
+underlying points, in the same way that [`chebyshev_nodes`](@ref) does:
 
 ```@repl rules
 ChebyshevQuadrature(4, 1) == GaussChebyshevQuadrature(4)

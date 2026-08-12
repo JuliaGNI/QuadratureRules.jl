@@ -83,73 +83,66 @@ TanhSinhQuadrature
 ```
 
 
-## Points, Nodes and Weights
+## Nodes and Weights
 
 The nodes and weights of every rule are also available on their own, without having to
-construct the rule. Two conventions are offered throughout:
+construct the rule. Each family provides one node function and one weight function, both
+taking an `interval` keyword argument that selects the interval the result lives on:
 
-- the `*_points` and `*_point_weights` functions work on the interval ``[-1,+1]``, the
-  interval on which the classical theory is formulated, and their weights sum to ``2``,
-- the `*_nodes` and `*_weights` functions work on the interval ``[0,1]``, the reference
-  interval used by [`QuadratureRule`](@ref), and their weights sum to ``1``,
+- [`UnitInterval`](@ref)`()`, the default, gives ``[0,1]``, the reference interval used by
+  [`QuadratureRule`](@ref), where the weights sum to ``1``,
+- [`SymmetricInterval`](@ref)`()` gives ``[-1,+1]``, the interval on which the classical
+  theory is formulated, where the weights sum to ``2``,
 
-related by ``c_i = (x_i + 1)/2`` and ``b_i = w_i / 2``. Each function has a method taking
-an explicit element type `T` and one defaulting to `Float64`.
+related by ``c_i = (x_i + 1)/2`` and ``b_i = w_i / 2``. Each function has a method taking an
+explicit element type `T` and one defaulting to `Float64`.
 
-Within each family one convention is primary and the other is derived from it, so that the
-two agree exactly at equal working precision and up to rounding across precisions. The
-nodes are always derived from the points. For the weights it depends on the family: the
-Legendre closed forms are formulated on ``[-1,+1]``, so there the `*_point_weights` are
-primary, whereas the Chebyshev, Clenshaw-Curtis and tanh-sinh formulas already carry the
-normalisation to ``[0,1]``, so there the `*_weights` are.
+`SymmetricInterval` describes the interval, not the node set: a Radau rule has deliberately
+asymmetric nodes on either interval.
+
+Within each family one interval is primary and the other is derived from it, so that the two
+agree exactly at equal working precision and up to rounding across precisions. The Legendre
+closed forms are formulated on ``[-1,+1]``, whereas the Chebyshev, Clenshaw-Curtis and
+tanh-sinh formulas already carry the normalisation to ``[0,1]``. Either way the mapping is
+applied in the working precision `IT` and the result converted to `T` only at the very end.
 
 The weight sums quoted above hold for every family except tanh-sinh, which is exact for no
 polynomial at all and therefore attains them only up to its truncation error.
 
+```@docs
+QuadratureInterval
+UnitInterval
+SymmetricInterval
+```
+
 ### Legendre
 
 ```@docs
-gauss_legendre_points
 gauss_legendre_nodes
-gauss_legendre_point_weights
 gauss_legendre_weights
-lobatto_legendre_points
 lobatto_legendre_nodes
-lobatto_legendre_point_weights
 lobatto_legendre_weights
-radau_legendre_points
 radau_legendre_nodes
-radau_legendre_point_weights
 radau_legendre_weights
 ```
 
 ### Chebyshev
 
 ```@docs
-chebyshev_points
 chebyshev_nodes
-chebyshev_point_weights
 chebyshev_weights
-gauss_chebyshev_points
 gauss_chebyshev_nodes
-gauss_chebyshev_point_weights
 gauss_chebyshev_weights
-lobatto_chebyshev_points
 lobatto_chebyshev_nodes
-lobatto_chebyshev_point_weights
 lobatto_chebyshev_weights
-clenshaw_curtis_points
 clenshaw_curtis_nodes
-clenshaw_curtis_point_weights
 clenshaw_curtis_weights
 ```
 
 ### Tanh-Sinh
 
 ```@docs
-tanh_sinh_points
 tanh_sinh_nodes
-tanh_sinh_point_weights
 tanh_sinh_weights
 ```
 

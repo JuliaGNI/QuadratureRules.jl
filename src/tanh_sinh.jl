@@ -2,9 +2,8 @@
 @doc raw"""
 Nodes and weights of the tanh-sinh rule of level `n` on the interval ``[0,1]``, computed and
 returned in the arithmetic `IT` and truncated to what the target type `T` can resolve. This
-is the common back end of [`TanhSinhQuadrature`](@ref), [`tanh_sinh_nodes`](@ref),
-[`tanh_sinh_points`](@ref), [`tanh_sinh_weights`](@ref) and
-[`tanh_sinh_point_weights`](@ref), so that all five truncate identically.
+is the common back end of [`TanhSinhQuadrature`](@ref), [`tanh_sinh_nodes`](@ref) and
+[`tanh_sinh_weights`](@ref), so that all three truncate identically.
 
 Substituting ``x = \tanh ( \tfrac{\pi}{2} \sinh t )`` and applying the trapezoidal rule with
 step ``h = 2^{-n}`` at ``t = k h`` gives, after the move to ``[0,1]``,
@@ -62,7 +61,7 @@ function _tanh_sinh(::Type{T}, n::Integer; IT=BigFloat) where {T}
 
         # Truncate as soon as the pair can no longer be told apart from the endpoints, or
         # its weight from zero, in the target precision T. Both the node 1-δ on [0,1] and
-        # the point 1-2δ on [-1,+1] are tested, so that neither representation degenerates.
+        # the node 1-2δ on [-1,+1] are tested, so that neither representation degenerates.
         (iszero(T(bₖ)) || iszero(T(δₖ)) || isone(T(1 - δₖ)) || isone(T(1 - 2δₖ))) && break
 
         if !isempty(d) && (T(δₖ) == T(d[end]) || T(1 - δₖ) == T(1 - d[end]) ||
@@ -87,11 +86,12 @@ end
 
 
 @doc raw"""
-    tanh_sinh_points(n; IT=BigFloat)
-    tanh_sinh_points(T, n; IT=BigFloat)
+    tanh_sinh_nodes(n; kwargs...)
+    tanh_sinh_nodes(T, n; IT=BigFloat, interval=UnitInterval())
 
-The tanh-sinh points of level `n` on the interval ``[-1,+1]``, in ascending order, i.e.
-the images
+The tanh-sinh nodes of level `n`, in ascending order, mapped to `interval`.
+
+On ``[-1,+1]`` they are the images
 
 ```math
 x_k = \tanh \left( \frac{\pi}{2} \sinh (k h) \right) ,
@@ -99,9 +99,19 @@ x_k = \tanh \left( \frac{\pi}{2} \sinh (k h) \right) ,
 ```
 
 of the equidistant grid ``t = k h`` under the tanh-sinh transformation. They lie strictly
-inside the interval and cluster double-exponentially fast towards its ends.
+inside the interval and cluster double-exponentially fast towards its ends. On ``[0,1]`` the
+transformation is the logistic sigmoid,
 
-The number of points is *not* a free parameter: the grid is truncated where the points can
+```math
+c_k = \frac{1 + x_k}{2} = \frac{1}{1 + e^{-\pi \sinh (k h)}} ,
+\qquad h = 2^{-n} ,
+```
+
+which is the form the nodes are actually computed in, since it yields the small distance of
+the outer nodes from the endpoints without cancellation. Unlike every other family it is
+therefore the `UnitInterval` nodes that are primary here.
+
+The number of nodes is *not* a free parameter: the grid is truncated where the nodes can
 no longer be distinguished from ``\pm 1`` in the target precision, so it depends on `n`, on
 `T` and, through the weights, on `IT`. See [`TanhSinhQuadrature`](@ref) for the arguments
 and for the truncation criterion.
@@ -111,54 +121,8 @@ accept exact and symbolic ones: it is the rounding in `T` that decides where the
 sum is cut off, so there is nothing to compute for a type that does not round. Anything else
 throws an `ArgumentError`.
 
-```jldoctest
-julia> x = tanh_sinh_points(1)
-13-element Vector{Float64}:
- -0.999999999999957
- -0.9999999888756649
- -0.9999774771924616
- -0.9975148564572244
- -0.9513679640727469
- -0.6742714922484359
-  0.0
-  0.6742714922484359
-  0.9513679640727469
-  0.9975148564572244
-  0.9999774771924616
-  0.9999999888756649
-  0.999999999999957
-
-julia> x == -reverse(x)
-true
-```
-
-See also [`tanh_sinh_nodes`](@ref) for the same points on ``[0,1]``.
-"""
-function tanh_sinh_points(::Type{T}, n::Integer; IT=BigFloat) where {T}
-    c, _ = _tanh_sinh(T, n; IT=IT)
-    T.(unshift_nodes(c))
-end
-
-tanh_sinh_points(n; kwargs...) = tanh_sinh_points(Float64, n; kwargs...)
-
-@doc raw"""
-    tanh_sinh_nodes(n; IT=BigFloat)
-    tanh_sinh_nodes(T, n; IT=BigFloat)
-
-The tanh-sinh nodes of level `n` on the interval ``[0,1]``, i.e. the tanh-sinh points
-shifted and scaled from ``[-1,+1]`` to ``[0,1]``. In this form the transformation is the
-logistic sigmoid,
-
-```math
-c_k = \frac{1 + x_k}{2} = \frac{1}{1 + e^{-\pi \sinh (k h)}} ,
-\qquad h = 2^{-n} ,
-```
-
-which is how the nodes are actually computed, since it yields the small distance of the
-outer nodes from the endpoints without cancellation.
-
-These are exactly the nodes of [`TanhSinhQuadrature`](@ref) at the same `n`, `T` and `IT`.
-See [`tanh_sinh_points`](@ref) for the arguments.
+On the unit interval these are exactly the nodes of [`TanhSinhQuadrature`](@ref) at the same
+`n`, `T` and `IT`.
 
 ```jldoctest
 julia> tanh_sinh_nodes(1)
@@ -176,34 +140,42 @@ julia> tanh_sinh_nodes(1)
  0.9999887385962308
  0.9999999944378325
  0.9999999999999786
+
+julia> x = tanh_sinh_nodes(1; interval = SymmetricInterval());
+
+julia> x == -reverse(x)
+true
 ```
 """
-function tanh_sinh_nodes(::Type{T}, n::Integer; IT=BigFloat) where {T}
+function tanh_sinh_nodes(::Type{T}, n::Integer; IT=BigFloat,
+                         interval::QuadratureInterval=UnitInterval()) where {T}
     c, _ = _tanh_sinh(T, n; IT=IT)
-    T.(c)
+    T.(_nodes_from_unit(c, interval))
 end
 
 tanh_sinh_nodes(n; kwargs...) = tanh_sinh_nodes(Float64, n; kwargs...)
 
 @doc raw"""
-    tanh_sinh_weights(n; IT=BigFloat)
-    tanh_sinh_weights(T, n; IT=BigFloat)
+    tanh_sinh_weights(n; kwargs...)
+    tanh_sinh_weights(T, n; IT=BigFloat, interval=UnitInterval())
 
-The tanh-sinh weights of level `n` for the interval ``[0,1]``, belonging to the nodes
-returned by [`tanh_sinh_nodes`](@ref), i.e. the trapezoidal weights ``h`` times the
-Jacobian of the tanh-sinh transformation,
+The tanh-sinh weights of level `n`, belonging to the nodes returned by
+[`tanh_sinh_nodes`](@ref) for the same `interval`, i.e. the trapezoidal weights ``h`` times
+the Jacobian of the tanh-sinh transformation,
 
 ```math
 b_k = \frac{\pi h}{4} \, \frac{\cosh (k h)}{\cosh^2 \big( \tfrac{\pi}{2} \sinh (k h) \big)} ,
 \qquad h = 2^{-n} .
 ```
 
-They are symmetric about the centre weight bit for bit, and all of them are positive.
+They are symmetric about the centre weight bit for bit, and all of them are positive. The
+formula carries the normalisation to ``[0,1]``, so it is the `UnitInterval` weights that are
+primary here; those on ``[-1,+1]`` are obtained as ``w_i = 2 b_i``.
 
-Unlike every other family in this package these weights sum to ``1`` only up to the
-truncation error, since the rule is not exact for the constant — see
-[`TanhSinhQuadrature`](@ref), whose weights these are, for the arguments and for the
-truncation criterion.
+Unlike every other family in this package these weights attain their sum — ``1`` on the unit
+interval, ``2`` on the symmetric one — only up to the truncation error, since the rule is not
+exact even for the constant. See [`TanhSinhQuadrature`](@ref), whose weights these are, for
+the arguments and for the truncation criterion.
 
 ```jldoctest
 julia> b = tanh_sinh_weights(1);
@@ -213,38 +185,18 @@ true
 
 julia> isapprox(sum(b), 1; atol = 1E-5)
 true
-```
 
-See also [`tanh_sinh_point_weights`](@ref) for the same weights on ``[-1,+1]``.
-"""
-function tanh_sinh_weights(::Type{T}, n::Integer; IT=BigFloat) where {T}
-    _, b = _tanh_sinh(T, n; IT=IT)
-    T.(b)
-end
-
-tanh_sinh_weights(n; kwargs...) = tanh_sinh_weights(Float64, n; kwargs...)
-
-@doc raw"""
-    tanh_sinh_point_weights(n; IT=BigFloat)
-    tanh_sinh_point_weights(T, n; IT=BigFloat)
-
-The tanh-sinh weights of level `n` for the interval ``[-1,+1]``, i.e. the weights of
-[`tanh_sinh_weights`](@ref) doubled, belonging to the points returned by
-[`tanh_sinh_points`](@ref). They sum to ``2`` only up to the truncation error.
-
-See [`TanhSinhQuadrature`](@ref) for the arguments.
-
-```jldoctest
-julia> isapprox(sum(tanh_sinh_point_weights(1)), 2; atol = 1E-5)
+julia> isapprox(sum(tanh_sinh_weights(1; interval = SymmetricInterval())), 2; atol = 1E-5)
 true
 ```
 """
-function tanh_sinh_point_weights(::Type{T}, n::Integer; IT=BigFloat) where {T}
+function tanh_sinh_weights(::Type{T}, n::Integer; IT=BigFloat,
+                           interval::QuadratureInterval=UnitInterval()) where {T}
     _, b = _tanh_sinh(T, n; IT=IT)
-    T.(unscale_weights(b))
+    T.(_weights_from_unit(b, interval))
 end
 
-tanh_sinh_point_weights(n; kwargs...) = tanh_sinh_point_weights(Float64, n; kwargs...)
+tanh_sinh_weights(n; kwargs...) = tanh_sinh_weights(Float64, n; kwargs...)
 
 
 @doc raw"""
@@ -336,10 +288,9 @@ julia> isfinite(quad(x -> 1 / sqrt(x * (1 - x))))  # no node sits on an endpoint
 true
 ```
 
-See also [`tanh_sinh_nodes`](@ref) and [`tanh_sinh_points`](@ref) for the nodes alone,
-[`tanh_sinh_weights`](@ref) and [`tanh_sinh_point_weights`](@ref) for the weights, and
-[`GaussLegendreQuadrature`](@ref), which is the better choice for an integrand that is
-smooth up to and including the endpoints.
+See also [`tanh_sinh_nodes`](@ref) and [`tanh_sinh_weights`](@ref) for the nodes and weights
+alone, and [`GaussLegendreQuadrature`](@ref), which is the better choice for an integrand that
+is smooth up to and including the endpoints.
 """
 function TanhSinhQuadrature(::Type{T}, n::Integer; IT=BigFloat) where {T}
     c, b = _tanh_sinh(T, n; IT=IT)

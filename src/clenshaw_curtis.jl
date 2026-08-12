@@ -1,24 +1,29 @@
+# The Clenshaw-Curtis weights on [0,1], in their own arithmetic. The explicit form given by
+# Reid; see the ClenshawCurtisQuadrature docstring for the derivation and the literature.
+function _clenshaw_curtis_weights(s, IT)
+    if s == 1
+        throw(ErrorException("Clenshaw-Curtis quadrature is not defined for one stage."))
+    end
+
+    b(j,n) = fld(n,2) == j == cld(n,2) ? IT(1) : IT(2)
+    c(k,n) = mod(k,n) == 0 ? IT(1) : IT(2)
+    ϑ(k,n) = 2 * IT(π) * k / n
+
+    cctrm(k,j,n) = b(j,n) / IT( 4 * j^2 - 1 ) * cos(j * ϑ(k,n))
+    ccsum(k,n) = c(k,n) / IT(2n) * ( IT(1) - mapreduce(j -> cctrm(k,j,n), +, 1:div(n,2); init = zero(IT)) )
+
+    [ccsum(i-1,s-1) for i in 1:s]
+end
+
 """
-    clenshaw_curtis_points(s; IT=BigFloat)
-    clenshaw_curtis_points(T, s; IT=_default_arithmetic(T))
+    clenshaw_curtis_nodes(s; kwargs...)
+    clenshaw_curtis_nodes(T, s; IT=_default_arithmetic(T), interval=UnitInterval())
 
-The `s` Clenshaw-Curtis points on the interval ``[-1,+1]``, i.e., the Chebyshev points
-of the second kind, cf. [`chebyshev_points`](@ref). They include both endpoints.
+The `s` Clenshaw-Curtis nodes, i.e., the Chebyshev nodes of the second kind, cf.
+[`chebyshev_nodes`](@ref). They include both endpoints of the interval.
 
-Identical to [`lobatto_chebyshev_points`](@ref). Requires `s ≥ 2`.
-"""
-clenshaw_curtis_points(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_points(T, s, Val(2); kwargs...)
-clenshaw_curtis_points(s; kwargs...) = clenshaw_curtis_points(Float64, s; kwargs...)
-
-"""
-    clenshaw_curtis_nodes(s; IT=BigFloat)
-    clenshaw_curtis_nodes(T, s; IT=_default_arithmetic(T))
-
-The `s` Clenshaw-Curtis nodes on the interval ``[0,1]``, i.e., the Chebyshev nodes of
-the second kind, cf. [`chebyshev_nodes`](@ref). The first and last node are `0` and `1`.
-
-These are exactly the nodes of [`ClenshawCurtisQuadrature`](@ref) at the same `T` and `IT`.
-Requires `s ≥ 2`.
+Identical to [`lobatto_chebyshev_nodes`](@ref). On the unit interval these are exactly the
+nodes of [`ClenshawCurtisQuadrature`](@ref) at the same `T` and `IT`. Requires `s ≥ 2`.
 
 ```jldoctest
 julia> clenshaw_curtis_nodes(5)
@@ -34,24 +39,26 @@ clenshaw_curtis_nodes(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_no
 clenshaw_curtis_nodes(s; kwargs...) = clenshaw_curtis_nodes(Float64, s; kwargs...)
 
 @doc raw"""
-    clenshaw_curtis_weights(s; IT=BigFloat)
-    clenshaw_curtis_weights(T, s; IT=_default_arithmetic(T))
+    clenshaw_curtis_weights(s; kwargs...)
+    clenshaw_curtis_weights(T, s; IT=_default_arithmetic(T), interval=UnitInterval())
 
-The `s` Clenshaw-Curtis weights for the interval ``[0,1]``, belonging to the nodes
-returned by [`clenshaw_curtis_nodes`](@ref) and summing to ``1``.
+The `s` Clenshaw-Curtis weights, belonging to the nodes returned by
+[`clenshaw_curtis_nodes`](@ref) for the same `interval`. All of them are positive.
 
 They are the weights of the interpolatory rule through the Chebyshev points of the second
-kind, given explicitly by
+kind, given explicitly on ``[0,1]``, where they sum to ``1``, by
 
 ```math
-w_k = \frac{c_k}{2n} \left( 1 - \sum_{j=1}^{\lfloor n/2 \rfloor}
+b_k = \frac{c_k}{2n} \left( 1 - \sum_{j=1}^{\lfloor n/2 \rfloor}
       \frac{b_j}{4 j^2 - 1} \cos ( j \vartheta_k ) \right) ,
       \qquad \vartheta_k = \frac{2 \pi k}{n} , \qquad n = s-1 ,
 ```
 
 with ``c_k = 1`` at the endpoints and ``2`` otherwise, and ``b_j = 1`` for the last term
-of an even sum and ``2`` otherwise. All weights are positive. See
-[`ClenshawCurtisQuadrature`](@ref) for the derivation, the literature and the arguments.
+of an even sum and ``2`` otherwise. The formula carries the normalisation to ``[0,1]``, so it
+is the `UnitInterval` weights that are primary here; those on ``[-1,+1]`` are obtained as
+``w_i = 2 b_i`` and sum to ``2``. See [`ClenshawCurtisQuadrature`](@ref) for the derivation,
+the literature and the arguments.
 
 Throws an `ErrorException` for `s == 1`.
 
@@ -61,49 +68,20 @@ julia> clenshaw_curtis_weights(3)
  0.16666666666666666
  0.6666666666666666
  0.16666666666666666
-```
 
-See also [`clenshaw_curtis_point_weights`](@ref) for the same weights on ``[-1,+1]``.
-"""
-function clenshaw_curtis_weights(::Type{T}, s::Integer; IT=_default_arithmetic(T)) where {T}
-    if s == 1
-        throw(ErrorException("Clenshaw-Curtis quadrature is not defined for one stage."))
-    end
-
-    b(j,n) = fld(n,2) == j == cld(n,2) ? IT(1) : IT(2)
-    c(k,n) = mod(k,n) == 0 ? IT(1) : IT(2)
-    ϑ(k,n) = 2 * IT(π) * k / n
-
-    cctrm(k,j,n) = b(j,n) / IT( 4 * j^2 - 1 ) * cos(j * ϑ(k,n))
-    ccsum(k,n) = c(k,n) / IT(2n) * ( IT(1) - mapreduce(j -> cctrm(k,j,n), +, 1:div(n,2); init = zero(IT)) )
-
-    T.([ccsum(i-1,s-1) for i in 1:s])
-end
-
-clenshaw_curtis_weights(s; kwargs...) = clenshaw_curtis_weights(Float64, s; kwargs...)
-
-@doc raw"""
-    clenshaw_curtis_point_weights(s; IT=BigFloat)
-    clenshaw_curtis_point_weights(T, s; IT=_default_arithmetic(T))
-
-The `s` Clenshaw-Curtis weights for the interval ``[-1,+1]``, i.e., the weights of
-[`clenshaw_curtis_weights`](@ref) doubled so that they sum to ``2``.
-
-Throws an `ErrorException` for `s == 1`.
-
-```jldoctest
-julia> clenshaw_curtis_point_weights(3)
+julia> clenshaw_curtis_weights(3; interval = SymmetricInterval())
 3-element Vector{Float64}:
  0.3333333333333333
  1.3333333333333333
  0.3333333333333333
 ```
 """
-function clenshaw_curtis_point_weights(::Type{T}, s::Integer; IT=_default_arithmetic(T)) where {T}
-    T.(unscale_weights(clenshaw_curtis_weights(IT, s; IT=IT)))
+function clenshaw_curtis_weights(::Type{T}, s::Integer; IT=_default_arithmetic(T),
+                                 interval::QuadratureInterval=UnitInterval()) where {T}
+    T.(_weights_from_unit(_clenshaw_curtis_weights(s, IT), interval))
 end
 
-clenshaw_curtis_point_weights(s; kwargs...) = clenshaw_curtis_point_weights(Float64, s; kwargs...)
+clenshaw_curtis_weights(s; kwargs...) = clenshaw_curtis_weights(Float64, s; kwargs...)
 
 
 @doc raw"""
@@ -180,8 +158,8 @@ function ClenshawCurtisQuadrature(::Type{T}, s::Integer; IT=_default_arithmetic(
         throw(ErrorException("Clenshaw-Curtis quadrature is not defined for one stage."))
     end
 
-    x = clenshaw_curtis_nodes(IT, s; IT=IT)
-    w = clenshaw_curtis_weights(IT, s; IT=IT)
+    x = _nodes_from_symmetric(_chebyshev_nodes(s, Val(2), IT), UnitInterval())
+    w = _clenshaw_curtis_weights(s, IT)
 
     QuadratureRule(isodd(s) ? s+1 : s, x, w, T)
 end

@@ -8,7 +8,10 @@ module QuadratureRules
     # one generic function per accessor instead of one per package
     import GeometricBase: nnodes, nodes, order, weights
 
+    include("intervals.jl")
     include("utils.jl")
+
+    export QuadratureInterval, UnitInterval, SymmetricInterval
 
 
     include("quadrature_rule.jl")
@@ -39,15 +42,6 @@ module QuadratureRules
            RadauLegendreQuadrature,
            TanhSinhQuadrature
 
-    export chebyshev_points,
-           gauss_chebyshev_points,
-           lobatto_chebyshev_points,
-           clenshaw_curtis_points,
-           gauss_legendre_points,
-           lobatto_legendre_points,
-           radau_legendre_points,
-           tanh_sinh_points
-
     export chebyshev_nodes,
            gauss_chebyshev_nodes,
            lobatto_chebyshev_nodes,
@@ -56,15 +50,6 @@ module QuadratureRules
            lobatto_legendre_nodes,
            radau_legendre_nodes,
            tanh_sinh_nodes
-
-    export chebyshev_point_weights,
-           gauss_chebyshev_point_weights,
-           lobatto_chebyshev_point_weights,
-           clenshaw_curtis_point_weights,
-           gauss_legendre_point_weights,
-           lobatto_legendre_point_weights,
-           radau_legendre_point_weights,
-           tanh_sinh_point_weights
 
     export chebyshev_weights,
            gauss_chebyshev_weights,

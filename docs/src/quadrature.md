@@ -38,12 +38,12 @@ Most of the classical theory is instead formulated on the symmetric interval $[-
 which is where orthogonal polynomials such as the Legendre and Chebyshev polynomials are
 defined. The package follows this convention internally and offers both views:
 
-- the `*_points` and `*_point_weights` functions work on $[-1,+1]$,
-- the `*_nodes` and `*_weights` functions work on $[0,1]$,
+- `interval = UnitInterval()`, the default, gives $[0,1]$,
+- `interval = SymmetricInterval()` gives $[-1,+1]$,
 
 related by $c_i = (x_i + 1) / 2$, with the weights scaled correspondingly by a factor
 $1/2$ so that they sum to $1$ rather than $2$. See
-[Points, Nodes and Weights](@ref) for the full list.
+[Nodes and Weights](@ref) for the full list.
 
 
 ## Interpolatory quadrature
@@ -354,7 +354,7 @@ julia> simplify.(gauss_legendre_nodes(typeof(Sym(1)), 2))
  1/2 - sqrt(3)/6
  sqrt(3)/6 + 1/2
 
-julia> simplify.(radau_legendre_weights(typeof(Sym(1)), 3, :right))
+julia> simplify.(radau_legendre_weights(typeof(Sym(1)), 3, Val(:right)))
 3-element Vector{Sym{PythonCall.Py}}:
  4/9 - sqrt(6)/36
  sqrt(6)/36 + 4/9

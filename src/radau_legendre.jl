@@ -1,73 +1,77 @@
-
-@doc raw"""
-    radau_legendre_points(s, endpoint; IT=BigFloat)
-    radau_legendre_points(T, s, ::Val{endpoint}; IT=_default_arithmetic(T))
-
-The `s` Radau-Legendre points on the interval ``[-1,+1]``, i.e., one prescribed endpoint
-together with the ``s-1`` free points that maximise the degree of exactness.
-
-Which endpoint is prescribed is selected by `endpoint`:
-
-- `:left` includes ``-1``, the classical Gauss-Radau convention and the one underlying the
-  Radau IA Runge-Kutta methods,
-- `:right` includes ``+1``, the convention underlying the Radau IIA methods.
-
-The left points are the ``s`` roots of ``P_{s-1} + P_s``, one of which is exactly ``-1``.
-They are computed in the arithmetic `IT`, either Newton-refined from the double precision
-approximations of `FastGaussQuadrature.gaussradau` or, for a non-numeric `IT` such as a
-symbolic one, exactly from the companion matrix, and the prescribed endpoint is then set
-to exactly ``-1``. The right points are obtained by reflection, ``x \mapsto -x``, which
-makes the two variants exact mirror images of each other.
-
-There is deliberately no default for `endpoint`: the two variants are not interchangeable,
-and silently choosing one would be easy to overlook.
-
-# Arguments
-- `T`: element type of the returned vector, `Float64` if omitted.
-- `s`: number of points.
-- `endpoint`: `:left` or `:right`, the endpoint included among the points.
-- `IT`: arithmetic in which the roots are computed, `BigFloat` for a numeric `T` and `T`
-  itself otherwise, cf. [`QuadratureRules._default_arithmetic`](@ref).
-
-```jldoctest
-julia> radau_legendre_points(2, :left)
-2-element Vector{Float64}:
- -1.0
-  0.3333333333333333
-
-julia> radau_legendre_points(2, :right)
-2-element Vector{Float64}:
- -0.3333333333333333
-  1.0
-```
-
-See also [`radau_legendre_nodes`](@ref) for the same points on ``[0,1]``.
-"""
-function radau_legendre_points(::Type{T}, s::Integer, ::Val{:left}; IT=_default_arithmetic(T)) where {T}
+# The left Radau-Legendre nodes on [-1,+1], i.e. the roots of P_{s-1} + P_s, one of which is
+# set to exactly -1, in their own arithmetic.
+function _radau_legendre_nodes(s, ::Val{:left}, IT)
     P = _legendre_polynomial(s-1, IT) + _legendre_polynomial(s, IT)
     x = sort(_roots(P, () -> FastGaussQuadrature.gaussradau(s)[1]))
     x[begin] = -1
 
-    T.(x)
+    x
 end
 
-function radau_legendre_points(::Type{T}, s::Integer, ::Val{:right}; IT=_default_arithmetic(T)) where {T}
-    T.(-reverse(radau_legendre_points(IT, s, Val(:left); IT=IT)))
+# The right nodes are the reflection of the left ones. Reflecting rather than evaluating the
+# mirrored closed form is what makes the two variants exact mirror images: the recurrence for
+# P_{s-1}(-x) does not reproduce P_{s-1}(x) bit for bit.
+_radau_legendre_nodes(s, ::Val{:right}, IT) = -reverse(_radau_legendre_nodes(s, Val(:left), IT))
+
+# The left Radau-Legendre weights on [-1,+1] belonging to the precomputed left nodes `x`, in
+# their own arithmetic. Taking the nodes as an argument lets _radau_legendre share the closed
+# form with radau_legendre_weights without repeating the root find.
+function _radau_legendre_weights(x::AbstractVector{IT}) where {IT}
+    s = length(x)
+
+    [ (1 - x[i]) / ( s^2 * _legendre(s-1, x[i])^2 )  for i in 1:s ]
 end
 
-radau_legendre_points(s, endpoint; kwargs...) = radau_legendre_points(Float64, s, Val(endpoint); kwargs...)
+# Nodes and weights on [-1,+1] from a single root find, the right variant obtained by
+# reflecting the left one.
+function _radau_legendre(s, ::Val{:left}, IT)
+    x = _radau_legendre_nodes(s, Val(:left), IT)
+
+    x, _radau_legendre_weights(x)
+end
+
+function _radau_legendre(s, ::Val{:right}, IT)
+    x, w = _radau_legendre(s, Val(:left), IT)
+
+    -reverse(x), reverse(w)
+end
 
 @doc raw"""
-    radau_legendre_nodes(s, endpoint; IT=BigFloat)
-    radau_legendre_nodes(T, s, ::Val{endpoint}; IT=_default_arithmetic(T))
+    radau_legendre_nodes(s, endpoint; kwargs...)
+    radau_legendre_nodes(T, s, ::Val{endpoint}; IT=_default_arithmetic(T),
+                         interval=UnitInterval())
 
-The `s` Radau-Legendre nodes on the interval ``[0,1]``, i.e., the Radau-Legendre points
-shifted and scaled from ``[-1,+1]`` to ``[0,1]``.
+The `s` Radau-Legendre nodes, i.e., one prescribed endpoint of the interval together with the
+``s-1`` free nodes that maximise the degree of exactness, mapped to `interval`.
 
-As the prescribed endpoint of [`radau_legendre_points`](@ref) is exact, the first node is
-exactly `0` for `endpoint = :left` and the last node exactly `1` for `endpoint = :right`.
-These are the nodes of [`RadauLegendreQuadrature`](@ref). See
-[`radau_legendre_points`](@ref) for the arguments.
+Which endpoint is prescribed is selected by `endpoint`:
+
+- `:left` includes the left end of the interval, the classical Gauss-Radau convention and the
+  one underlying the Radau IA Runge-Kutta methods,
+- `:right` includes the right end, the convention underlying the Radau IIA methods.
+
+There is deliberately no default for `endpoint`: the two variants are not interchangeable,
+and silently choosing one would be easy to overlook.
+
+The left nodes are the ``s`` roots of ``P_{s-1} + P_s`` on ``[-1,+1]``, one of which is
+exactly ``-1``. They are computed in the arithmetic `IT`, either Newton-refined from the
+double precision approximations of `FastGaussQuadrature.gaussradau` or, for a non-numeric
+`IT` such as a symbolic one, exactly from the companion matrix, and the prescribed endpoint
+is then set to exactly ``-1``. The right nodes are obtained by reflection,
+``x \mapsto -x``, which makes the two variants exact mirror images of each other. As the
+prescribed endpoint is exact, so is the corresponding node after the mapping.
+
+Note that only the *interval* of `SymmetricInterval` is symmetric: the Radau nodes are
+asymmetric by construction on either interval, which is the whole point of the family.
+
+# Arguments
+- `T`: element type of the returned vector, `Float64` if omitted.
+- `s`: number of nodes.
+- `endpoint`: `:left` or `:right`, the endpoint included among the nodes.
+- `IT`: arithmetic in which the roots are computed, `BigFloat` for a numeric `T` and `T`
+  itself otherwise, cf. [`QuadratureRules._default_arithmetic`](@ref).
+- `interval`: [`UnitInterval`](@ref) for ``[0,1]``, the default and the interval of
+  [`RadauLegendreQuadrature`](@ref), or [`SymmetricInterval`](@ref) for ``[-1,+1]``.
 
 ```jldoctest
 julia> radau_legendre_nodes(2, :left)
@@ -79,45 +83,29 @@ julia> radau_legendre_nodes(2, :right)
 2-element Vector{Float64}:
  0.3333333333333333
  1.0
+
+julia> radau_legendre_nodes(2, :left; interval = SymmetricInterval())
+2-element Vector{Float64}:
+ -1.0
+  0.3333333333333333
 ```
 """
-function radau_legendre_nodes(::Type{T}, s::Integer, endpoint::Val; IT=_default_arithmetic(T)) where {T}
-    T.(shift_nodes(radau_legendre_points(IT, s, endpoint; IT=IT)))
+function radau_legendre_nodes(::Type{T}, s::Integer, endpoint::Val;
+                              IT=_default_arithmetic(T),
+                              interval::QuadratureInterval=UnitInterval()) where {T}
+    T.(_nodes_from_symmetric(_radau_legendre_nodes(s, endpoint, IT), interval))
 end
 
 radau_legendre_nodes(s, endpoint; kwargs...) = radau_legendre_nodes(Float64, s, Val(endpoint); kwargs...)
 
-# The left Radau-Legendre weights on [-1,+1] belonging to the precomputed left points `x`,
-# in their own arithmetic. Taking the points as an argument lets _radau_legendre share the
-# closed form with radau_legendre_point_weights without repeating the root find.
-function _radau_legendre_point_weights(x::AbstractVector{IT}) where {IT}
-    s = length(x)
-
-    [ (1 - x[i]) / ( s^2 * _legendre(s-1, x[i])^2 )  for i in 1:s ]
-end
-
-# Points and weights on [-1,+1] from a single root find, the right variant obtained by
-# reflecting the left one. Reflecting rather than evaluating the mirrored closed form is
-# what makes the two variants exact mirror images: the recurrence for P_{s-1}(-x) does not
-# reproduce P_{s-1}(x) bit for bit.
-function _radau_legendre(s, ::Val{:left}, IT)
-    x = radau_legendre_points(IT, s, Val(:left); IT=IT)
-
-    x, _radau_legendre_point_weights(x)
-end
-
-function _radau_legendre(s, ::Val{:right}, IT)
-    x, w = _radau_legendre(s, Val(:left), IT)
-
-    -reverse(x), reverse(w)
-end
-
 @doc raw"""
-    radau_legendre_point_weights(s, endpoint; IT=BigFloat)
-    radau_legendre_point_weights(T, s, ::Val{endpoint}; IT=_default_arithmetic(T))
+    radau_legendre_weights(s, endpoint; kwargs...)
+    radau_legendre_weights(T, s, ::Val{endpoint}; IT=_default_arithmetic(T),
+                           interval=UnitInterval())
 
-The `s` Radau-Legendre weights for the interval ``[-1,+1]``, belonging to the points
-returned by [`radau_legendre_points`](@ref) and summing to ``2``.
+The `s` Radau-Legendre weights belonging to the nodes returned by
+[`radau_legendre_nodes`](@ref) for the same `endpoint` and `interval`. All of them are
+positive.
 
 They are given in closed form by
 
@@ -126,47 +114,31 @@ w_i = \frac{1 \mp x_i}{s^2 \, \big[ P_{s-1}(x_i) \big]^2} ,
 ```
 
 with the upper sign for `endpoint = :left` and the lower one for `endpoint = :right`. Like
-the corresponding Lobatto formula this holds for the free points and for the prescribed
-endpoint alike, where ``P_{s-1}(\mp 1)^2 = 1`` reduces it to ``2/s^2``.
+the corresponding Lobatto formula this holds for the free nodes and for the prescribed
+endpoint alike, where ``P_{s-1}(\mp 1)^2 = 1`` reduces it to ``2/s^2``. Being formulated on
+``[-1,+1]``, where the weights sum to ``2``, it is the `SymmetricInterval` weights that are
+primary here; those on ``[0,1]`` are obtained as ``b_i = w_i / 2`` and sum to ``1``.
 
-See [`radau_legendre_points`](@ref) for the arguments.
-
-```jldoctest
-julia> radau_legendre_point_weights(2, :left)
-2-element Vector{Float64}:
- 0.5
- 1.5
-```
-
-See also [`radau_legendre_weights`](@ref) for the same weights on ``[0,1]``.
-"""
-function radau_legendre_point_weights(::Type{T}, s::Integer, endpoint::Val; IT=_default_arithmetic(T)) where {T}
-    _, w = _radau_legendre(s, endpoint, IT)
-
-    T.(w)
-end
-
-radau_legendre_point_weights(s, endpoint; kwargs...) = radau_legendre_point_weights(Float64, s, Val(endpoint); kwargs...)
-
-@doc raw"""
-    radau_legendre_weights(s, endpoint; IT=BigFloat)
-    radau_legendre_weights(T, s, ::Val{endpoint}; IT=_default_arithmetic(T))
-
-The `s` Radau-Legendre weights for the interval ``[0,1]``, i.e., the weights of
-[`radau_legendre_point_weights`](@ref) halved so that they sum to ``1``.
-
-These are the weights of [`RadauLegendreQuadrature`](@ref). See
-[`radau_legendre_points`](@ref) for the arguments.
+See [`radau_legendre_nodes`](@ref) for the arguments.
 
 ```jldoctest
 julia> radau_legendre_weights(2, :left)
 2-element Vector{Float64}:
  0.25
  0.75
+
+julia> radau_legendre_weights(2, :left; interval = SymmetricInterval())
+2-element Vector{Float64}:
+ 0.5
+ 1.5
 ```
 """
-function radau_legendre_weights(::Type{T}, s::Integer, endpoint::Val; IT=_default_arithmetic(T)) where {T}
-    T.(scale_weights(radau_legendre_point_weights(IT, s, endpoint; IT=IT)))
+function radau_legendre_weights(::Type{T}, s::Integer, endpoint::Val;
+                                IT=_default_arithmetic(T),
+                                interval::QuadratureInterval=UnitInterval()) where {T}
+    _, w = _radau_legendre(s, endpoint, IT)
+
+    T.(_weights_from_symmetric(w, interval))
 end
 
 radau_legendre_weights(s, endpoint; kwargs...) = radau_legendre_weights(Float64, s, Val(endpoint); kwargs...)
@@ -219,7 +191,7 @@ Unlike the Lobatto rules, the Radau rules are defined for `s == 1`, where the si
 is the prescribed endpoint and the rule reduces to a Riemann sum.
 
 See [`GaussLegendreQuadrature`](@ref) for the meaning of `T`, `IT` and `fast`, and
-[`radau_legendre_points`](@ref) for `endpoint`.
+[`radau_legendre_nodes`](@ref) for `endpoint`.
 
 ```jldoctest
 julia> RadauLegendreQuadrature(1, :left) == RiemannQuadratureLeft()

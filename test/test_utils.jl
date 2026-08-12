@@ -1,5 +1,7 @@
 import QuadratureRules: scale_weights, unscale_weights, shift_nodes, unshift_nodes, shift!, unshift!
 import QuadratureRules: _default_arithmetic
+import QuadratureRules: _nodes_from_symmetric, _nodes_from_unit
+import QuadratureRules: _weights_from_symmetric, _weights_from_unit
 
 # A stand-in for an element type from outside the numeric tower, such as that of a computer
 # algebra system, of which the default arithmetic knows nothing but that it is not numeric.
@@ -43,5 +45,28 @@ struct NotANumber end
     @test unscale_weights(scale_weights(b)) ≈ b  atol=1E-14
     @test scale_weights(unscale_weights(b)) ≈ b  atol=1E-14
     @test unscale_weights([0.5, 0.5]) == [1.0, 1.0]
+
+    # The interval a family computes on is mapped to the one the caller asked for, and mapping
+    # to the interval the values already live on is the identity rather than a round trip.
+    @test _nodes_from_symmetric(c, SymmetricInterval()) === c
+    @test _nodes_from_symmetric(c, UnitInterval())      == shift_nodes(c)
+    @test _nodes_from_unit(c, UnitInterval())           === c
+    @test _nodes_from_unit(c, SymmetricInterval())      == unshift_nodes(c)
+
+    @test _weights_from_symmetric(b, SymmetricInterval()) === b
+    @test _weights_from_symmetric(b, UnitInterval())      == scale_weights(b)
+    @test _weights_from_unit(b, UnitInterval())           === b
+    @test _weights_from_unit(b, SymmetricInterval())      == unscale_weights(b)
+
+    @test UnitInterval() isa QuadratureInterval
+    @test SymmetricInterval() isa QuadratureInterval
+
+    # An interval outside the type is a TypeError, not a silent [0,1]. The keyword is
+    # annotated, so this is raised at the accessor itself and names both the keyword and
+    # the expected supertype, rather than surfacing as a MethodError on a private helper.
+    @test_throws TypeError gauss_legendre_nodes(2; interval = :symmetric)
+    @test_throws TypeError gauss_legendre_weights(2; interval = :symmetric)
+    @test_throws TypeError tanh_sinh_nodes(1; interval = :symmetric)
+    @test_throws TypeError radau_legendre_nodes(2, :left; interval = :symmetric)
 
 end

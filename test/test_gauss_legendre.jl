@@ -11,26 +11,26 @@ import QuadratureRules: scale_weights, unscale_weights, shift_nodes, unshift_nod
 
         @test gauss_legendre_nodes(Float64, s) == nodes(GaussLegendreQuadrature(s))
         @test gauss_legendre_nodes(s) == gauss_legendre_nodes(Float64, s)
-        @test gauss_legendre_points(s) == gauss_legendre_points(Float64, s)
+        @test gauss_legendre_nodes(s; interval = SymmetricInterval()) == gauss_legendre_nodes(Float64, s; interval = SymmetricInterval())
 
         @test gauss_legendre_weights(Float64, s) == weights(GaussLegendreQuadrature(s))
         @test gauss_legendre_weights(s) == gauss_legendre_weights(Float64, s)
-        @test gauss_legendre_point_weights(s) == gauss_legendre_point_weights(Float64, s)
+        @test gauss_legendre_weights(s; interval = SymmetricInterval()) == gauss_legendre_weights(Float64, s; interval = SymmetricInterval())
 
-        # the points are primary and the nodes are derived from them, so the two agree
-        # exactly at equal working precision and up to rounding across precisions
-        @test shift_nodes(gauss_legendre_points(BigFloat, s)) == gauss_legendre_nodes(BigFloat, s)
-        @test shift_nodes(gauss_legendre_points(Float64, s))  ≈  gauss_legendre_nodes(Float64, s)
-        @test unshift_nodes(gauss_legendre_nodes(Float64, s)) ≈ gauss_legendre_points(Float64, s)
-        @test gauss_legendre_points(Float64, s) ≈ FastGaussQuadrature.gausslegendre(s)[1]
+        # the symmetric nodes are primary and the unit-interval ones are derived from them,
+        # so the two agree exactly at equal working precision and up to rounding across precisions
+        @test shift_nodes(gauss_legendre_nodes(BigFloat, s; interval = SymmetricInterval())) == gauss_legendre_nodes(BigFloat, s)
+        @test shift_nodes(gauss_legendre_nodes(Float64, s; interval = SymmetricInterval()))  ≈  gauss_legendre_nodes(Float64, s)
+        @test unshift_nodes(gauss_legendre_nodes(Float64, s)) ≈ gauss_legendre_nodes(Float64, s; interval = SymmetricInterval())
+        @test gauss_legendre_nodes(Float64, s; interval = SymmetricInterval()) ≈ FastGaussQuadrature.gausslegendre(s)[1]
 
         # likewise the weights for [-1,+1] are primary and those for [0,1] are derived
-        @test scale_weights(gauss_legendre_point_weights(BigFloat, s)) == gauss_legendre_weights(BigFloat, s)
-        @test unscale_weights(gauss_legendre_weights(Float64, s))      ≈  gauss_legendre_point_weights(Float64, s)
-        @test gauss_legendre_point_weights(Float64, s) ≈ FastGaussQuadrature.gausslegendre(s)[2]
+        @test scale_weights(gauss_legendre_weights(BigFloat, s; interval = SymmetricInterval())) == gauss_legendre_weights(BigFloat, s)
+        @test unscale_weights(gauss_legendre_weights(Float64, s))      ≈  gauss_legendre_weights(Float64, s; interval = SymmetricInterval())
+        @test gauss_legendre_weights(Float64, s; interval = SymmetricInterval()) ≈ FastGaussQuadrature.gausslegendre(s)[2]
 
-        @test sum(gauss_legendre_point_weights(Float64, s)) ≈ 2
-        @test all(wᵢ > 0 for wᵢ in gauss_legendre_point_weights(Float64, s))
+        @test sum(gauss_legendre_weights(Float64, s; interval = SymmetricInterval())) ≈ 2
+        @test all(wᵢ > 0 for wᵢ in gauss_legendre_weights(Float64, s; interval = SymmetricInterval()))
 
         @test eltype(gauss_legendre_nodes(BigFloat, s)) == BigFloat
         @test eltype(gauss_legendre_weights(BigFloat, s)) == BigFloat
@@ -60,10 +60,10 @@ import QuadratureRules: scale_weights, unscale_weights, shift_nodes, unshift_nod
     # is of no help for an algebraic number, and the exact root find needs `eigvals`, which
     # they do not have.
     for s in 1:10
-        @test gauss_legendre_points(ComplexF64, s) == ComplexF64.(gauss_legendre_points(BigFloat, s))
+        @test gauss_legendre_nodes(ComplexF64, s; interval = SymmetricInterval()) == ComplexF64.(gauss_legendre_nodes(BigFloat, s; interval = SymmetricInterval()))
         @test gauss_legendre_weights(ComplexF64, s) == ComplexF64.(gauss_legendre_weights(BigFloat, s))
 
-        @test gauss_legendre_points(Rational{BigInt}, s) == Rational{BigInt}.(gauss_legendre_points(BigFloat, s))
+        @test gauss_legendre_nodes(Rational{BigInt}, s; interval = SymmetricInterval()) == Rational{BigInt}.(gauss_legendre_nodes(BigFloat, s; interval = SymmetricInterval()))
         @test gauss_legendre_weights(Rational{BigInt}, s) == Rational{BigInt}.(gauss_legendre_weights(BigFloat, s))
     end
 
