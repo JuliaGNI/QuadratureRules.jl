@@ -60,9 +60,11 @@ This is the explicit form given by Reid; see the
 derivation and for the literature.
 
 Being an interpolatory rule on `s` nodes, it is exact for polynomials of degree
-``\le s-1``, so its **order is `s`**. For odd `s` it gains one further degree by
-symmetry, which the reported order does not reflect. All weights are positive, which is
-what guarantees convergence for every continuous integrand.
+``\le s-1``. For odd `s` it gains one further degree, because the monomial of degree `s`
+that it would otherwise fail on is odd about the midpoint of the interval and its error
+therefore cancels. The **order is `s` for even `s` and `s+1` for odd `s`**, and it is
+sharp: the rule is not exact one degree beyond. All weights are positive, which is what
+guarantees convergence for every continuous integrand.
 
 Although its order is only about half that of [`GaussLegendreQuadrature`](@ref) with the
 same number of nodes, Clenshaw-Curtis converges at essentially the same rate for
@@ -86,7 +88,10 @@ Throws an `ErrorException` for `s == 1`.
 
 ```jldoctest
 julia> ClenshawCurtisQuadrature(3)     # Simpson's rule
-QuadratureRule{Float64, 3}(3, [0.0, 0.5, 1.0], [0.16666666666666666, 0.6666666666666666, 0.16666666666666666])
+QuadratureRule{Float64, 3}(4, [0.0, 0.5, 1.0], [0.16666666666666666, 0.6666666666666666, 0.16666666666666666])
+
+julia> ClenshawCurtisQuadrature(3) == LobattoLegendreQuadrature(3)
+true
 
 julia> ClenshawCurtisQuadrature(5)(x -> x^4)
 0.19999999999999996
@@ -111,7 +116,7 @@ function ClenshawCurtisQuadrature(::Type{T}, s::Integer; IT=BigFloat) where {T}
     x = clenshaw_curtis_nodes(IT, s; IT=IT)
     w = [ccsum(i-1,s-1) for i in 1:s]
 
-    QuadratureRule(s, x, w, T)
+    QuadratureRule(isodd(s) ? s+1 : s, x, w, T)
 end
 
 ClenshawCurtisQuadrature(s; kwargs...) = ClenshawCurtisQuadrature(Float64, s; kwargs...)

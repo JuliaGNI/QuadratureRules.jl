@@ -90,11 +90,16 @@ $\le p - 1$ exactly. The order is the quantity that governs the convergence rate
 composite rule, and it is the convention used for the order of the collocation and
 variational integrators that this package is primarily written for.
 
-The order stored in a rule is a *guaranteed* value rather than a sharp one. The
-Clenshaw-Curtis and Chebyshev rules pick up one extra degree of exactness when the number
-of nodes is odd, because the additional monomial they would fail on is odd about the
-midpoint of the interval and therefore integrates to zero on both sides. The reported
-order does not reflect this bonus.
+The order stored in a rule is *sharp*: the rule really does fail for some polynomial of
+degree $p$. In particular, the Clenshaw-Curtis and Chebyshev rules pick up one extra
+degree of exactness when the number of nodes is odd — the additional monomial they would
+fail on is odd about the midpoint of the interval and therefore integrates to zero on
+both sides — and the reported order includes that bonus.
+
+Sharpness has a useful consequence. Since the order is a function of the nodes and
+weights rather than of the family a rule was constructed from, two rules that coincide
+compare equal. The three-node Clenshaw-Curtis and Lobatto-Legendre rules are both
+Simpson's rule, and both report order 4.
 
 
 ## How accurate can a rule be?

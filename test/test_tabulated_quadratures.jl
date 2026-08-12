@@ -37,4 +37,12 @@
     @test weights(TrapezoidalQuadrature())  == [0.5, 0.5]
     @test order(TrapezoidalQuadrature())    == 2
 
+    # the tabulated rules are the low-node members of the generated families, and since
+    # an interpolatory rule is determined by its nodes they agree exactly
+    @test MidpointQuadrature()    == GaussLegendreQuadrature(1)
+    @test MidpointQuadrature()    == GaussChebyshevQuadrature(1)
+    @test TrapezoidalQuadrature() == LobattoLegendreQuadrature(2)
+    @test TrapezoidalQuadrature() == ClenshawCurtisQuadrature(2)
+    @test TrapezoidalQuadrature() == LobattoChebyshevQuadrature(2)
+
 end

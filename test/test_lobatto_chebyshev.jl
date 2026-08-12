@@ -35,7 +35,7 @@ import QuadratureRules: shift_nodes, unshift_nodes
         # nodes, so the interpolatory rule on them is the Clenshaw-Curtis rule
         @test LobattoChebyshevQuadrature(s) == ClenshawCurtisQuadrature(s)
         @test LobattoChebyshevQuadrature(BigFloat, s) == ClenshawCurtisQuadrature(BigFloat, s)
-        @test order(LobattoChebyshevQuadrature(s)) == s
+        @test order(LobattoChebyshevQuadrature(s)) == (isodd(s) ? s+1 : s)
 
         let q = LobattoChebyshevQuadrature(BigFloat, s)
             @test nodes(q)[begin] == 0

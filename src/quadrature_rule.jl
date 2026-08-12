@@ -140,15 +140,20 @@ A quadrature rule has order ``p`` if it integrates all polynomials of degree
 \sum_{i} b_i \, c_i^{k} = \frac{1}{k+1} , \qquad k = 0, 1, \dots, p-1 ,
 ```
 
-are satisfied. The order is a *guaranteed* value: the Clenshaw-Curtis and Chebyshev
-rules gain one additional degree when the number of nodes is odd, which is not
-reflected here.
+are satisfied. The order is *sharp* for every rule in this package: the rule fails for
+some polynomial of degree ``p``. It follows that two rules with the same nodes and
+weights also have the same order, so rules that coincide compare equal across families,
+for instance the three-node Clenshaw-Curtis and Lobatto-Legendre rules, both of which
+are Simpson's rule.
 
 ```jldoctest
 julia> order(GaussLegendreQuadrature(3))     # exact up to degree 5
 6
 
 julia> order(LobattoLegendreQuadrature(3))   # exact up to degree 3
+4
+
+julia> order(ClenshawCurtisQuadrature(3))    # the same rule, hence the same order
 4
 ```
 """

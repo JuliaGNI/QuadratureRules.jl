@@ -9,9 +9,10 @@ import QuadratureRules: scale_weights, shift_nodes, unshift_nodes
         @test ClenshawCurtisQuadrature(s) == ClenshawCurtisQuadrature(Float64, s)
 
         @test sum(weights(ClenshawCurtisQuadrature(s))) ≈ 1
-        @test order(ClenshawCurtisQuadrature(s)) == s
+        @test order(ClenshawCurtisQuadrature(s)) == (isodd(s) ? s+1 : s)
 
-        # an s-node interpolatory rule integrates polynomials up to degree s-1 exactly
+        # an s-node interpolatory rule integrates polynomials up to degree s-1 exactly,
+        # and one degree further for odd s; see test_order.jl
         let q = ClenshawCurtisQuadrature(BigFloat, s)
             for k in 0:order(q)-1
                 @test sum(weights(q) .* nodes(q).^k) ≈ 1 / BigFloat(k+1)  atol=1E-60

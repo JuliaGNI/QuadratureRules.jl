@@ -146,8 +146,10 @@ w_i = \frac{2}{s} \left( 1 - 2 \sum_{j=1}^{\lfloor s/2 \rfloor}
 ```
 
 scaled by ``1/2`` for the interval ``[0,1]``. Being an interpolatory rule on `s` nodes,
-it is exact for polynomials of degree ``\le s-1``, so its **order is `s`**; for odd `s`
-it gains one further degree by symmetry. All weights are positive.
+it is exact for polynomials of degree ``\le s-1``. For odd `s` it gains one further
+degree, because the monomial of degree `s` that it would otherwise fail on is odd about
+the midpoint of the interval and its error therefore cancels. The **order is `s` for even
+`s` and `s+1` for odd `s`**, and it is sharp. All weights are positive.
 
 !!! note "This is not the weighted Gauss-Chebyshev rule"
     The classical Gauss-Chebyshev rule approximates the weighted integral
@@ -167,11 +169,14 @@ it gains one further degree by symmetry. All weights are positive.
 ```jldoctest
 julia> quad = GaussChebyshevQuadrature(3);
 
-julia> order(quad)
-3
+julia> order(quad)          # odd s, so exact up to degree 3
+4
 
 julia> quad(x -> x^2)
 0.33333333333333337
+
+julia> GaussChebyshevQuadrature(1) == MidpointQuadrature()
+true
 ```
 
 See also [`ClenshawCurtisQuadrature`](@ref) and [`ChebyshevQuadrature`](@ref).
@@ -188,7 +193,7 @@ function GaussChebyshevQuadrature(::Type{T}, s::Integer; IT=BigFloat) where {T}
         b[i] = (1 - 2tj) / IT(s)
     end
 
-    QuadratureRule(s, c, b, T)
+    QuadratureRule(isodd(s) ? s+1 : s, c, b, T)
 end
 
 GaussChebyshevQuadrature(s; kwargs...) = GaussChebyshevQuadrature(Float64, s; kwargs...)
@@ -205,7 +210,7 @@ the interval. These are precisely the Clenshaw-Curtis nodes, and since an interp
 rule is uniquely determined by its nodes, this rule *is* the Clenshaw-Curtis rule:
 `LobattoChebyshevQuadrature(s) == ClenshawCurtisQuadrature(s)`. The implementation
 therefore delegates to [`ClenshawCurtisQuadrature`](@ref), where the weights and the
-resulting **order `s`** are documented.
+resulting **order**, `s` for even `s` and `s+1` for odd `s`, are documented.
 
 Throws an `ErrorException` for `s == 1`.
 
@@ -214,7 +219,7 @@ julia> LobattoChebyshevQuadrature(3) == ClenshawCurtisQuadrature(3)
 true
 
 julia> LobattoChebyshevQuadrature(3)
-QuadratureRule{Float64, 3}(3, [0.0, 0.5, 1.0], [0.16666666666666666, 0.6666666666666666, 0.16666666666666666])
+QuadratureRule{Float64, 3}(4, [0.0, 0.5, 1.0], [0.16666666666666666, 0.6666666666666666, 0.16666666666666666])
 ```
 """
 function LobattoChebyshevQuadrature(::Type{T}, s::Integer; IT=BigFloat) where {T}

@@ -254,8 +254,10 @@ w_i = \frac{2}{s} \left( 1 - 2 \sum_{j=1}^{\lfloor s/2 \rfloor}
 with a further factor $1/2$ for the move to $[0,1]$. This rule is classically known as
 **Fejér's first rule**. All its weights are positive and all its nodes are interior.
 
-Being interpolatory on `s` nodes, it is exact for polynomials of degree $\le s-1$, so its
-order is `s`. For odd `s` it gains one further degree by symmetry.
+Being interpolatory on `s` nodes, it is exact for polynomials of degree $\le s-1$. For
+odd `s` it gains one further degree, the monomial of degree `s` being odd about the
+midpoint of the interval, so its order is `s` for even `s` and `s+1` for odd `s`. With one
+node it reduces to the midpoint rule.
 
 !!! warning "Not the weighted Gauss-Chebyshev rule"
     The name Gauss-Chebyshev is also used for the rule that approximates the *weighted*
@@ -292,8 +294,10 @@ corrections of the underlying cosine transform: the endpoints are shared by only
 half-period, and the highest mode of an even-length transform is not duplicated. As
 always, a factor $1/2$ maps the rule to $[0,1]$.
 
-The rule is exact for polynomials of degree $\le s-1$, giving order `s`, with one bonus
-degree for odd `s`. All weights are positive [imhof1963](@cite). It requires $s \ge 2$.
+The rule is exact for polynomials of degree $\le s-1$, with one bonus degree for odd `s`,
+so its order is `s` for even `s` and `s+1` for odd `s`. All weights are positive
+[imhof1963](@cite). It requires $s \ge 2$. With three nodes it is Simpson's rule and
+therefore equal, order included, to the three-node Lobatto-Legendre rule.
 
 This is the explicit closed form derived in [reid2014](@citet), which is the form the
 implementation follows; the rule itself goes back to [clenshaw1960](@citet). Comparing the
@@ -445,12 +449,15 @@ ChebyshevQuadrature(4, 2) == LobattoChebyshevQuadrature(4)
 | [`TrapezoidalQuadrature`](@ref) | $0, 1$ | both | 2 | |
 | [`GaussLegendreQuadrature`](@ref) | roots of $P_s$ | no | $2s$ | |
 | [`LobattoLegendreQuadrature`](@ref) | roots of $P_{s-1}'$ and $\pm 1$ | both | $2s-2$ | $s \ge 2$ |
-| [`GaussChebyshevQuadrature`](@ref) | Chebyshev, first kind | no | $s$ | |
-| [`ClenshawCurtisQuadrature`](@ref) | Chebyshev, second kind | both | $s$ | $s \ge 2$ |
-| [`LobattoChebyshevQuadrature`](@ref) | Chebyshev, second kind | both | $s$ | $s \ge 2$ |
+| [`GaussChebyshevQuadrature`](@ref) | Chebyshev, first kind | no | $s$ / $s+1$ | |
+| [`ClenshawCurtisQuadrature`](@ref) | Chebyshev, second kind | both | $s$ / $s+1$ | $s \ge 2$ |
+| [`LobattoChebyshevQuadrature`](@ref) | Chebyshev, second kind | both | $s$ / $s+1$ | $s \ge 2$ |
 
-The orders quoted for the Chebyshev-based rules are guaranteed values; for an odd number
-of nodes these rules integrate one additional degree exactly.
+The two orders quoted for the Chebyshev-based rules are for an even and an odd number of
+nodes respectively; these rules integrate one additional degree exactly when `s` is odd.
+Every order in the table is sharp, so rules that coincide agree in their order too:
+`ClenshawCurtisQuadrature(3) == LobattoLegendreQuadrature(3)` and
+`GaussChebyshevQuadrature(1) == MidpointQuadrature()`.
 
 Not provided: Radau rules, which fix one endpoint, and Fejér's second rule, the
 interpolatory rule on the Chebyshev extrema *excluding* the endpoints.
