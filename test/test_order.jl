@@ -60,6 +60,29 @@
     end
 
 
+    # Tanh-sinh is the one rule in the package without a degree of exactness. It is the
+    # trapezoidal rule after a change of variables, not an interpolatory rule, and its
+    # truncated sum reproduces no polynomial exactly — not even the constant, so `moment`
+    # already fails at k = 0. Its order is therefore 0, and it is absent from the two loops
+    # above: `test_order` would assert exactness up to degree -1, and `exact_upto` over the
+    # empty range `0:-1` is vacuously true, which would assert nothing at all.
+    @testset "$(rpad("tanh-sinh has no order",60))" begin
+        for n in 1:5
+            quad = TanhSinhQuadrature(BigFloat, n)
+
+            @test order(quad) == 0
+            @test moment(quad, 0) != 1        # never exact, however close it gets
+            @test moment(quad, 0) ≈ 1  atol = 1E-5
+
+            # From level 4 the truncation error falls below the 1E-60 tolerance that
+            # `exact_to` uses throughout this file, so the moment machinery can no longer
+            # tell the rule from an exact one. That is another reason why the accuracy of
+            # tanh-sinh is tested by its convergence rate in test_tanh_sinh.jl instead.
+            n ≤ 3 && @test !exact_to(quad, 0)
+        end
+    end
+
+
     # Because the order is sharp, a rule is determined by its nodes and weights alone,
     # so rules that coincide compare equal even across families. An interpolatory rule
     # is uniquely determined by its nodes, and these node sets agree exactly.

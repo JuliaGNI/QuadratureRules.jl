@@ -78,6 +78,30 @@
         for quadrature in (GaussLegendreQuadrature, LobattoLegendreQuadrature), s in 2:8
             @test eltype(quadrature(T, s; fast=true)) == T
         end
+
+        # Tanh-sinh cannot join the loops above: it takes a level rather than a node count,
+        # so neither its number of nodes nor `moment_error` — which needs a positive order —
+        # applies. Its nodes must nevertheless meet the same structural requirements, and,
+        # being the rule for endpoint singularities, must stay strictly inside the interval.
+        for n in 1:5
+            quad = TanhSinhQuadrature(T, n; IT=IT)
+            c, b = nodes(quad), weights(quad)
+
+            @test eltype(quad) == T
+            @test nnodes(quad) == length(c) == length(b)
+            @test all(0 < cᵢ < 1 for cᵢ in c)
+            @test all(bᵢ > 0 for bᵢ in b)
+            @test issorted(c, lt = <=)
+            @test allunique(c)
+
+            for accessor in (tanh_sinh_points, tanh_sinh_nodes)
+                x = accessor(T, n; IT=IT)
+                @test eltype(x) == T
+                @test length(x) == nnodes(quad)
+                @test issorted(x, lt = <=)
+                @test allunique(x)
+            end
+        end
     end
 
     # the tabulated rules hold exact values and take no working precision
