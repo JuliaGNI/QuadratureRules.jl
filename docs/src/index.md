@@ -127,18 +127,13 @@ See [Quadrature Rules](@ref) for a derivation of each rule.
 
 ## Accessing Nodes and Weights Directly
 
-The nodes and weights of each rule are also available without constructing the rule. The
-two conventions are told apart by the interval they live on: functions named
-`symmetric_*_nodes` and `symmetric_*_weights` work on the symmetric interval ``[-1,+1]``,
-where the weights sum to ``2``, and functions named `*_nodes` and `*_weights` on the unit
-interval ``[0,1]``, where they sum to ``1`` — for every rule but tanh-sinh, which reaches
-those sums only up to its truncation error:
+The nodes and weights of each rule are also available without constructing the rule. Each
+family provides one node function and one weight function, both taking an `interval` keyword
+argument that selects the interval the result lives on: [`UnitInterval`](@ref)`()`, the
+default, gives ``[0,1]``, where the weights sum to ``1``, and
+[`SymmetricInterval`](@ref)`()` gives ``[-1,+1]``, where they sum to ``2`` — for every rule
+but tanh-sinh, which reaches those sums only up to its truncation error:
 ```jldoctest intro
-julia> symmetric_gauss_legendre_nodes(2)
-2-element Vector{Float64}:
- -0.5773502691896257
-  0.5773502691896257
-
 julia> gauss_legendre_nodes(2)
 2-element Vector{Float64}:
  0.2113248654051871
@@ -148,15 +143,21 @@ julia> gauss_legendre_weights(2)
 2-element Vector{Float64}:
  0.5
  0.5
+
+julia> gauss_legendre_nodes(2; interval = SymmetricInterval())
+2-element Vector{Float64}:
+ -0.5773502691896257
+  0.5773502691896257
 ```
 
-These exist for all rules, i.e., as [`symmetric_gauss_legendre_nodes`](@ref),
-[`symmetric_lobatto_legendre_nodes`](@ref), [`symmetric_radau_legendre_nodes`](@ref),
-[`symmetric_chebyshev_nodes`](@ref), [`symmetric_gauss_chebyshev_nodes`](@ref),
-[`symmetric_lobatto_chebyshev_nodes`](@ref), [`symmetric_clenshaw_curtis_nodes`](@ref) and
-[`symmetric_tanh_sinh_nodes`](@ref), together with the corresponding `*_nodes`,
-`symmetric_*_weights` and `*_weights` functions. The prefix names the interval, not the
-node set — a Radau rule has deliberately asymmetric nodes on either interval.
+These exist for all rules, i.e., as [`gauss_legendre_nodes`](@ref),
+[`lobatto_legendre_nodes`](@ref), [`radau_legendre_nodes`](@ref),
+[`chebyshev_nodes`](@ref), [`gauss_chebyshev_nodes`](@ref),
+[`lobatto_chebyshev_nodes`](@ref), [`clenshaw_curtis_nodes`](@ref) and
+[`tanh_sinh_nodes`](@ref), together with the corresponding `*_weights` functions. Note that
+`SymmetricInterval` describes the interval, not the node set — a Radau rule has deliberately
+asymmetric nodes on either interval.
+
 
 The Radau family takes the prescribed endpoint as a further argument, `:left` or `:right`,
 since the two variants are different rules:

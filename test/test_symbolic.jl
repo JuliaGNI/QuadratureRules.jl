@@ -33,29 +33,29 @@ exactly(x, y) = iszero(simplify(x - y))
 exactly(x::AbstractVector, y::AbstractVector) = length(x) == length(y) && all(exactly.(x, y))
 
 """
-The checks that apply to every family: the four accessors return the requested element type
-and the right number of values, they agree with the `Float64` result, the derived quantities
-are consistent with the primary ones, and the weights sum to one *exactly*.
+The checks that apply to every family: the node and weight functions return the requested
+element type and the right number of values on either interval, they agree with the `Float64`
+result, the two intervals are consistent with each other, and the weights sum to one *exactly*.
 
 That last assertion is the one that distinguishes a genuinely exact result from a `BigFloat`
 merely wrapped in a `Sym`, which is what these accessors used to return: a sum of rounded
 weights is never symbolically equal to one.
 """
-function test_symbolic_family(symmetric_nodes, nodes, symmetric_weights, weights, s)
-    x = symmetric_nodes(symtype(), s)
-    c = nodes(symtype(), s)
-    v = symmetric_weights(symtype(), s)
-    b = weights(symtype(), s)
+function test_symbolic_family(nodefunction, weightfunction, s)
+    x = nodefunction(symtype(), s; interval = SymmetricInterval())
+    c = nodefunction(symtype(), s)
+    v = weightfunction(symtype(), s; interval = SymmetricInterval())
+    b = weightfunction(symtype(), s)
 
     for y in (x, c, v, b)
         @test eltype(y) == symtype()
         @test length(y) == s
     end
 
-    @test tofloat(x) ≈ symmetric_nodes(Float64, s)
-    @test tofloat(c) ≈ nodes(Float64, s)
-    @test tofloat(v) ≈ symmetric_weights(Float64, s)
-    @test tofloat(b) ≈ weights(Float64, s)
+    @test tofloat(x) ≈ nodefunction(Float64, s; interval = SymmetricInterval())
+    @test tofloat(c) ≈ nodefunction(Float64, s)
+    @test tofloat(v) ≈ weightfunction(Float64, s; interval = SymmetricInterval())
+    @test tofloat(b) ≈ weightfunction(Float64, s)
 
     @test exactly(c, shift_nodes(x))
     @test exactly(b, scale_weights(v))
@@ -70,26 +70,22 @@ asserted as exact symbolic identities rather than to within a tolerance. This is
 strongest available statement that the symbolic path really computes the rule and does not
 just carry floating point values around in symbolic clothing.
 """
-function test_symbolic_moments(nodes, weights, s, d)
-    c = nodes(symtype(), s)
-    b = weights(symtype(), s)
+function test_symbolic_moments(nodefunction, weightfunction, s, d)
+    c = nodefunction(symtype(), s)
+    b = weightfunction(symtype(), s)
 
     for k in 0:d
         @test exactly(sum(b .* c.^k), 1//(k+1))
     end
 end
 
-# Normalise the accessors that take an extra argument, so that they can be passed to the
-# helpers above alongside the single-argument ones.
-symmetric_radau_nds(endpoint) = (T, s) -> symmetric_radau_legendre_nodes(T, s, Val(endpoint))
-radau_nds(endpoint)           = (T, s) -> radau_legendre_nodes(T, s, Val(endpoint))
-symmetric_radau_wts(endpoint) = (T, s) -> symmetric_radau_legendre_weights(T, s, Val(endpoint))
-radau_wts(endpoint)           = (T, s) -> radau_legendre_weights(T, s, Val(endpoint))
+# Normalise the accessors that take an extra positional argument, so that they can be passed
+# to the helpers above alongside the single-argument ones. The `interval` keyword is forwarded.
+radau_nds(endpoint) = (T, s; kwargs...) -> radau_legendre_nodes(T, s, Val(endpoint); kwargs...)
+radau_wts(endpoint) = (T, s; kwargs...) -> radau_legendre_weights(T, s, Val(endpoint); kwargs...)
 
-symmetric_chebyshev_nds(kind) = (T, s) -> symmetric_chebyshev_nodes(T, s, Val(kind))
-chebyshev_nds(kind)           = (T, s) -> chebyshev_nodes(T, s, Val(kind))
-symmetric_chebyshev_wts(kind) = (T, s) -> symmetric_chebyshev_weights(T, s, Val(kind))
-chebyshev_wts(kind)           = (T, s) -> chebyshev_weights(T, s, Val(kind))
+chebyshev_nds(kind) = (T, s; kwargs...) -> chebyshev_nodes(T, s, Val(kind); kwargs...)
+chebyshev_wts(kind) = (T, s; kwargs...) -> chebyshev_weights(T, s, Val(kind); kwargs...)
 
 
 @testset "$(rpad("Symbolic evaluation",80))" begin
@@ -101,12 +97,11 @@ chebyshev_wts(kind)           = (T, s) -> chebyshev_weights(T, s, Val(kind))
 
     @testset "$(rpad("Gauß-Legendre",60))" begin
         for s in 1:3
-            test_symbolic_family(symmetric_gauss_legendre_nodes, gauss_legendre_nodes,
-                                 symmetric_gauss_legendre_weights, gauss_legendre_weights, s)
+            test_symbolic_family(gauss_legendre_nodes, gauss_legendre_weights, s)
             test_symbolic_moments(gauss_legendre_nodes, gauss_legendre_weights, s, 2s-1)
         end
 
-        @test exactly(symmetric_gauss_legendre_nodes(symtype(), 2), [-sqrt(SymPyPythonCall.Sym(3))/3,
+        @test exactly(gauss_legendre_nodes(symtype(), 2; interval = SymmetricInterval()), [-sqrt(SymPyPythonCall.Sym(3))/3,
                                                             sqrt(SymPyPythonCall.Sym(3))/3])
         @test exactly(gauss_legendre_nodes(symtype(), 2), [1//2 - sqrt(SymPyPythonCall.Sym(3))/6,
                                                            1//2 + sqrt(SymPyPythonCall.Sym(3))/6])
@@ -115,40 +110,38 @@ chebyshev_wts(kind)           = (T, s) -> chebyshev_weights(T, s, Val(kind))
 
     @testset "$(rpad("Lobatto-Legendre",60))" begin
         for s in 2:4
-            test_symbolic_family(symmetric_lobatto_legendre_nodes, lobatto_legendre_nodes,
-                                 symmetric_lobatto_legendre_weights, lobatto_legendre_weights, s)
+            test_symbolic_family(lobatto_legendre_nodes, lobatto_legendre_weights, s)
             test_symbolic_moments(lobatto_legendre_nodes, lobatto_legendre_weights, s, 2s-3)
 
             # the endpoints are included and exact, as they are for floating point types
-            @test exactly(symmetric_lobatto_legendre_nodes(symtype(), s)[begin], -1)
-            @test exactly(symmetric_lobatto_legendre_nodes(symtype(), s)[end], 1)
+            @test exactly(lobatto_legendre_nodes(symtype(), s; interval = SymmetricInterval())[begin], -1)
+            @test exactly(lobatto_legendre_nodes(symtype(), s; interval = SymmetricInterval())[end], 1)
             @test exactly(lobatto_legendre_nodes(symtype(), s)[begin], 0)
             @test exactly(lobatto_legendre_nodes(symtype(), s)[end], 1)
         end
 
-        @test exactly(symmetric_lobatto_legendre_nodes(symtype(), 3), [-1, 0, 1])
+        @test exactly(lobatto_legendre_nodes(symtype(), 3; interval = SymmetricInterval()), [-1, 0, 1])
         @test exactly(lobatto_legendre_weights(symtype(), 3), [1//6, 2//3, 1//6])
         @test exactly(lobatto_legendre_weights(symtype(), 4), [1//12, 5//12, 5//12, 1//12])
 
-        @test_throws ErrorException symmetric_lobatto_legendre_nodes(symtype(), 1)
+        @test_throws ErrorException lobatto_legendre_nodes(symtype(), 1; interval = SymmetricInterval())
         @test_throws ErrorException lobatto_legendre_nodes(symtype(), 1)
-        @test_throws ErrorException symmetric_lobatto_legendre_weights(symtype(), 1)
+        @test_throws ErrorException lobatto_legendre_weights(symtype(), 1; interval = SymmetricInterval())
         @test_throws ErrorException lobatto_legendre_weights(symtype(), 1)
     end
 
     @testset "$(rpad("Radau-Legendre",60))" begin
         for endpoint in (:left, :right)
             for s in 1:3
-                test_symbolic_family(symmetric_radau_nds(endpoint), radau_nds(endpoint),
-                                     symmetric_radau_wts(endpoint), radau_wts(endpoint), s)
+                test_symbolic_family(radau_nds(endpoint), radau_wts(endpoint), s)
                 test_symbolic_moments(radau_nds(endpoint), radau_wts(endpoint), s, 2s-2)
             end
         end
 
         # the two variants are exact mirror images of each other
         for s in 1:3
-            @test exactly(symmetric_radau_legendre_nodes(symtype(), s, Val(:right)),
-                          -reverse(symmetric_radau_legendre_nodes(symtype(), s, Val(:left))))
+            @test exactly(radau_legendre_nodes(symtype(), s, Val(:right); interval = SymmetricInterval()),
+                          -reverse(radau_legendre_nodes(symtype(), s, Val(:left); interval = SymmetricInterval())))
             @test exactly(radau_legendre_weights(symtype(), s, Val(:right)),
                           reverse(radau_legendre_weights(symtype(), s, Val(:left))))
         end
@@ -163,48 +156,45 @@ chebyshev_wts(kind)           = (T, s) -> chebyshev_weights(T, s, Val(kind))
         # the closed forms are evaluated at SymPy's π rather than at a rounded one, so the
         # nodes come out as exact radicals
         for s in 1:5
-            test_symbolic_family(symmetric_chebyshev_nds(1), chebyshev_nds(1),
-                                 symmetric_chebyshev_wts(1), chebyshev_wts(1), s)
+            test_symbolic_family(chebyshev_nds(1), chebyshev_wts(1), s)
             test_symbolic_moments(chebyshev_nds(1), chebyshev_wts(1), s, s-1)
         end
 
         for s in 2:5
-            test_symbolic_family(symmetric_chebyshev_nds(2), chebyshev_nds(2),
-                                 symmetric_chebyshev_wts(2), chebyshev_wts(2), s)
+            test_symbolic_family(chebyshev_nds(2), chebyshev_wts(2), s)
             test_symbolic_moments(chebyshev_nds(2), chebyshev_wts(2), s, s-1)
         end
 
-        @test exactly(symmetric_chebyshev_nodes(symtype(), 2, Val(1)), [-sqrt(SymPyPythonCall.Sym(2))/2,
+        @test exactly(chebyshev_nodes(symtype(), 2, Val(1); interval = SymmetricInterval()), [-sqrt(SymPyPythonCall.Sym(2))/2,
                                                                 sqrt(SymPyPythonCall.Sym(2))/2])
-        @test exactly(symmetric_chebyshev_nodes(symtype(), 3, Val(2)), [-1, 0, 1])
+        @test exactly(chebyshev_nodes(symtype(), 3, Val(2); interval = SymmetricInterval()), [-1, 0, 1])
         @test exactly(chebyshev_weights(symtype(), 3, Val(1)), [2//9, 5//9, 2//9])
 
-        @test_throws ErrorException symmetric_chebyshev_nodes(symtype(), 1, Val(2))
+        @test_throws ErrorException chebyshev_nodes(symtype(), 1, Val(2); interval = SymmetricInterval())
         @test_throws ErrorException chebyshev_nodes(symtype(), 1, Val(2))
 
         # the aliases dispatch to the same closed forms
         for s in 1:5
-            @test symmetric_gauss_chebyshev_nodes(symtype(), s) == symmetric_chebyshev_nodes(symtype(), s, Val(1))
+            @test gauss_chebyshev_nodes(symtype(), s; interval = SymmetricInterval()) == chebyshev_nodes(symtype(), s, Val(1); interval = SymmetricInterval())
             @test gauss_chebyshev_weights(symtype(), s) == chebyshev_weights(symtype(), s, Val(1))
         end
 
         for s in 2:5
-            @test symmetric_lobatto_chebyshev_nodes(symtype(), s) == symmetric_chebyshev_nodes(symtype(), s, Val(2))
+            @test lobatto_chebyshev_nodes(symtype(), s; interval = SymmetricInterval()) == chebyshev_nodes(symtype(), s, Val(2); interval = SymmetricInterval())
             @test lobatto_chebyshev_weights(symtype(), s) == chebyshev_weights(symtype(), s, Val(2))
         end
     end
 
     @testset "$(rpad("Clenshaw-Curtis",60))" begin
         for s in 2:5
-            test_symbolic_family(symmetric_clenshaw_curtis_nodes, clenshaw_curtis_nodes,
-                                 symmetric_clenshaw_curtis_weights, clenshaw_curtis_weights, s)
+            test_symbolic_family(clenshaw_curtis_nodes, clenshaw_curtis_weights, s)
             test_symbolic_moments(clenshaw_curtis_nodes, clenshaw_curtis_weights, s, s-1)
         end
 
         @test exactly(clenshaw_curtis_weights(symtype(), 3), [1//6, 2//3, 1//6])
         @test exactly(clenshaw_curtis_weights(symtype(), 5), [1//30, 4//15, 2//5, 4//15, 1//30])
 
-        @test_throws ErrorException symmetric_clenshaw_curtis_nodes(symtype(), 1)
+        @test_throws ErrorException clenshaw_curtis_nodes(symtype(), 1; interval = SymmetricInterval())
         @test_throws ErrorException clenshaw_curtis_weights(symtype(), 1)
     end
 
@@ -261,9 +251,9 @@ chebyshev_wts(kind)           = (T, s) -> chebyshev_weights(T, s, Val(kind))
         # Tanh-Sinh is the one family without an exact variant: the number of nodes is not
         # given in advance but follows from where they stop being resolvable in `T`, which
         # a type that does not round cannot answer.
-        @test_throws ArgumentError symmetric_tanh_sinh_nodes(symtype(), 2)
+        @test_throws ArgumentError tanh_sinh_nodes(symtype(), 2; interval = SymmetricInterval())
         @test_throws ArgumentError tanh_sinh_nodes(symtype(), 2)
-        @test_throws ArgumentError symmetric_tanh_sinh_weights(symtype(), 2)
+        @test_throws ArgumentError tanh_sinh_weights(symtype(), 2; interval = SymmetricInterval())
         @test_throws ArgumentError tanh_sinh_weights(symtype(), 2)
         @test_throws ArgumentError TanhSinhQuadrature(symtype(), 2)
     end

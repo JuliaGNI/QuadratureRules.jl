@@ -13,14 +13,8 @@
     radau_left_rule(T, s; kwargs...)  = RadauLegendreQuadrature(T, s, Val(:left); kwargs...)
     radau_right_rule(T, s; kwargs...) = RadauLegendreQuadrature(T, s, Val(:right); kwargs...)
 
-    symmetric_radau_left_nodes(T, s; kwargs...)  = symmetric_radau_legendre_nodes(T, s, Val(:left); kwargs...)
-    symmetric_radau_right_nodes(T, s; kwargs...) = symmetric_radau_legendre_nodes(T, s, Val(:right); kwargs...)
-
     radau_left_nodes(T, s; kwargs...)  = radau_legendre_nodes(T, s, Val(:left); kwargs...)
     radau_right_nodes(T, s; kwargs...) = radau_legendre_nodes(T, s, Val(:right); kwargs...)
-
-    symmetric_radau_left_weights(T, s; kwargs...)  = symmetric_radau_legendre_weights(T, s, Val(:left); kwargs...)
-    symmetric_radau_right_weights(T, s; kwargs...) = symmetric_radau_legendre_weights(T, s, Val(:right); kwargs...)
 
     radau_left_weights(T, s; kwargs...)  = radau_legendre_weights(T, s, Val(:left); kwargs...)
     radau_right_weights(T, s; kwargs...) = radau_legendre_weights(T, s, Val(:right); kwargs...)
@@ -29,19 +23,9 @@
              GaussChebyshevQuadrature, LobattoChebyshevQuadrature,
              radau_left_rule, radau_right_rule)
 
-    SYMMETRIC_NODES = (symmetric_gauss_legendre_nodes, symmetric_lobatto_legendre_nodes,
-                       symmetric_gauss_chebyshev_nodes, symmetric_lobatto_chebyshev_nodes,
-                       symmetric_clenshaw_curtis_nodes,
-                       symmetric_radau_left_nodes, symmetric_radau_right_nodes)
-
     NODES = (gauss_legendre_nodes, lobatto_legendre_nodes, gauss_chebyshev_nodes,
              lobatto_chebyshev_nodes, clenshaw_curtis_nodes,
              radau_left_nodes, radau_right_nodes)
-
-    SYMMETRIC_WEIGHTS = (symmetric_gauss_legendre_weights, symmetric_lobatto_legendre_weights,
-                         symmetric_gauss_chebyshev_weights, symmetric_lobatto_chebyshev_weights,
-                         symmetric_clenshaw_curtis_weights,
-                         symmetric_radau_left_weights, symmetric_radau_right_weights)
 
     WEIGHTS = (gauss_legendre_weights, lobatto_legendre_weights, gauss_chebyshev_weights,
                lobatto_chebyshev_weights, clenshaw_curtis_weights,
@@ -79,40 +63,41 @@
             @test moment_error(quad) ≤ tol * eps(T)
         end
 
-        for nodefunction in SYMMETRIC_NODES, s in 2:8
-            x = nodefunction(T, s; IT=IT)
+        for nodefunction in NODES, s in 2:8
+            x = nodefunction(T, s; IT=IT, interval = SymmetricInterval())
             @test eltype(x) == T
             @test length(x) == s
             @test all(-1 ≤ xᵢ ≤ 1 for xᵢ in x)
             @test issorted(x, lt = <)
-        end
 
-        for nodefunction in NODES, s in 2:8
             c = nodefunction(T, s; IT=IT)
             @test eltype(c) == T
             @test length(c) == s
             @test all(0 ≤ cᵢ ≤ 1 for cᵢ in c)
             @test issorted(c, lt = <)
-        end
 
-        for weightfunction in SYMMETRIC_WEIGHTS, s in 2:8
-            b = weightfunction(T, s; IT=IT)
-            @test eltype(b) == T
-            @test length(b) == s
-            @test all(bᵢ > 0 for bᵢ in b)
-            @test sum(b) ≈ 2one(T)  atol = 2 * tol * eps(T)
+            # UnitInterval() is the default, and naming it explicitly changes nothing
+            @test c == nodefunction(T, s; IT=IT, interval = UnitInterval())
         end
 
         for weightfunction in WEIGHTS, s in 2:8
+            w = weightfunction(T, s; IT=IT, interval = SymmetricInterval())
+            @test eltype(w) == T
+            @test length(w) == s
+            @test all(wᵢ > 0 for wᵢ in w)
+            @test sum(w) ≈ 2one(T)  atol = 2 * tol * eps(T)
+
             b = weightfunction(T, s; IT=IT)
             @test eltype(b) == T
             @test length(b) == s
             @test all(bᵢ > 0 for bᵢ in b)
             @test sum(b) ≈ one(T)  atol = tol * eps(T)
+
+            @test b == weightfunction(T, s; IT=IT, interval = UnitInterval())
         end
 
         for kind in (1, 2), s in 2:8
-            @test eltype(symmetric_chebyshev_nodes(T, s, Val(kind); IT=IT)) == T
+            @test eltype(chebyshev_nodes(T, s, Val(kind); IT=IT, interval = SymmetricInterval())) == T
             @test eltype(chebyshev_nodes(T, s, Val(kind); IT=IT)) == T
         end
 
@@ -141,18 +126,16 @@
             @test issorted(c, lt = <=)
             @test allunique(c)
 
-            for accessor in (symmetric_tanh_sinh_nodes, tanh_sinh_nodes)
-                x = accessor(T, n; IT=IT)
+            for interval in (UnitInterval(), SymmetricInterval())
+                x = tanh_sinh_nodes(T, n; IT=IT, interval=interval)
                 @test eltype(x) == T
                 @test length(x) == nnodes(quad)
                 @test issorted(x, lt = <=)
                 @test allunique(x)
-            end
 
-            # its weights truncate with the nodes, so they too must match in length; they
-            # are only asserted positive, the sum being subject to the truncation error
-            for accessor in (symmetric_tanh_sinh_weights, tanh_sinh_weights)
-                w = accessor(T, n; IT=IT)
+                # its weights truncate with the nodes, so they too must match in length; they
+                # are only asserted positive, the sum being subject to the truncation error
+                w = tanh_sinh_weights(T, n; IT=IT, interval=interval)
                 @test eltype(w) == T
                 @test length(w) == nnodes(quad)
                 @test all(wᵢ > 0 for wᵢ in w)

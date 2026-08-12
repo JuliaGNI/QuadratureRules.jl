@@ -12,24 +12,28 @@ The accumulated breaking changes below warrant a **0.2.0** release.
 
 ### ⚠️ Breaking
 
-- **The `[-1,+1]` accessors are renamed.** `*_points` becomes `symmetric_*_nodes` and
-  `*_point_weights` becomes `symmetric_*_weights`, for all eight families. The old names
-  are gone; there is no deprecation path, as they were public for a single patch release.
-  What used to be encoded by two different words — *point* versus *node* — is now said
-  outright: the prefix names the interval, symmetric ``[-1,+1]`` versus unit ``[0,1]``, and
-  everything is a node.
+- **The interval is now a keyword argument, not part of the function name.** The `*_points`
+  and `*_point_weights` functions are gone. Each family provides one node function and one
+  weight function, both taking an `interval` keyword argument:
 
-  | before | after |
-  | --- | --- |
-  | `gauss_legendre_points` | `symmetric_gauss_legendre_nodes` |
-  | `gauss_legendre_point_weights` | `symmetric_gauss_legendre_weights` |
-  | `gauss_legendre_nodes` | *unchanged* |
-  | `gauss_legendre_weights` | *unchanged* |
+  ```julia
+  gauss_legendre_nodes(2)                                    # [0,1], as before
+  gauss_legendre_nodes(2; interval = SymmetricInterval())     # was gauss_legendre_points(2)
+  gauss_legendre_weights(2; interval = SymmetricInterval())   # was gauss_legendre_point_weights(2)
+  ```
 
-  and likewise for `lobatto_legendre_*`, `radau_legendre_*`, `chebyshev_*`,
-  `gauss_chebyshev_*`, `lobatto_chebyshev_*`, `clenshaw_curtis_*` and `tanh_sinh_*`. The
-  prefix names the interval, not the node set: a Radau rule has deliberately asymmetric
-  nodes on either interval.
+  `interval` takes the new exported singletons `UnitInterval()` for ``[0,1]``, the default and
+  the interval of `QuadratureRule`, or `SymmetricInterval()` for ``[-1,+1]``, both subtypes of
+  the new abstract type `QuadratureInterval`. What used to be encoded by two different words —
+  *point* versus *node*, neither of which names an interval — is now an argument that says
+  which interval it is. `SymmetricInterval` describes the interval, not the node set: a Radau
+  rule has deliberately asymmetric nodes on either interval.
+
+  This drops 16 exported names and matches how the package already selects the Radau endpoint
+  and the Chebyshev kind. The 16 removed functions map to keyword calls mechanically:
+  `symmetric_X_nodes(args...)` becomes `X_nodes(args...; interval = SymmetricInterval())`, and
+  likewise for the weights. There is no deprecation path; the old names were public for a
+  single patch release, and `*_point_weights` was never released at all.
 
 - **`LobattoChebyshevQuadrature` returns different weights.** It combined two different
   point sets: its nodes were the Chebyshev points of the second kind, which include the
@@ -75,8 +79,9 @@ The accumulated breaking changes below warrant a **0.2.0** release.
 
 ### Added
 
-- **Tanh-sinh quadrature**: `TanhSinhQuadrature` together with
-  `symmetric_tanh_sinh_nodes`, `tanh_sinh_nodes`, `symmetric_tanh_sinh_weights` and
+- `QuadratureInterval`, `UnitInterval` and `SymmetricInterval`, described above.
+
+- **Tanh-sinh quadrature**: `TanhSinhQuadrature` together with `tanh_sinh_nodes` and
   `tanh_sinh_weights`. The rule for integrands with endpoint singularities, converging
   double-exponentially. It differs from the other families in three ways: it takes a *level*
   `n` rather than a node count, the number of nodes following from where they cease to be
@@ -85,16 +90,14 @@ The accumulated breaking changes below warrant a **0.2.0** release.
   throwing an `ArgumentError` for anything else.
 
 - **Radau-Legendre quadrature**: `RadauLegendreQuadrature` together with
-  `symmetric_radau_legendre_nodes`, `radau_legendre_nodes`,
-  `symmetric_radau_legendre_weights` and `radau_legendre_weights`. Prescribes one endpoint
+  `radau_legendre_nodes` and `radau_legendre_weights`. Prescribes one endpoint
   and leaves the rest free, for order `2s-1`. Which endpoint is prescribed is a further
   positional argument, `:left` (Radau IA) or `:right` (Radau IIA), deliberately without a
   default, as the two variants are not interchangeable. The right variant is obtained by
   reflecting the left one, which makes the two exact mirror images of each other.
 
-- **Weights accessors for every family**, i.e. the sixteen `symmetric_*_weights` and
-  `*_weights` functions. Previously only the nodes were available without constructing the
-  rule.
+- **Weights accessors for every family**, i.e. the eight `*_weights` functions. Previously
+  only the nodes were available without constructing the rule.
 
 - **Nodes and weights on symbolic element types.** For an element type outside the numeric
   tower the roots are computed exactly, as the eigenvalues of the companion matrix, and the
@@ -138,7 +141,7 @@ The accumulated breaking changes below warrant a **0.2.0** release.
 ### Added
 
 - `*_points` and `*_nodes` accessors for all rules, so that nodes can be obtained without
-  constructing a rule. (Renamed to `symmetric_*_nodes` in the unreleased changes above.)
+  constructing a rule. (Folded into the `interval` keyword in the unreleased changes above.)
 
 ### Changed
 

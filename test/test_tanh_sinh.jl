@@ -5,14 +5,14 @@ import QuadratureRules: scale_weights, unscale_weights, unshift_nodes
     @test_throws ErrorException TanhSinhQuadrature(0)
     @test_throws ErrorException TanhSinhQuadrature(-1)
     @test_throws ErrorException tanh_sinh_weights(0)
-    @test_throws ErrorException symmetric_tanh_sinh_weights(0)
+    @test_throws ErrorException tanh_sinh_weights(0; interval = SymmetricInterval())
 
     for n in 1:6
         @test TanhSinhQuadrature(n)      == TanhSinhQuadrature(Float64, n)
         @test tanh_sinh_nodes(n)         == tanh_sinh_nodes(Float64, n)
-        @test symmetric_tanh_sinh_nodes(n)        == symmetric_tanh_sinh_nodes(Float64, n)
+        @test tanh_sinh_nodes(n; interval = SymmetricInterval())        == tanh_sinh_nodes(Float64, n; interval = SymmetricInterval())
         @test tanh_sinh_weights(n)       == tanh_sinh_weights(Float64, n)
-        @test symmetric_tanh_sinh_weights(n) == symmetric_tanh_sinh_weights(Float64, n)
+        @test tanh_sinh_weights(n; interval = SymmetricInterval()) == tanh_sinh_weights(Float64, n; interval = SymmetricInterval())
     end
 
 
@@ -57,7 +57,7 @@ import QuadratureRules: scale_weights, unscale_weights, unshift_nodes
 
             # the nodes on [-1,+1] carry one bit less next to the endpoints than those
             # on [0,1]; the truncation accounts for that, so they too remain distinct
-            x = symmetric_tanh_sinh_nodes(T, n)
+            x = tanh_sinh_nodes(T, n; interval = SymmetricInterval())
             @test issorted(x, lt = <=)
             @test allunique(x)
             @test all(-1 < xᵢ < 1 for xᵢ in x)
@@ -70,7 +70,7 @@ import QuadratureRules: scale_weights, unscale_weights, unshift_nodes
 
             # the same holds for the weights, which are primary on [0,1] here, so that the
             # weights for [-1,+1] must be derived from them and truncate alike
-            w = symmetric_tanh_sinh_weights(T, n)
+            w = tanh_sinh_weights(T, n; interval = SymmetricInterval())
             @test tanh_sinh_weights(T, n) == b
             @test length(w) == length(b)
             @test w == reverse(w)
@@ -178,15 +178,15 @@ import QuadratureRules: scale_weights, unscale_weights, unshift_nodes
         for n in 1:5
             @test TanhSinhQuadrature(Float64, n; IT=Float64)        ≈ TanhSinhQuadrature(n)
             @test tanh_sinh_nodes(Float64, n; IT=Float64)           ≈ tanh_sinh_nodes(n)
-            @test symmetric_tanh_sinh_nodes(Float64, n; IT=Float64)          ≈ symmetric_tanh_sinh_nodes(n)
+            @test tanh_sinh_nodes(Float64, n; IT=Float64, interval = SymmetricInterval())          ≈ tanh_sinh_nodes(n; interval = SymmetricInterval())
             @test tanh_sinh_weights(Float64, n; IT=Float64)         ≈ tanh_sinh_weights(n)
-            @test symmetric_tanh_sinh_weights(Float64, n; IT=Float64)   ≈ symmetric_tanh_sinh_weights(n)
+            @test tanh_sinh_weights(Float64, n; IT=Float64, interval = SymmetricInterval())   ≈ tanh_sinh_weights(n; interval = SymmetricInterval())
 
             @test eltype(TanhSinhQuadrature(Float32, n; IT=Float32))      == Float32
             @test eltype(tanh_sinh_nodes(Float32, n; IT=Float32))         == Float32
-            @test eltype(symmetric_tanh_sinh_nodes(Float32, n; IT=Float32))        == Float32
+            @test eltype(tanh_sinh_nodes(Float32, n; IT=Float32, interval = SymmetricInterval()))        == Float32
             @test eltype(tanh_sinh_weights(Float32, n; IT=Float32))       == Float32
-            @test eltype(symmetric_tanh_sinh_weights(Float32, n; IT=Float32)) == Float32
+            @test eltype(tanh_sinh_weights(Float32, n; IT=Float32, interval = SymmetricInterval())) == Float32
         end
     end
 

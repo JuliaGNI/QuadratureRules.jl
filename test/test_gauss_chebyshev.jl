@@ -12,31 +12,31 @@ import QuadratureRules: scale_weights, unscale_weights, shift_nodes, unshift_nod
         x = reverse(FastTransforms.chebyshevpoints(Float64, s, Val(1)))
         c = shift_nodes(x)
 
-        @test symmetric_chebyshev_nodes(Float64, s, Val(1)) ≈ x
+        @test chebyshev_nodes(Float64, s, Val(1); interval = SymmetricInterval()) ≈ x
         @test chebyshev_nodes(Float64, s, Val(1))  ≈ c
         @test nodes(GaussChebyshevQuadrature(s))   ≈ c
 
-        @test symmetric_gauss_chebyshev_nodes(Float64, s) == symmetric_chebyshev_nodes(Float64, s, Val(1))
+        @test gauss_chebyshev_nodes(Float64, s; interval = SymmetricInterval()) == chebyshev_nodes(Float64, s, Val(1); interval = SymmetricInterval())
         @test gauss_chebyshev_nodes(Float64, s)  == chebyshev_nodes(Float64, s, Val(1))
-        @test symmetric_gauss_chebyshev_nodes(s) == symmetric_gauss_chebyshev_nodes(Float64, s)
+        @test gauss_chebyshev_nodes(s; interval = SymmetricInterval()) == gauss_chebyshev_nodes(Float64, s; interval = SymmetricInterval())
         @test gauss_chebyshev_nodes(s)  == gauss_chebyshev_nodes(Float64, s)
-        @test symmetric_chebyshev_nodes(s, 1) == symmetric_chebyshev_nodes(Float64, s, Val(1))
+        @test chebyshev_nodes(s, 1; interval = SymmetricInterval()) == chebyshev_nodes(Float64, s, Val(1); interval = SymmetricInterval())
         @test chebyshev_nodes(s, 1)  == chebyshev_nodes(Float64, s, Val(1))
 
-        @test unshift_nodes(chebyshev_nodes(Float64, s, Val(1))) ≈ symmetric_chebyshev_nodes(Float64, s, Val(1))
+        @test unshift_nodes(chebyshev_nodes(Float64, s, Val(1))) ≈ chebyshev_nodes(Float64, s, Val(1); interval = SymmetricInterval())
 
         @test chebyshev_weights(Float64, s, Val(1)) == weights(GaussChebyshevQuadrature(s))
         @test gauss_chebyshev_weights(Float64, s)       == chebyshev_weights(Float64, s, Val(1))
-        @test symmetric_gauss_chebyshev_weights(Float64, s) == symmetric_chebyshev_weights(Float64, s, Val(1))
+        @test gauss_chebyshev_weights(Float64, s; interval = SymmetricInterval()) == chebyshev_weights(Float64, s, Val(1); interval = SymmetricInterval())
         @test gauss_chebyshev_weights(s)       == gauss_chebyshev_weights(Float64, s)
-        @test symmetric_gauss_chebyshev_weights(s) == symmetric_gauss_chebyshev_weights(Float64, s)
+        @test gauss_chebyshev_weights(s; interval = SymmetricInterval()) == gauss_chebyshev_weights(Float64, s; interval = SymmetricInterval())
         @test chebyshev_weights(s, 1)       == chebyshev_weights(Float64, s, Val(1))
-        @test symmetric_chebyshev_weights(s, 1) == symmetric_chebyshev_weights(Float64, s, Val(1))
+        @test chebyshev_weights(s, 1; interval = SymmetricInterval()) == chebyshev_weights(Float64, s, Val(1); interval = SymmetricInterval())
 
         # here the weights for [0,1] are primary and those for [-1,+1] are derived
-        @test unscale_weights(chebyshev_weights(BigFloat, s, Val(1))) == symmetric_chebyshev_weights(BigFloat, s, Val(1))
-        @test scale_weights(symmetric_chebyshev_weights(Float64, s, Val(1))) ≈ chebyshev_weights(Float64, s, Val(1))
-        @test sum(symmetric_chebyshev_weights(Float64, s, Val(1))) ≈ 2
+        @test unscale_weights(chebyshev_weights(BigFloat, s, Val(1))) == chebyshev_weights(BigFloat, s, Val(1); interval = SymmetricInterval())
+        @test scale_weights(chebyshev_weights(Float64, s, Val(1); interval = SymmetricInterval())) ≈ chebyshev_weights(Float64, s, Val(1))
+        @test sum(chebyshev_weights(Float64, s, Val(1); interval = SymmetricInterval())) ≈ 2
 
         # Gauss-Chebyshev is Fejér's first rule: an interpolatory rule on the s
         # Chebyshev points of the first kind, hence exact up to degree s-1, and one
@@ -62,7 +62,7 @@ import QuadratureRules: scale_weights, unscale_weights, shift_nodes, unshift_nod
 
     # unlike the rules on the Chebyshev points of the second kind, Fejér's first rule
     # is defined for a single node, where it is the midpoint rule
-    @test symmetric_chebyshev_nodes(Float64, 1, Val(1)) == [0.0]
+    @test chebyshev_nodes(Float64, 1, Val(1); interval = SymmetricInterval()) == [0.0]
     @test chebyshev_nodes(Float64, 1, Val(1))  == [0.5]
     @test GaussChebyshevQuadrature(1) == MidpointQuadrature()
     @test GaussChebyshevQuadrature(1) == ChebyshevQuadrature(1, 1)

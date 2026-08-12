@@ -107,6 +107,23 @@ function unscale_weights(b)
     b .* 2
 end
 
+# Map nodes and weights from the interval their closed form is formulated on to the interval
+# the caller asked for. Each family computes on its own interval and converts once at the very
+# end, in the working precision, so that the two conventions agree exactly at equal working
+# precision and up to rounding across precisions.
+_nodes_from_symmetric(x, ::SymmetricInterval) = x
+_nodes_from_symmetric(x, ::UnitInterval)      = shift_nodes(x)
+
+_nodes_from_unit(c, ::UnitInterval)      = c
+_nodes_from_unit(c, ::SymmetricInterval) = unshift_nodes(c)
+
+_weights_from_symmetric(w, ::SymmetricInterval) = w
+_weights_from_symmetric(w, ::UnitInterval)      = scale_weights(w)
+
+_weights_from_unit(b, ::UnitInterval)      = b
+_weights_from_unit(b, ::SymmetricInterval) = unscale_weights(b)
+
+
 "Scale nodes and weights from the interval [-1,+1] to the interval [0,1]."
 function shift!(b,c)
     b .= b ./ 2
