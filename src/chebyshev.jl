@@ -1,7 +1,7 @@
 
 @doc raw"""
-    chebyshev_points(s, kind)
-    chebyshev_points(T, s, ::Val{kind})
+    chebyshev_points(s, kind; IT=BigFloat)
+    chebyshev_points(T, s, ::Val{kind}; IT=BigFloat)
 
 The `s` Chebyshev points of the first (`kind = 1`) or second (`kind = 2`) kind on the
 interval ``[-1,+1]``, in ascending order.
@@ -20,8 +20,12 @@ points of the second kind are the extrema of ``T_{s-1}``,
 x_i = \cos \left( \frac{(i-1) \, \pi}{s-1} \right) , \qquad i = 1, \dots, s ,
 ```
 
-and include both endpoints ``\pm 1``. All points are computed in `BigFloat` arithmetic
-and converted to `T`.
+and include both endpoints ``\pm 1``.
+
+The points are evaluated in the arithmetic `IT` and then converted to `T`. The default
+`IT=BigFloat` means the closed forms above are evaluated to full precision whatever `T`
+is, so that the returned values are correctly rounded; see [`ClenshawCurtisQuadrature`](@ref)
+for the trade-off involved in choosing a lower working precision.
 
 Points of the second kind require `s ≥ 2` and throw an `ErrorException` otherwise.
 
@@ -35,70 +39,71 @@ julia> chebyshev_points(3, 1)
 
 See also [`chebyshev_nodes`](@ref) for the same points on ``[0,1]``.
 """
-function chebyshev_points(::Type{T}, s::Integer, ::Val{1}) where {T}
-    T[ @big sin( π*(s-2i+1) / (2s) ) for i in s:-1:1 ]
+function chebyshev_points(::Type{T}, s::Integer, ::Val{1}; IT=BigFloat) where {T}
+    T[ sin( IT(π) * (s-2i+1) / (2s) ) for i in s:-1:1 ]
 end
 
-function chebyshev_points(::Type{T}, s::Integer, ::Val{2}) where {T}
+function chebyshev_points(::Type{T}, s::Integer, ::Val{2}; IT=BigFloat) where {T}
     if s == 1
         throw(ErrorException("Chebyshev points of the second kind are not defined for one point."))
     end
 
-    T[ @big cos( π * (i-1) / (s-1) ) for i in s:-1:1 ]
+    T[ cos( IT(π) * (i-1) / (s-1) ) for i in s:-1:1 ]
 end
 
-chebyshev_points(s, kind) = chebyshev_points(Float64, s, Val(kind))
+chebyshev_points(s, kind; kwargs...) = chebyshev_points(Float64, s, Val(kind); kwargs...)
 
 @doc raw"""
-    chebyshev_nodes(s, kind)
-    chebyshev_nodes(T, s, ::Val{kind})
+    chebyshev_nodes(s, kind; IT=BigFloat)
+    chebyshev_nodes(T, s, ::Val{kind}; IT=BigFloat)
 
 The `s` Chebyshev nodes of the first (`kind = 1`) or second (`kind = 2`) kind on the
 interval ``[0,1]``, i.e., the Chebyshev points shifted and scaled from ``[-1,+1]``
 to ``[0,1]``.
 
-See [`chebyshev_points`](@ref) for the definition of the two kinds.
+See [`chebyshev_points`](@ref) for the definition of the two kinds and for `IT`. Both the
+points and the shift are computed in `IT` before the result is converted to `T`.
 
 ```jldoctest
 julia> chebyshev_nodes(3, 1)
 3-element Vector{Float64}:
- 0.0669872981077807
+ 0.06698729810778067
  0.5
  0.9330127018922193
 ```
 """
-function chebyshev_nodes(::Type{T}, s::Integer, kind::Val) where {T}
-    shift_nodes(chebyshev_points(T, s, kind))
+function chebyshev_nodes(::Type{T}, s::Integer, kind::Val; IT=BigFloat) where {T}
+    T.(shift_nodes(chebyshev_points(IT, s, kind; IT=IT)))
 end
 
-chebyshev_nodes(s, kind) = chebyshev_nodes(Float64, s, Val(kind))
+chebyshev_nodes(s, kind; kwargs...) = chebyshev_nodes(Float64, s, Val(kind); kwargs...)
 
 
 """
-    gauss_chebyshev_points(s)
-    gauss_chebyshev_points(T, s)
+    gauss_chebyshev_points(s; IT=BigFloat)
+    gauss_chebyshev_points(T, s; IT=BigFloat)
 
 The `s` Gauss-Chebyshev points on the interval ``[-1,+1]``, i.e., the Chebyshev points
 of the first kind, cf. [`chebyshev_points`](@ref).
 
 These are the nodes of [`GaussChebyshevQuadrature`](@ref).
 """
-gauss_chebyshev_points(::Type{T}, s::Integer) where {T} = chebyshev_points(T, s, Val(1))
-gauss_chebyshev_points(s) = gauss_chebyshev_points(Float64, s)
+gauss_chebyshev_points(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_points(T, s, Val(1); kwargs...)
+gauss_chebyshev_points(s; kwargs...) = gauss_chebyshev_points(Float64, s; kwargs...)
 
 """
-    gauss_chebyshev_nodes(s)
-    gauss_chebyshev_nodes(T, s)
+    gauss_chebyshev_nodes(s; IT=BigFloat)
+    gauss_chebyshev_nodes(T, s; IT=BigFloat)
 
 The `s` Gauss-Chebyshev nodes on the interval ``[0,1]``, i.e., the Chebyshev nodes of
 the first kind, cf. [`chebyshev_nodes`](@ref).
 """
-gauss_chebyshev_nodes(::Type{T}, s::Integer) where {T} = chebyshev_nodes(T, s, Val(1))
-gauss_chebyshev_nodes(s) = gauss_chebyshev_nodes(Float64, s)
+gauss_chebyshev_nodes(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_nodes(T, s, Val(1); kwargs...)
+gauss_chebyshev_nodes(s; kwargs...) = gauss_chebyshev_nodes(Float64, s; kwargs...)
 
 """
-    lobatto_chebyshev_points(s)
-    lobatto_chebyshev_points(T, s)
+    lobatto_chebyshev_points(s; IT=BigFloat)
+    lobatto_chebyshev_points(T, s; IT=BigFloat)
 
 The `s` Lobatto-Chebyshev points on the interval ``[-1,+1]``, i.e., the Chebyshev points
 of the second kind, cf. [`chebyshev_points`](@ref). They include both endpoints.
@@ -108,20 +113,20 @@ These points coincide with [`clenshaw_curtis_points`](@ref), and correspondingly
 
 Requires `s ≥ 2`.
 """
-lobatto_chebyshev_points(::Type{T}, s::Integer) where {T} = chebyshev_points(T, s, Val(2))
-lobatto_chebyshev_points(s) = lobatto_chebyshev_points(Float64, s)
+lobatto_chebyshev_points(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_points(T, s, Val(2); kwargs...)
+lobatto_chebyshev_points(s; kwargs...) = lobatto_chebyshev_points(Float64, s; kwargs...)
 
 """
-    lobatto_chebyshev_nodes(s)
-    lobatto_chebyshev_nodes(T, s)
+    lobatto_chebyshev_nodes(s; IT=BigFloat)
+    lobatto_chebyshev_nodes(T, s; IT=BigFloat)
 
 The `s` Lobatto-Chebyshev nodes on the interval ``[0,1]``, i.e., the Chebyshev nodes of
 the second kind, cf. [`chebyshev_nodes`](@ref). The first and last node are `0` and `1`.
 
 Requires `s ≥ 2`.
 """
-lobatto_chebyshev_nodes(::Type{T}, s::Integer) where {T} = chebyshev_nodes(T, s, Val(2))
-lobatto_chebyshev_nodes(s) = lobatto_chebyshev_nodes(Float64, s)
+lobatto_chebyshev_nodes(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_nodes(T, s, Val(2); kwargs...)
+lobatto_chebyshev_nodes(s; kwargs...) = lobatto_chebyshev_nodes(Float64, s; kwargs...)
 
 @doc raw"""
     GaussChebyshevQuadrature(s; IT=BigFloat)
@@ -155,8 +160,9 @@ it gains one further degree by symmetry. All weights are positive.
 - `T`: element type of the resulting rule, `Float64` if omitted.
 - `s`: number of nodes.
 - `IT`: arithmetic in which nodes and weights are computed, `BigFloat` by default. As for
-  [`ClenshawCurtisQuadrature`](@ref), the weight sum costs ``O(s^2)`` operations, so
-  `IT=Float64` is substantially faster when `T` is `Float64` anyway.
+  [`ClenshawCurtisQuadrature`](@ref), the weight sum costs ``O(s^2)`` operations, so a lower
+  working precision is faster but accumulates round-off in the intermediate terms; see the
+  note there.
 
 ```jldoctest
 julia> quad = GaussChebyshevQuadrature(3);
@@ -171,7 +177,7 @@ julia> quad(x -> x^2)
 See also [`ClenshawCurtisQuadrature`](@ref) and [`ChebyshevQuadrature`](@ref).
 """
 function GaussChebyshevQuadrature(::Type{T}, s::Integer; IT=BigFloat) where {T}
-    c = chebyshev_nodes(IT, s, Val(1))
+    c = chebyshev_nodes(IT, s, Val(1); IT=IT)
     b = zero(c)
     for i in eachindex(b)
         tj = zero(IT)

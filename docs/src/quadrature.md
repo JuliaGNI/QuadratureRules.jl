@@ -237,9 +237,17 @@ result to the requested element type `T` only at the very end. The roots themsel
 obtained by taking the double precision approximations from
 [FastGaussQuadrature.jl](https://github.com/JuliaApproximation/FastGaussQuadrature.jl) as
 initial guesses and refining them with Newton's method in the working precision. The
-closed-form node and weight formulae of the Chebyshev family are likewise evaluated in
-`BigFloat` arithmetic, using the [`@big`](@ref) macro to ensure that all intermediate
-quantities, not merely the final result, are computed in high precision.
+closed-form node and weight formulae of the Chebyshev family are likewise evaluated in `IT`,
+so that all intermediate quantities, and not merely the final result, are computed in high
+precision.
+
+This matters more than it might appear. Setting `IT` equal to `T` — computing a `Float64`
+rule entirely in `Float64` — is much faster, but the round-off accumulated in the
+intermediate terms leaves the moment conditions violated by a few hundred times `eps(T)`,
+whereas computing in `BigFloat` and rounding only at the end satisfies them to better than
+`eps(T)`, i.e. returns correctly rounded nodes and weights. Since the whole point of the
+package is to supply coefficients that meet the order conditions of a high-order integrator
+to full precision, `BigFloat` is the default everywhere.
 
 Where the extra accuracy is not needed, the Legendre rules accept `fast=true`, which
 takes the nodes and weights directly from FastGaussQuadrature.jl in double precision.

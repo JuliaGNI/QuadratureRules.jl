@@ -1,38 +1,37 @@
 """
-    clenshaw_curtis_points(s)
-    clenshaw_curtis_points(T, s)
+    clenshaw_curtis_points(s; IT=BigFloat)
+    clenshaw_curtis_points(T, s; IT=BigFloat)
 
 The `s` Clenshaw-Curtis points on the interval ``[-1,+1]``, i.e., the Chebyshev points
 of the second kind, cf. [`chebyshev_points`](@ref). They include both endpoints.
 
 Identical to [`lobatto_chebyshev_points`](@ref). Requires `s ≥ 2`.
 """
-clenshaw_curtis_points(::Type{T}, s::Integer) where {T} = chebyshev_points(T, s, Val(2))
-clenshaw_curtis_points(s) = clenshaw_curtis_points(Float64, s)
+clenshaw_curtis_points(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_points(T, s, Val(2); kwargs...)
+clenshaw_curtis_points(s; kwargs...) = clenshaw_curtis_points(Float64, s; kwargs...)
 
 """
-    clenshaw_curtis_nodes(s)
-    clenshaw_curtis_nodes(T, s)
+    clenshaw_curtis_nodes(s; IT=BigFloat)
+    clenshaw_curtis_nodes(T, s; IT=BigFloat)
 
 The `s` Clenshaw-Curtis nodes on the interval ``[0,1]``, i.e., the Chebyshev nodes of
 the second kind, cf. [`chebyshev_nodes`](@ref). The first and last node are `0` and `1`.
 
-These are the nodes of [`ClenshawCurtisQuadrature`](@ref), although note that the
-quadrature computes them in the working precision `IT` and rounds to `T`, so the two
-agree exactly only when `T == IT`. Requires `s ≥ 2`.
+These are exactly the nodes of [`ClenshawCurtisQuadrature`](@ref) at the same `T` and `IT`.
+Requires `s ≥ 2`.
 
 ```jldoctest
 julia> clenshaw_curtis_nodes(5)
 5-element Vector{Float64}:
  0.0
- 0.1464466094067262
+ 0.14644660940672624
  0.5
  0.8535533905932737
  1.0
 ```
 """
-clenshaw_curtis_nodes(::Type{T}, s::Integer) where {T} = chebyshev_nodes(T, s, Val(2))
-clenshaw_curtis_nodes(s) = clenshaw_curtis_nodes(Float64, s)
+clenshaw_curtis_nodes(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_nodes(T, s, Val(2); kwargs...)
+clenshaw_curtis_nodes(s; kwargs...) = clenshaw_curtis_nodes(Float64, s; kwargs...)
 
 
 @doc raw"""
@@ -75,9 +74,15 @@ Throws an `ErrorException` for `s == 1`.
 # Arguments
 - `T`: element type of the resulting rule, `Float64` if omitted.
 - `s`: number of nodes.
-- `IT`: arithmetic in which nodes and weights are computed, `BigFloat` by default. The
-  weight sum costs ``O(s^2)`` operations, so `IT=Float64` is roughly two orders of
-  magnitude faster and is the better choice when `T` is `Float64` anyway.
+- `IT`: arithmetic in which nodes and weights are computed, `BigFloat` by default.
+
+!!! note "Why `BigFloat` is the default"
+    The weight sum costs ``O(s^2)`` operations, so a lower working precision such as
+    `IT=Float64` is considerably faster. It is not the default, however, because the sum
+    accumulates round-off in its intermediate terms: computing in `BigFloat` and rounding
+    only the final result guarantees weights that are correct to the full precision of `T`,
+    whereas `IT=Float64` merely gets close to it. Lower the working precision only when the
+    cost matters and a few units in the last place do not.
 
 ```jldoctest
 julia> ClenshawCurtisQuadrature(3)     # Simpson's rule
@@ -103,7 +108,7 @@ function ClenshawCurtisQuadrature(::Type{T}, s::Integer; IT=BigFloat) where {T}
     cctrm(k,j,n) = b(j,n) / IT( 4 * j^2 - 1 ) * cos(j * ϑ(k,n))
     ccsum(k,n) = c(k,n) / IT(2n) * ( IT(1) - mapreduce(j -> cctrm(k,j,n), +, 1:div(n,2); init = zero(IT)) )
 
-    x = clenshaw_curtis_nodes(IT, s)
+    x = clenshaw_curtis_nodes(IT, s; IT=IT)
     w = [ccsum(i-1,s-1) for i in 1:s]
 
     QuadratureRule(s, x, w, T)

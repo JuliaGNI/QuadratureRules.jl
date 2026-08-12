@@ -1,30 +1,4 @@
 
-_big(x) = x
-_big(x::Number) = big(x)
-_big(x::String) = parse(BigFloat, x)
-
-function _big(x::Expr)
-    y = x
-    y.args .= _big.(y.args)
-    return  y
-end
-
-"""
-    @big expr
-
-Rewrite `expr` so that all numeric literals it contains become `BigFloat`s, and the
-whole expression is thus evaluated in arbitrary precision arithmetic.
-
-This differs from `big.(expr)`, which evaluates `expr` in the arithmetic of its literals
-and only widens the result afterwards, losing the precision of intermediate values.
-It is used throughout the package to evaluate closed-form node and weight formulae such
-as `@big cos(π * (i-1) / (s-1))` to full precision.
-"""
-macro big(x)
-    return esc(_big(x))
-end
-
-
 "Legendre polynomial P_s(x) of degree s defined on the interval [-1..+1], evaluated by the three-term recurrence."
 function _legendre(j::Int, x::T) where {T}
     if j <= 0

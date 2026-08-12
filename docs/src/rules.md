@@ -386,14 +386,22 @@ and for $e^x$ both reach machine precision well before $n = 16$.
 ### Cost
 
 The weight sum above is evaluated directly, at a cost of $O(s^2)$ operations, and by
-default in `BigFloat`. Passing `IT=Float64` is about two orders of magnitude faster and is
-the appropriate choice whenever the result is wanted in `Float64`:
+default in `BigFloat`. Lowering the working precision with `IT=Float64` is one to two
+orders of magnitude faster:
 
 ```@repl rules
 ClenshawCurtisQuadrature(Float64, 64; IT=Float64) ≈ ClenshawCurtisQuadrature(64)
 ```
 
-Computing the weights through a fast cosine transform instead reduces this to
+`BigFloat` is nevertheless the default, and deliberately so. The weights are a sum of
+$O(s)$ cosine terms, and every term contributes round-off; evaluating the closed forms in
+`BigFloat` and rounding only at the end delivers nodes and weights correct to the full
+precision of `T`, whereas a lower working precision merely comes close. This is what the
+package is for — the coefficients of a high-order integrator have to satisfy their order
+conditions to full precision, and a rule that is a few units in the last place off will not
+do. Lower `IT` only when the cost matters and that accuracy does not.
+
+Computing the weights through a fast cosine transform instead reduces the cost to
 $O(s \log s)$; see [gentleman1972](@citet) and [waldvogel2006](@citet). That is not done
 here, because the package's priority is arbitrary-precision accuracy for moderate node
 counts rather than throughput at large $s$.

@@ -28,10 +28,11 @@ import QuadratureRules: scale_weights, shift_nodes, unshift_nodes
 
         @test clenshaw_curtis_nodes(Float64, s) ≈ c
 
-        # the quadrature computes its nodes in IT = BigFloat and rounds to T,
-        # whereas clenshaw_curtis_nodes(Float64, s) computes them in Float64,
-        # so the two agree exactly only at equal working precision
-        @test clenshaw_curtis_nodes(Float64, s)  ≈  nodes(ClenshawCurtisQuadrature(s))
+        # both compute the nodes in the working precision IT and round to T, so
+        # they agree exactly and not merely approximately
+        @test clenshaw_curtis_nodes(Float64, s)  ==  nodes(ClenshawCurtisQuadrature(s))
+        @test clenshaw_curtis_nodes(Float32, s)  ==  nodes(ClenshawCurtisQuadrature(Float32, s))
+        @test clenshaw_curtis_nodes(Float64, s; IT=Float64) == nodes(ClenshawCurtisQuadrature(Float64, s; IT=Float64))
         @test clenshaw_curtis_nodes(BigFloat, s) == nodes(ClenshawCurtisQuadrature(BigFloat, s))
         @test clenshaw_curtis_points(Float64, s) ≈ reverse(FastTransforms.clenshawcurtisnodes(Float64, s))
         @test unshift_nodes(clenshaw_curtis_nodes(Float64, s)) ≈ clenshaw_curtis_points(Float64, s)

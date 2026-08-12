@@ -116,7 +116,6 @@ The following are not exported and are documented for reference only. They are n
 of the public API and may change without notice.
 
 ```@docs
-QuadratureRules.@big
 QuadratureRules._legendre
 QuadratureRules._legendre_polynomial
 QuadratureRules._newton_roots
