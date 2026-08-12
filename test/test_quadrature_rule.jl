@@ -1,3 +1,5 @@
+import GeometricBase
+
 @testset "$(rpad("QuadratureRule",80))" begin
 
     o = 2
@@ -37,5 +39,19 @@
     @test quad ≈   quadϵ
     @test quad !=  quadϵ
     @test quad !== quadϵ
+
+end
+
+
+@testset "$(rpad("Accessor bindings",80))" begin
+
+    # the accessors must be methods on the GeometricBase generics, not functions of their
+    # own, or loading QuadratureRules together with another package of the ecosystem makes
+    # the exported names resolve to nothing
+
+    @test QuadratureRules.nnodes  === GeometricBase.nnodes
+    @test QuadratureRules.nodes   === GeometricBase.nodes
+    @test QuadratureRules.order   === GeometricBase.order
+    @test QuadratureRules.weights === GeometricBase.weights
 
 end

@@ -4,6 +4,10 @@ module QuadratureRules
     import Polynomials
     import Polynomials: Polynomial
 
+    # extended below rather than defined here, so that the packages of the ecosystem share
+    # one generic function per accessor instead of one per package
+    import GeometricBase: nnodes, nodes, order, weights
+
     include("utils.jl")
 
 
