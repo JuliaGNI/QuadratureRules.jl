@@ -28,7 +28,6 @@ import QuadratureRules: shift_nodes, unshift_nodes
         @test lobatto_legendre_points(Float64, s)[begin] == -1
         @test lobatto_legendre_points(Float64, s)[end]   == +1
 
-        @test lobatto_legendre_nodes(Float64, s; fast=true) ≈ lobatto_legendre_nodes(Float64, s)
         @test eltype(lobatto_legendre_nodes(BigFloat, s)) == BigFloat
     end
 

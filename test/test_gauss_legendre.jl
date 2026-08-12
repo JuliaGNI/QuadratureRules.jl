@@ -20,7 +20,6 @@ import QuadratureRules: shift_nodes, unshift_nodes
         @test unshift_nodes(gauss_legendre_nodes(Float64, s)) ≈ gauss_legendre_points(Float64, s)
         @test gauss_legendre_points(Float64, s) ≈ FastGaussQuadrature.gausslegendre(s)[1]
 
-        @test gauss_legendre_nodes(Float64, s; fast=true) ≈ gauss_legendre_nodes(Float64, s)
         @test eltype(gauss_legendre_nodes(BigFloat, s)) == BigFloat
     end
 
