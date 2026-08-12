@@ -24,9 +24,12 @@ import QuadratureRules: shift_nodes, unshift_nodes
         @test unshift_nodes(lobatto_legendre_nodes(Float64, s)) ≈ lobatto_legendre_points(Float64, s)
         @test lobatto_legendre_points(Float64, s) ≈ FastGaussQuadrature.gausslobatto(s)[1]
 
-        # the endpoints stay exact under the shift to [-1,+1]
+        # the endpoints of the points are pinned exactly, and shift_nodes maps them
+        # to exactly 0 and 1
         @test lobatto_legendre_points(Float64, s)[begin] == -1
         @test lobatto_legendre_points(Float64, s)[end]   == +1
+        @test lobatto_legendre_nodes(Float64, s)[begin]  == 0
+        @test lobatto_legendre_nodes(Float64, s)[end]    == 1
 
         @test eltype(lobatto_legendre_nodes(BigFloat, s)) == BigFloat
     end
