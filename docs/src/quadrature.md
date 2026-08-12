@@ -38,12 +38,12 @@ Most of the classical theory is instead formulated on the symmetric interval $[-
 which is where orthogonal polynomials such as the Legendre and Chebyshev polynomials are
 defined. The package follows this convention internally and offers both views:
 
-- the `*_points` and `*_point_weights` functions work on $[-1,+1]$,
+- the `symmetric_*_nodes` and `symmetric_*_weights` functions work on $[-1,+1]$,
 - the `*_nodes` and `*_weights` functions work on $[0,1]$,
 
 related by $c_i = (x_i + 1) / 2$, with the weights scaled correspondingly by a factor
 $1/2$ so that they sum to $1$ rather than $2$. See
-[Points, Nodes and Weights](@ref) for the full list.
+[Nodes and Weights](@ref) for the full list.
 
 
 ## Interpolatory quadrature

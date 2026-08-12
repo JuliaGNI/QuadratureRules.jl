@@ -1,20 +1,21 @@
 """
-    clenshaw_curtis_points(s; IT=BigFloat)
-    clenshaw_curtis_points(T, s; IT=_default_arithmetic(T))
+    symmetric_clenshaw_curtis_nodes(s; IT=BigFloat)
+    symmetric_clenshaw_curtis_nodes(T, s; IT=_default_arithmetic(T))
 
-The `s` Clenshaw-Curtis points on the interval ``[-1,+1]``, i.e., the Chebyshev points
-of the second kind, cf. [`chebyshev_points`](@ref). They include both endpoints.
+The `s` Clenshaw-Curtis nodes on the symmetric interval ``[-1,+1]``, i.e., the Chebyshev
+points of the second kind, cf. [`symmetric_chebyshev_nodes`](@ref). They include both
+endpoints.
 
-Identical to [`lobatto_chebyshev_points`](@ref). Requires `s ≥ 2`.
+Identical to [`symmetric_lobatto_chebyshev_nodes`](@ref). Requires `s ≥ 2`.
 """
-clenshaw_curtis_points(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_points(T, s, Val(2); kwargs...)
-clenshaw_curtis_points(s; kwargs...) = clenshaw_curtis_points(Float64, s; kwargs...)
+symmetric_clenshaw_curtis_nodes(::Type{T}, s::Integer; kwargs...) where {T} = symmetric_chebyshev_nodes(T, s, Val(2); kwargs...)
+symmetric_clenshaw_curtis_nodes(s; kwargs...) = symmetric_clenshaw_curtis_nodes(Float64, s; kwargs...)
 
 """
     clenshaw_curtis_nodes(s; IT=BigFloat)
     clenshaw_curtis_nodes(T, s; IT=_default_arithmetic(T))
 
-The `s` Clenshaw-Curtis nodes on the interval ``[0,1]``, i.e., the Chebyshev nodes of
+The `s` Clenshaw-Curtis nodes on the unit interval ``[0,1]``, i.e., the Chebyshev nodes of
 the second kind, cf. [`chebyshev_nodes`](@ref). The first and last node are `0` and `1`.
 
 These are exactly the nodes of [`ClenshawCurtisQuadrature`](@ref) at the same `T` and `IT`.
@@ -37,7 +38,7 @@ clenshaw_curtis_nodes(s; kwargs...) = clenshaw_curtis_nodes(Float64, s; kwargs..
     clenshaw_curtis_weights(s; IT=BigFloat)
     clenshaw_curtis_weights(T, s; IT=_default_arithmetic(T))
 
-The `s` Clenshaw-Curtis weights for the interval ``[0,1]``, belonging to the nodes
+The `s` Clenshaw-Curtis weights for the unit interval ``[0,1]``, belonging to the nodes
 returned by [`clenshaw_curtis_nodes`](@ref) and summing to ``1``.
 
 They are the weights of the interpolatory rule through the Chebyshev points of the second
@@ -63,7 +64,7 @@ julia> clenshaw_curtis_weights(3)
  0.16666666666666666
 ```
 
-See also [`clenshaw_curtis_point_weights`](@ref) for the same weights on ``[-1,+1]``.
+See also [`symmetric_clenshaw_curtis_weights`](@ref) for the same weights on ``[-1,+1]``.
 """
 function clenshaw_curtis_weights(::Type{T}, s::Integer; IT=_default_arithmetic(T)) where {T}
     if s == 1
@@ -83,27 +84,27 @@ end
 clenshaw_curtis_weights(s; kwargs...) = clenshaw_curtis_weights(Float64, s; kwargs...)
 
 @doc raw"""
-    clenshaw_curtis_point_weights(s; IT=BigFloat)
-    clenshaw_curtis_point_weights(T, s; IT=_default_arithmetic(T))
+    symmetric_clenshaw_curtis_weights(s; IT=BigFloat)
+    symmetric_clenshaw_curtis_weights(T, s; IT=_default_arithmetic(T))
 
-The `s` Clenshaw-Curtis weights for the interval ``[-1,+1]``, i.e., the weights of
-[`clenshaw_curtis_weights`](@ref) doubled so that they sum to ``2``.
+The `s` Clenshaw-Curtis weights for the symmetric interval ``[-1,+1]``, i.e., the weights
+of [`clenshaw_curtis_weights`](@ref) doubled so that they sum to ``2``.
 
 Throws an `ErrorException` for `s == 1`.
 
 ```jldoctest
-julia> clenshaw_curtis_point_weights(3)
+julia> symmetric_clenshaw_curtis_weights(3)
 3-element Vector{Float64}:
  0.3333333333333333
  1.3333333333333333
  0.3333333333333333
 ```
 """
-function clenshaw_curtis_point_weights(::Type{T}, s::Integer; IT=_default_arithmetic(T)) where {T}
+function symmetric_clenshaw_curtis_weights(::Type{T}, s::Integer; IT=_default_arithmetic(T)) where {T}
     T.(unscale_weights(clenshaw_curtis_weights(IT, s; IT=IT)))
 end
 
-clenshaw_curtis_point_weights(s; kwargs...) = clenshaw_curtis_point_weights(Float64, s; kwargs...)
+symmetric_clenshaw_curtis_weights(s; kwargs...) = symmetric_clenshaw_curtis_weights(Float64, s; kwargs...)
 
 
 @doc raw"""

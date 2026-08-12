@@ -1,12 +1,12 @@
 
 @doc raw"""
-    chebyshev_points(s, kind; IT=BigFloat)
-    chebyshev_points(T, s, ::Val{kind}; IT=_default_arithmetic(T))
+    symmetric_chebyshev_nodes(s, kind; IT=BigFloat)
+    symmetric_chebyshev_nodes(T, s, ::Val{kind}; IT=_default_arithmetic(T))
 
-The `s` Chebyshev points of the first (`kind = 1`) or second (`kind = 2`) kind on the
-interval ``[-1,+1]``, in ascending order.
+The `s` Chebyshev nodes of the first (`kind = 1`) or second (`kind = 2`) kind on the
+symmetric interval ``[-1,+1]``, in ascending order.
 
-The points of the first kind are the roots of the Chebyshev polynomial ``T_s``,
+The nodes of the first kind are the roots of the Chebyshev polynomial ``T_s``,
 
 ```math
 x_i = \cos \left( \frac{(2i-1) \, \pi}{2s} \right) , \qquad i = 1, \dots, s ,
@@ -14,7 +14,7 @@ x_i = \cos \left( \frac{(2i-1) \, \pi}{2s} \right) , \qquad i = 1, \dots, s ,
 
 which lie strictly inside the interval. They are evaluated in the equivalent `sin` form
 used in the implementation, which is more accurate near the ends of the interval. The
-points of the second kind are the extrema of ``T_{s-1}``,
+nodes of the second kind are the extrema of ``T_{s-1}``,
 
 ```math
 x_i = \cos \left( \frac{(i-1) \, \pi}{s-1} \right) , \qquad i = 1, \dots, s ,
@@ -22,7 +22,7 @@ x_i = \cos \left( \frac{(i-1) \, \pi}{s-1} \right) , \qquad i = 1, \dots, s ,
 
 and include both endpoints ``\pm 1``.
 
-The points are evaluated in the arithmetic `IT` and then converted to `T`. For a numeric `T`
+The nodes are evaluated in the arithmetic `IT` and then converted to `T`. For a numeric `T`
 the default is `IT=BigFloat`, so that the closed forms above are evaluated to full precision
 whatever `T` is and the returned values are correctly rounded; see
 [`ClenshawCurtisQuadrature`](@ref) for the trade-off involved in choosing a lower working
@@ -30,23 +30,23 @@ precision. For any other `T` the default is `IT=T`, so that with a symbolic `T` 
 forms are evaluated exactly, ``\pi`` included; cf.
 [`QuadratureRules._default_arithmetic`](@ref).
 
-Points of the second kind require `s ≥ 2` and throw an `ErrorException` otherwise.
+Nodes of the second kind require `s ≥ 2` and throw an `ErrorException` otherwise.
 
 ```jldoctest
-julia> chebyshev_points(3, 1)
+julia> symmetric_chebyshev_nodes(3, 1)
 3-element Vector{Float64}:
  -0.8660254037844386
   0.0
   0.8660254037844386
 ```
 
-See also [`chebyshev_nodes`](@ref) for the same points on ``[0,1]``.
+See also [`chebyshev_nodes`](@ref) for the same nodes on ``[0,1]``.
 """
-function chebyshev_points(::Type{T}, s::Integer, ::Val{1}; IT=_default_arithmetic(T)) where {T}
+function symmetric_chebyshev_nodes(::Type{T}, s::Integer, ::Val{1}; IT=_default_arithmetic(T)) where {T}
     T[ sin( IT(π) * (s-2i+1) / (2s) ) for i in s:-1:1 ]
 end
 
-function chebyshev_points(::Type{T}, s::Integer, ::Val{2}; IT=_default_arithmetic(T)) where {T}
+function symmetric_chebyshev_nodes(::Type{T}, s::Integer, ::Val{2}; IT=_default_arithmetic(T)) where {T}
     if s == 1
         throw(ErrorException("Chebyshev points of the second kind are not defined for one point."))
     end
@@ -54,18 +54,18 @@ function chebyshev_points(::Type{T}, s::Integer, ::Val{2}; IT=_default_arithmeti
     T[ cos( IT(π) * (i-1) / (s-1) ) for i in s:-1:1 ]
 end
 
-chebyshev_points(s, kind; kwargs...) = chebyshev_points(Float64, s, Val(kind); kwargs...)
+symmetric_chebyshev_nodes(s, kind; kwargs...) = symmetric_chebyshev_nodes(Float64, s, Val(kind); kwargs...)
 
 @doc raw"""
     chebyshev_nodes(s, kind; IT=BigFloat)
     chebyshev_nodes(T, s, ::Val{kind}; IT=_default_arithmetic(T))
 
-The `s` Chebyshev nodes of the first (`kind = 1`) or second (`kind = 2`) kind on the
-interval ``[0,1]``, i.e., the Chebyshev points shifted and scaled from ``[-1,+1]``
-to ``[0,1]``.
+The `s` Chebyshev nodes of the first (`kind = 1`) or second (`kind = 2`) kind on the unit
+interval ``[0,1]``, i.e., the nodes of [`symmetric_chebyshev_nodes`](@ref) shifted and
+scaled from ``[-1,+1]`` to ``[0,1]``.
 
-See [`chebyshev_points`](@ref) for the definition of the two kinds and for `IT`. Both the
-points and the shift are computed in `IT` before the result is converted to `T`.
+See [`symmetric_chebyshev_nodes`](@ref) for the definition of the two kinds and for `IT`.
+Both the nodes and the shift are computed in `IT` before the result is converted to `T`.
 
 ```jldoctest
 julia> chebyshev_nodes(3, 1)
@@ -76,7 +76,7 @@ julia> chebyshev_nodes(3, 1)
 ```
 """
 function chebyshev_nodes(::Type{T}, s::Integer, kind::Val; IT=_default_arithmetic(T)) where {T}
-    T.(shift_nodes(chebyshev_points(IT, s, kind; IT=IT)))
+    T.(shift_nodes(symmetric_chebyshev_nodes(IT, s, kind; IT=IT)))
 end
 
 chebyshev_nodes(s, kind; kwargs...) = chebyshev_nodes(Float64, s, Val(kind); kwargs...)
@@ -85,8 +85,8 @@ chebyshev_nodes(s, kind; kwargs...) = chebyshev_nodes(Float64, s, Val(kind); kwa
     chebyshev_weights(s, kind; IT=BigFloat)
     chebyshev_weights(T, s, ::Val{kind}; IT=_default_arithmetic(T))
 
-The `s` interpolatory weights for the interval ``[0,1]`` belonging to the Chebyshev nodes
-of the first (`kind = 1`) or second (`kind = 2`) kind, summing to ``1``.
+The `s` interpolatory weights for the unit interval ``[0,1]`` belonging to the Chebyshev
+nodes of the first (`kind = 1`) or second (`kind = 2`) kind, summing to ``1``.
 
 For `kind = 1` these are the weights of Fejér's first rule,
 
@@ -100,8 +100,8 @@ already normalised to ``[0,1]``. For `kind = 2` the nodes coincide with the
 Clenshaw-Curtis nodes, so the weights are those of
 [`clenshaw_curtis_weights`](@ref), to which this function delegates.
 
-See [`chebyshev_points`](@ref) for the definition of the two kinds and for the arguments.
-`kind = 2` requires `s ≥ 2`.
+See [`symmetric_chebyshev_nodes`](@ref) for the definition of the two kinds and for the
+arguments. `kind = 2` requires `s ≥ 2`.
 
 ```jldoctest
 julia> chebyshev_weights(3, 1)
@@ -111,7 +111,7 @@ julia> chebyshev_weights(3, 1)
  0.2222222222222222
 ```
 
-See also [`chebyshev_point_weights`](@ref) for the same weights on ``[-1,+1]``.
+See also [`symmetric_chebyshev_weights`](@ref) for the same weights on ``[-1,+1]``.
 """
 function chebyshev_weights(::Type{T}, s::Integer, ::Val{1}; IT=_default_arithmetic(T)) where {T}
     b = zeros(IT, s)
@@ -132,48 +132,48 @@ chebyshev_weights(::Type{T}, s::Integer, ::Val{2}; kwargs...) where {T} = clensh
 chebyshev_weights(s, kind; kwargs...) = chebyshev_weights(Float64, s, Val(kind); kwargs...)
 
 @doc raw"""
-    chebyshev_point_weights(s, kind; IT=BigFloat)
-    chebyshev_point_weights(T, s, ::Val{kind}; IT=_default_arithmetic(T))
+    symmetric_chebyshev_weights(s, kind; IT=BigFloat)
+    symmetric_chebyshev_weights(T, s, ::Val{kind}; IT=_default_arithmetic(T))
 
-The `s` interpolatory weights for the interval ``[-1,+1]`` belonging to the Chebyshev
-points of the first (`kind = 1`) or second (`kind = 2`) kind, i.e., the weights of
+The `s` interpolatory weights for the symmetric interval ``[-1,+1]`` belonging to the
+Chebyshev nodes of the first (`kind = 1`) or second (`kind = 2`) kind, i.e., the weights of
 [`chebyshev_weights`](@ref) doubled so that they sum to ``2``.
 
-See [`chebyshev_points`](@ref) for the definition of the two kinds and for the arguments.
-`kind = 2` requires `s ≥ 2`.
+See [`symmetric_chebyshev_nodes`](@ref) for the definition of the two kinds and for the
+arguments. `kind = 2` requires `s ≥ 2`.
 
 ```jldoctest
-julia> chebyshev_point_weights(3, 1)
+julia> symmetric_chebyshev_weights(3, 1)
 3-element Vector{Float64}:
  0.4444444444444444
  1.1111111111111112
  0.4444444444444444
 ```
 """
-function chebyshev_point_weights(::Type{T}, s::Integer, kind::Val; IT=_default_arithmetic(T)) where {T}
+function symmetric_chebyshev_weights(::Type{T}, s::Integer, kind::Val; IT=_default_arithmetic(T)) where {T}
     T.(unscale_weights(chebyshev_weights(IT, s, kind; IT=IT)))
 end
 
-chebyshev_point_weights(s, kind; kwargs...) = chebyshev_point_weights(Float64, s, Val(kind); kwargs...)
+symmetric_chebyshev_weights(s, kind; kwargs...) = symmetric_chebyshev_weights(Float64, s, Val(kind); kwargs...)
 
 
 """
-    gauss_chebyshev_points(s; IT=BigFloat)
-    gauss_chebyshev_points(T, s; IT=_default_arithmetic(T))
+    symmetric_gauss_chebyshev_nodes(s; IT=BigFloat)
+    symmetric_gauss_chebyshev_nodes(T, s; IT=_default_arithmetic(T))
 
-The `s` Gauss-Chebyshev points on the interval ``[-1,+1]``, i.e., the Chebyshev points
-of the first kind, cf. [`chebyshev_points`](@ref).
+The `s` Gauss-Chebyshev nodes on the symmetric interval ``[-1,+1]``, i.e., the Chebyshev
+points of the first kind, cf. [`symmetric_chebyshev_nodes`](@ref).
 
 These are the nodes of [`GaussChebyshevQuadrature`](@ref).
 """
-gauss_chebyshev_points(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_points(T, s, Val(1); kwargs...)
-gauss_chebyshev_points(s; kwargs...) = gauss_chebyshev_points(Float64, s; kwargs...)
+symmetric_gauss_chebyshev_nodes(::Type{T}, s::Integer; kwargs...) where {T} = symmetric_chebyshev_nodes(T, s, Val(1); kwargs...)
+symmetric_gauss_chebyshev_nodes(s; kwargs...) = symmetric_gauss_chebyshev_nodes(Float64, s; kwargs...)
 
 """
     gauss_chebyshev_nodes(s; IT=BigFloat)
     gauss_chebyshev_nodes(T, s; IT=_default_arithmetic(T))
 
-The `s` Gauss-Chebyshev nodes on the interval ``[0,1]``, i.e., the Chebyshev nodes of
+The `s` Gauss-Chebyshev nodes on the unit interval ``[0,1]``, i.e., the Chebyshev nodes of
 the first kind, cf. [`chebyshev_nodes`](@ref).
 """
 gauss_chebyshev_nodes(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_nodes(T, s, Val(1); kwargs...)
@@ -183,8 +183,8 @@ gauss_chebyshev_nodes(s; kwargs...) = gauss_chebyshev_nodes(Float64, s; kwargs..
     gauss_chebyshev_weights(s; IT=BigFloat)
     gauss_chebyshev_weights(T, s; IT=_default_arithmetic(T))
 
-The `s` Gauss-Chebyshev weights for the interval ``[0,1]``, i.e., the weights of Fejér's
-first rule, cf. [`chebyshev_weights`](@ref). They sum to `1`.
+The `s` Gauss-Chebyshev weights for the unit interval ``[0,1]``, i.e., the weights of
+Fejér's first rule, cf. [`chebyshev_weights`](@ref). They sum to `1`.
 
 These are the weights of [`GaussChebyshevQuadrature`](@ref).
 """
@@ -192,36 +192,37 @@ gauss_chebyshev_weights(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_
 gauss_chebyshev_weights(s; kwargs...) = gauss_chebyshev_weights(Float64, s; kwargs...)
 
 """
-    gauss_chebyshev_point_weights(s; IT=BigFloat)
-    gauss_chebyshev_point_weights(T, s; IT=_default_arithmetic(T))
+    symmetric_gauss_chebyshev_weights(s; IT=BigFloat)
+    symmetric_gauss_chebyshev_weights(T, s; IT=_default_arithmetic(T))
 
-The `s` Gauss-Chebyshev weights for the interval ``[-1,+1]``, cf.
-[`chebyshev_point_weights`](@ref). They sum to `2`.
+The `s` Gauss-Chebyshev weights for the symmetric interval ``[-1,+1]``, cf.
+[`symmetric_chebyshev_weights`](@ref). They sum to `2`.
 """
-gauss_chebyshev_point_weights(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_point_weights(T, s, Val(1); kwargs...)
-gauss_chebyshev_point_weights(s; kwargs...) = gauss_chebyshev_point_weights(Float64, s; kwargs...)
+symmetric_gauss_chebyshev_weights(::Type{T}, s::Integer; kwargs...) where {T} = symmetric_chebyshev_weights(T, s, Val(1); kwargs...)
+symmetric_gauss_chebyshev_weights(s; kwargs...) = symmetric_gauss_chebyshev_weights(Float64, s; kwargs...)
 
 """
-    lobatto_chebyshev_points(s; IT=BigFloat)
-    lobatto_chebyshev_points(T, s; IT=_default_arithmetic(T))
+    symmetric_lobatto_chebyshev_nodes(s; IT=BigFloat)
+    symmetric_lobatto_chebyshev_nodes(T, s; IT=_default_arithmetic(T))
 
-The `s` Lobatto-Chebyshev points on the interval ``[-1,+1]``, i.e., the Chebyshev points
-of the second kind, cf. [`chebyshev_points`](@ref). They include both endpoints.
+The `s` Lobatto-Chebyshev nodes on the symmetric interval ``[-1,+1]``, i.e., the Chebyshev
+points of the second kind, cf. [`symmetric_chebyshev_nodes`](@ref). They include both
+endpoints.
 
-These points coincide with [`clenshaw_curtis_points`](@ref), and correspondingly
+These nodes coincide with [`symmetric_clenshaw_curtis_nodes`](@ref), and correspondingly
 [`LobattoChebyshevQuadrature`](@ref) coincides with [`ClenshawCurtisQuadrature`](@ref).
 
 Requires `s ≥ 2`.
 """
-lobatto_chebyshev_points(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_points(T, s, Val(2); kwargs...)
-lobatto_chebyshev_points(s; kwargs...) = lobatto_chebyshev_points(Float64, s; kwargs...)
+symmetric_lobatto_chebyshev_nodes(::Type{T}, s::Integer; kwargs...) where {T} = symmetric_chebyshev_nodes(T, s, Val(2); kwargs...)
+symmetric_lobatto_chebyshev_nodes(s; kwargs...) = symmetric_lobatto_chebyshev_nodes(Float64, s; kwargs...)
 
 """
     lobatto_chebyshev_nodes(s; IT=BigFloat)
     lobatto_chebyshev_nodes(T, s; IT=_default_arithmetic(T))
 
-The `s` Lobatto-Chebyshev nodes on the interval ``[0,1]``, i.e., the Chebyshev nodes of
-the second kind, cf. [`chebyshev_nodes`](@ref). The first and last node are `0` and `1`.
+The `s` Lobatto-Chebyshev nodes on the unit interval ``[0,1]``, i.e., the Chebyshev nodes
+of the second kind, cf. [`chebyshev_nodes`](@ref). The first and last node are `0` and `1`.
 
 Requires `s ≥ 2`.
 """
@@ -232,7 +233,7 @@ lobatto_chebyshev_nodes(s; kwargs...) = lobatto_chebyshev_nodes(Float64, s; kwar
     lobatto_chebyshev_weights(s; IT=BigFloat)
     lobatto_chebyshev_weights(T, s; IT=_default_arithmetic(T))
 
-The `s` Lobatto-Chebyshev weights for the interval ``[0,1]``, cf.
+The `s` Lobatto-Chebyshev weights for the unit interval ``[0,1]``, cf.
 [`chebyshev_weights`](@ref). They sum to `1`.
 
 As the nodes coincide with the Clenshaw-Curtis nodes, so do the weights: these are
@@ -245,16 +246,16 @@ lobatto_chebyshev_weights(::Type{T}, s::Integer; kwargs...) where {T} = chebyshe
 lobatto_chebyshev_weights(s; kwargs...) = lobatto_chebyshev_weights(Float64, s; kwargs...)
 
 """
-    lobatto_chebyshev_point_weights(s; IT=BigFloat)
-    lobatto_chebyshev_point_weights(T, s; IT=_default_arithmetic(T))
+    symmetric_lobatto_chebyshev_weights(s; IT=BigFloat)
+    symmetric_lobatto_chebyshev_weights(T, s; IT=_default_arithmetic(T))
 
-The `s` Lobatto-Chebyshev weights for the interval ``[-1,+1]``, cf.
-[`chebyshev_point_weights`](@ref). They sum to `2`.
+The `s` Lobatto-Chebyshev weights for the symmetric interval ``[-1,+1]``, cf.
+[`symmetric_chebyshev_weights`](@ref). They sum to `2`.
 
 Requires `s ≥ 2`.
 """
-lobatto_chebyshev_point_weights(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_point_weights(T, s, Val(2); kwargs...)
-lobatto_chebyshev_point_weights(s; kwargs...) = lobatto_chebyshev_point_weights(Float64, s; kwargs...)
+symmetric_lobatto_chebyshev_weights(::Type{T}, s::Integer; kwargs...) where {T} = symmetric_chebyshev_weights(T, s, Val(2); kwargs...)
+symmetric_lobatto_chebyshev_weights(s; kwargs...) = symmetric_lobatto_chebyshev_weights(Float64, s; kwargs...)
 
 @doc raw"""
     GaussChebyshevQuadrature(s; IT=BigFloat)

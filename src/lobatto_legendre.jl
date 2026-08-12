@@ -1,12 +1,12 @@
 
 @doc raw"""
-    lobatto_legendre_points(s)
-    lobatto_legendre_points(T, s; IT=_default_arithmetic(T))
+    symmetric_lobatto_legendre_nodes(s)
+    symmetric_lobatto_legendre_nodes(T, s; IT=_default_arithmetic(T))
 
-The `s` Lobatto-Legendre points on the interval ``[-1,+1]``, i.e., the two endpoints
-``\pm 1`` together with the ``s-2`` roots of ``P_{s-1}'``.
+The `s` Lobatto-Legendre nodes on the symmetric interval ``[-1,+1]``, i.e., the two
+endpoints ``\pm 1`` together with the ``s-2`` roots of ``P_{s-1}'``.
 
-Rather than differentiating the Legendre polynomial, the interior points are obtained
+Rather than differentiating the Legendre polynomial, the interior nodes are obtained
 as the roots of the ``(s-2)``-nd derivative of ``(1-x^2)^{s-1}``, which has the same
 roots by Rodrigues' formula. The roots are computed in the arithmetic `IT`, either
 Newton-refined from the double precision approximations of
@@ -14,17 +14,17 @@ Newton-refined from the double precision approximations of
 exactly from the companion matrix, and the endpoints are set to exactly ``\pm 1``.
 
 Throws an `ErrorException` for `s == 1`, as a Lobatto rule needs at least the two
-endpoints. See [`gauss_legendre_points`](@ref) for the arguments.
+endpoints. See [`symmetric_gauss_legendre_nodes`](@ref) for the arguments.
 
 ```jldoctest
-julia> lobatto_legendre_points(3)
+julia> symmetric_lobatto_legendre_nodes(3)
 3-element Vector{Float64}:
  -1.0
   0.0
   1.0
 ```
 """
-function lobatto_legendre_points(::Type{T}, s::Integer; IT=_default_arithmetic(T)) where {T}
+function symmetric_lobatto_legendre_nodes(::Type{T}, s::Integer; IT=_default_arithmetic(T)) where {T}
     if s == 1
         throw(ErrorException("Lobatto quadrature is not defined for one stage."))
     end
@@ -36,17 +36,16 @@ function lobatto_legendre_points(::Type{T}, s::Integer; IT=_default_arithmetic(T
     T.(x)
 end
 
-lobatto_legendre_points(s; kwargs...) = lobatto_legendre_points(Float64, s; kwargs...)
+symmetric_lobatto_legendre_nodes(s; kwargs...) = symmetric_lobatto_legendre_nodes(Float64, s; kwargs...)
 
 @doc raw"""
     lobatto_legendre_nodes(s)
     lobatto_legendre_nodes(T, s; IT=_default_arithmetic(T))
 
-The `s` Lobatto-Legendre nodes on the interval ``[0,1]``, i.e., the Lobatto-Legendre
-points shifted and scaled from ``[-1,+1]`` to ``[0,1]``.
+The `s` Lobatto-Legendre nodes on the unit interval ``[0,1]``, i.e., the nodes of
+[`symmetric_lobatto_legendre_nodes`](@ref) shifted and scaled from ``[-1,+1]`` to ``[0,1]``.
 
-As the endpoints of [`lobatto_legendre_points`](@ref) are exact, the first and last
-node are exactly `0` and `1`. These are the nodes of
+As the outermost of those are exact, the first and last node are exactly `0` and `1`. These are the nodes of
 [`LobattoLegendreQuadrature`](@ref).
 
 ```jldoctest
@@ -58,26 +57,26 @@ julia> lobatto_legendre_nodes(3)
 ```
 """
 function lobatto_legendre_nodes(::Type{T}, s::Integer; IT=_default_arithmetic(T)) where {T}
-    T.(shift_nodes(lobatto_legendre_points(IT, s; IT=IT)))
+    T.(shift_nodes(symmetric_lobatto_legendre_nodes(IT, s; IT=IT)))
 end
 
 lobatto_legendre_nodes(s; kwargs...) = lobatto_legendre_nodes(Float64, s; kwargs...)
 
-# The Lobatto-Legendre weights on [-1,+1] belonging to the precomputed points `x`, in their
-# own arithmetic. Taking the points as an argument lets the constructor share the closed
-# form with lobatto_legendre_point_weights without repeating the root find.
-function _lobatto_legendre_point_weights(x::AbstractVector{IT}) where {IT}
+# The Lobatto-Legendre weights on [-1,+1] belonging to the precomputed nodes `x`, in their
+# own arithmetic. Taking the nodes as an argument lets the constructor share the closed
+# form with symmetric_lobatto_legendre_weights without repeating the root find.
+function _symmetric_lobatto_legendre_weights(x::AbstractVector{IT}) where {IT}
     s = length(x)
 
     [ 2 / ( s*(s-1) * _legendre(s-1, x[i])^2 )  for i in 1:s ]
 end
 
 @doc raw"""
-    lobatto_legendre_point_weights(s)
-    lobatto_legendre_point_weights(T, s; IT=_default_arithmetic(T))
+    symmetric_lobatto_legendre_weights(s)
+    symmetric_lobatto_legendre_weights(T, s; IT=_default_arithmetic(T))
 
-The `s` Lobatto-Legendre weights for the interval ``[-1,+1]``, belonging to the points
-returned by [`lobatto_legendre_points`](@ref) and summing to ``2``.
+The `s` Lobatto-Legendre weights for the symmetric interval ``[-1,+1]``, belonging to the
+nodes returned by [`symmetric_lobatto_legendre_nodes`](@ref) and summing to ``2``.
 
 They are given in closed form by
 
@@ -85,11 +84,12 @@ They are given in closed form by
 w_i = \frac{2}{s \, (s-1) \, \big[ P_{s-1}(x_i) \big]^2} ,
 ```
 
-which holds for the interior points and for the two endpoints alike. Throws an
-`ErrorException` for `s == 1`. See [`lobatto_legendre_points`](@ref) for the arguments.
+which holds for the interior nodes and for the two endpoints alike. Throws an
+`ErrorException` for `s == 1`. See [`symmetric_lobatto_legendre_nodes`](@ref) for the
+arguments.
 
 ```jldoctest
-julia> lobatto_legendre_point_weights(3)
+julia> symmetric_lobatto_legendre_weights(3)
 3-element Vector{Float64}:
  0.3333333333333333
  1.3333333333333333
@@ -98,21 +98,21 @@ julia> lobatto_legendre_point_weights(3)
 
 See also [`lobatto_legendre_weights`](@ref) for the same weights on ``[0,1]``.
 """
-function lobatto_legendre_point_weights(::Type{T}, s::Integer; IT=_default_arithmetic(T)) where {T}
-    T.(_lobatto_legendre_point_weights(lobatto_legendre_points(IT, s; IT=IT)))
+function symmetric_lobatto_legendre_weights(::Type{T}, s::Integer; IT=_default_arithmetic(T)) where {T}
+    T.(_symmetric_lobatto_legendre_weights(symmetric_lobatto_legendre_nodes(IT, s; IT=IT)))
 end
 
-lobatto_legendre_point_weights(s; kwargs...) = lobatto_legendre_point_weights(Float64, s; kwargs...)
+symmetric_lobatto_legendre_weights(s; kwargs...) = symmetric_lobatto_legendre_weights(Float64, s; kwargs...)
 
 @doc raw"""
     lobatto_legendre_weights(s)
     lobatto_legendre_weights(T, s; IT=_default_arithmetic(T))
 
-The `s` Lobatto-Legendre weights for the interval ``[0,1]``, i.e., the weights of
-[`lobatto_legendre_point_weights`](@ref) halved so that they sum to ``1``.
+The `s` Lobatto-Legendre weights for the unit interval ``[0,1]``, i.e., the weights of
+[`symmetric_lobatto_legendre_weights`](@ref) halved so that they sum to ``1``.
 
 These are the weights of [`LobattoLegendreQuadrature`](@ref). Throws an `ErrorException`
-for `s == 1`. See [`lobatto_legendre_points`](@ref) for the arguments.
+for `s == 1`. See [`symmetric_lobatto_legendre_nodes`](@ref) for the arguments.
 
 ```jldoctest
 julia> lobatto_legendre_weights(3)
@@ -123,7 +123,7 @@ julia> lobatto_legendre_weights(3)
 ```
 """
 function lobatto_legendre_weights(::Type{T}, s::Integer; IT=_default_arithmetic(T)) where {T}
-    T.(scale_weights(lobatto_legendre_point_weights(IT, s; IT=IT)))
+    T.(scale_weights(symmetric_lobatto_legendre_weights(IT, s; IT=IT)))
 end
 
 lobatto_legendre_weights(s; kwargs...) = lobatto_legendre_weights(Float64, s; kwargs...)
@@ -182,8 +182,8 @@ function LobattoLegendreQuadrature(::Type{T}, s::Integer; IT=_default_arithmetic
         return _lobatto_legendre_fast(s, T)
     end
 
-    x = lobatto_legendre_points(IT, s; IT=IT)
-    w = _lobatto_legendre_point_weights(x)
+    x = symmetric_lobatto_legendre_nodes(IT, s; IT=IT)
+    w = _symmetric_lobatto_legendre_weights(x)
 
     return QuadratureRule(2s-2, shift_nodes(x), scale_weights(w), T)
 end

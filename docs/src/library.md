@@ -83,25 +83,30 @@ TanhSinhQuadrature
 ```
 
 
-## Points, Nodes and Weights
+## Nodes and Weights
 
 The nodes and weights of every rule are also available on their own, without having to
-construct the rule. Two conventions are offered throughout:
+construct the rule. Two conventions are offered throughout, distinguished by the interval
+they live on:
 
-- the `*_points` and `*_point_weights` functions work on the interval ``[-1,+1]``, the
-  interval on which the classical theory is formulated, and their weights sum to ``2``,
-- the `*_nodes` and `*_weights` functions work on the interval ``[0,1]``, the reference
-  interval used by [`QuadratureRule`](@ref), and their weights sum to ``1``,
+- the `symmetric_*_nodes` and `symmetric_*_weights` functions work on the symmetric
+  interval ``[-1,+1]``, the interval on which the classical theory is formulated, and their
+  weights sum to ``2``,
+- the `*_nodes` and `*_weights` functions work on the unit interval ``[0,1]``, the
+  reference interval used by [`QuadratureRule`](@ref), and their weights sum to ``1``,
 
 related by ``c_i = (x_i + 1)/2`` and ``b_i = w_i / 2``. Each function has a method taking
 an explicit element type `T` and one defaulting to `Float64`.
 
+The prefix `symmetric_` names the interval, not the node set: a Radau rule, for instance,
+has deliberately asymmetric nodes on either interval.
+
 Within each family one convention is primary and the other is derived from it, so that the
 two agree exactly at equal working precision and up to rounding across precisions. The
-nodes are always derived from the points. For the weights it depends on the family: the
-Legendre closed forms are formulated on ``[-1,+1]``, so there the `*_point_weights` are
-primary, whereas the Chebyshev, Clenshaw-Curtis and tanh-sinh formulas already carry the
-normalisation to ``[0,1]``, so there the `*_weights` are.
+unit-interval nodes are always derived from the symmetric ones. For the weights it depends
+on the family: the Legendre closed forms are formulated on ``[-1,+1]``, so there the
+`symmetric_*_weights` are primary, whereas the Chebyshev, Clenshaw-Curtis and tanh-sinh
+formulas already carry the normalisation to ``[0,1]``, so there the `*_weights` are.
 
 The weight sums quoted above hold for every family except tanh-sinh, which is exact for no
 polynomial at all and therefore attains them only up to its truncation error.
@@ -109,47 +114,47 @@ polynomial at all and therefore attains them only up to its truncation error.
 ### Legendre
 
 ```@docs
-gauss_legendre_points
+symmetric_gauss_legendre_nodes
 gauss_legendre_nodes
-gauss_legendre_point_weights
+symmetric_gauss_legendre_weights
 gauss_legendre_weights
-lobatto_legendre_points
+symmetric_lobatto_legendre_nodes
 lobatto_legendre_nodes
-lobatto_legendre_point_weights
+symmetric_lobatto_legendre_weights
 lobatto_legendre_weights
-radau_legendre_points
+symmetric_radau_legendre_nodes
 radau_legendre_nodes
-radau_legendre_point_weights
+symmetric_radau_legendre_weights
 radau_legendre_weights
 ```
 
 ### Chebyshev
 
 ```@docs
-chebyshev_points
+symmetric_chebyshev_nodes
 chebyshev_nodes
-chebyshev_point_weights
+symmetric_chebyshev_weights
 chebyshev_weights
-gauss_chebyshev_points
+symmetric_gauss_chebyshev_nodes
 gauss_chebyshev_nodes
-gauss_chebyshev_point_weights
+symmetric_gauss_chebyshev_weights
 gauss_chebyshev_weights
-lobatto_chebyshev_points
+symmetric_lobatto_chebyshev_nodes
 lobatto_chebyshev_nodes
-lobatto_chebyshev_point_weights
+symmetric_lobatto_chebyshev_weights
 lobatto_chebyshev_weights
-clenshaw_curtis_points
+symmetric_clenshaw_curtis_nodes
 clenshaw_curtis_nodes
-clenshaw_curtis_point_weights
+symmetric_clenshaw_curtis_weights
 clenshaw_curtis_weights
 ```
 
 ### Tanh-Sinh
 
 ```@docs
-tanh_sinh_points
+symmetric_tanh_sinh_nodes
 tanh_sinh_nodes
-tanh_sinh_point_weights
+symmetric_tanh_sinh_weights
 tanh_sinh_weights
 ```
 

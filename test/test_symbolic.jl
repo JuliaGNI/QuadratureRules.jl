@@ -41,10 +41,10 @@ That last assertion is the one that distinguishes a genuinely exact result from 
 merely wrapped in a `Sym`, which is what these accessors used to return: a sum of rounded
 weights is never symbolically equal to one.
 """
-function test_symbolic_family(points, nodes, point_weights, weights, s)
-    x = points(symtype(), s)
+function test_symbolic_family(symmetric_nodes, nodes, symmetric_weights, weights, s)
+    x = symmetric_nodes(symtype(), s)
     c = nodes(symtype(), s)
-    v = point_weights(symtype(), s)
+    v = symmetric_weights(symtype(), s)
     b = weights(symtype(), s)
 
     for y in (x, c, v, b)
@@ -52,9 +52,9 @@ function test_symbolic_family(points, nodes, point_weights, weights, s)
         @test length(y) == s
     end
 
-    @test tofloat(x) ≈ points(Float64, s)
+    @test tofloat(x) ≈ symmetric_nodes(Float64, s)
     @test tofloat(c) ≈ nodes(Float64, s)
-    @test tofloat(v) ≈ point_weights(Float64, s)
+    @test tofloat(v) ≈ symmetric_weights(Float64, s)
     @test tofloat(b) ≈ weights(Float64, s)
 
     @test exactly(c, shift_nodes(x))
@@ -81,15 +81,15 @@ end
 
 # Normalise the accessors that take an extra argument, so that they can be passed to the
 # helpers above alongside the single-argument ones.
-radau_points(endpoint)        = (T, s) -> radau_legendre_points(T, s, Val(endpoint))
-radau_nodes(endpoint)         = (T, s) -> radau_legendre_nodes(T, s, Val(endpoint))
-radau_point_weights(endpoint) = (T, s) -> radau_legendre_point_weights(T, s, Val(endpoint))
-radau_weights(endpoint)       = (T, s) -> radau_legendre_weights(T, s, Val(endpoint))
+symmetric_radau_nds(endpoint) = (T, s) -> symmetric_radau_legendre_nodes(T, s, Val(endpoint))
+radau_nds(endpoint)           = (T, s) -> radau_legendre_nodes(T, s, Val(endpoint))
+symmetric_radau_wts(endpoint) = (T, s) -> symmetric_radau_legendre_weights(T, s, Val(endpoint))
+radau_wts(endpoint)           = (T, s) -> radau_legendre_weights(T, s, Val(endpoint))
 
-chebyshev_pts(kind)          = (T, s) -> chebyshev_points(T, s, Val(kind))
-chebyshev_nds(kind)          = (T, s) -> chebyshev_nodes(T, s, Val(kind))
-chebyshev_pt_weights(kind)   = (T, s) -> chebyshev_point_weights(T, s, Val(kind))
-chebyshev_wts(kind)          = (T, s) -> chebyshev_weights(T, s, Val(kind))
+symmetric_chebyshev_nds(kind) = (T, s) -> symmetric_chebyshev_nodes(T, s, Val(kind))
+chebyshev_nds(kind)           = (T, s) -> chebyshev_nodes(T, s, Val(kind))
+symmetric_chebyshev_wts(kind) = (T, s) -> symmetric_chebyshev_weights(T, s, Val(kind))
+chebyshev_wts(kind)           = (T, s) -> chebyshev_weights(T, s, Val(kind))
 
 
 @testset "$(rpad("Symbolic evaluation",80))" begin
@@ -101,12 +101,12 @@ chebyshev_wts(kind)          = (T, s) -> chebyshev_weights(T, s, Val(kind))
 
     @testset "$(rpad("Gauß-Legendre",60))" begin
         for s in 1:3
-            test_symbolic_family(gauss_legendre_points, gauss_legendre_nodes,
-                                 gauss_legendre_point_weights, gauss_legendre_weights, s)
+            test_symbolic_family(symmetric_gauss_legendre_nodes, gauss_legendre_nodes,
+                                 symmetric_gauss_legendre_weights, gauss_legendre_weights, s)
             test_symbolic_moments(gauss_legendre_nodes, gauss_legendre_weights, s, 2s-1)
         end
 
-        @test exactly(gauss_legendre_points(symtype(), 2), [-sqrt(SymPyPythonCall.Sym(3))/3,
+        @test exactly(symmetric_gauss_legendre_nodes(symtype(), 2), [-sqrt(SymPyPythonCall.Sym(3))/3,
                                                             sqrt(SymPyPythonCall.Sym(3))/3])
         @test exactly(gauss_legendre_nodes(symtype(), 2), [1//2 - sqrt(SymPyPythonCall.Sym(3))/6,
                                                            1//2 + sqrt(SymPyPythonCall.Sym(3))/6])
@@ -115,40 +115,40 @@ chebyshev_wts(kind)          = (T, s) -> chebyshev_weights(T, s, Val(kind))
 
     @testset "$(rpad("Lobatto-Legendre",60))" begin
         for s in 2:4
-            test_symbolic_family(lobatto_legendre_points, lobatto_legendre_nodes,
-                                 lobatto_legendre_point_weights, lobatto_legendre_weights, s)
+            test_symbolic_family(symmetric_lobatto_legendre_nodes, lobatto_legendre_nodes,
+                                 symmetric_lobatto_legendre_weights, lobatto_legendre_weights, s)
             test_symbolic_moments(lobatto_legendre_nodes, lobatto_legendre_weights, s, 2s-3)
 
             # the endpoints are included and exact, as they are for floating point types
-            @test exactly(lobatto_legendre_points(symtype(), s)[begin], -1)
-            @test exactly(lobatto_legendre_points(symtype(), s)[end], 1)
+            @test exactly(symmetric_lobatto_legendre_nodes(symtype(), s)[begin], -1)
+            @test exactly(symmetric_lobatto_legendre_nodes(symtype(), s)[end], 1)
             @test exactly(lobatto_legendre_nodes(symtype(), s)[begin], 0)
             @test exactly(lobatto_legendre_nodes(symtype(), s)[end], 1)
         end
 
-        @test exactly(lobatto_legendre_points(symtype(), 3), [-1, 0, 1])
+        @test exactly(symmetric_lobatto_legendre_nodes(symtype(), 3), [-1, 0, 1])
         @test exactly(lobatto_legendre_weights(symtype(), 3), [1//6, 2//3, 1//6])
         @test exactly(lobatto_legendre_weights(symtype(), 4), [1//12, 5//12, 5//12, 1//12])
 
-        @test_throws ErrorException lobatto_legendre_points(symtype(), 1)
+        @test_throws ErrorException symmetric_lobatto_legendre_nodes(symtype(), 1)
         @test_throws ErrorException lobatto_legendre_nodes(symtype(), 1)
-        @test_throws ErrorException lobatto_legendre_point_weights(symtype(), 1)
+        @test_throws ErrorException symmetric_lobatto_legendre_weights(symtype(), 1)
         @test_throws ErrorException lobatto_legendre_weights(symtype(), 1)
     end
 
     @testset "$(rpad("Radau-Legendre",60))" begin
         for endpoint in (:left, :right)
             for s in 1:3
-                test_symbolic_family(radau_points(endpoint), radau_nodes(endpoint),
-                                     radau_point_weights(endpoint), radau_weights(endpoint), s)
-                test_symbolic_moments(radau_nodes(endpoint), radau_weights(endpoint), s, 2s-2)
+                test_symbolic_family(symmetric_radau_nds(endpoint), radau_nds(endpoint),
+                                     symmetric_radau_wts(endpoint), radau_wts(endpoint), s)
+                test_symbolic_moments(radau_nds(endpoint), radau_wts(endpoint), s, 2s-2)
             end
         end
 
         # the two variants are exact mirror images of each other
         for s in 1:3
-            @test exactly(radau_legendre_points(symtype(), s, Val(:right)),
-                          -reverse(radau_legendre_points(symtype(), s, Val(:left))))
+            @test exactly(symmetric_radau_legendre_nodes(symtype(), s, Val(:right)),
+                          -reverse(symmetric_radau_legendre_nodes(symtype(), s, Val(:left))))
             @test exactly(radau_legendre_weights(symtype(), s, Val(:right)),
                           reverse(radau_legendre_weights(symtype(), s, Val(:left))))
         end
@@ -161,50 +161,50 @@ chebyshev_wts(kind)          = (T, s) -> chebyshev_weights(T, s, Val(kind))
 
     @testset "$(rpad("Chebyshev",60))" begin
         # the closed forms are evaluated at SymPy's π rather than at a rounded one, so the
-        # points come out as exact radicals
+        # nodes come out as exact radicals
         for s in 1:5
-            test_symbolic_family(chebyshev_pts(1), chebyshev_nds(1),
-                                 chebyshev_pt_weights(1), chebyshev_wts(1), s)
+            test_symbolic_family(symmetric_chebyshev_nds(1), chebyshev_nds(1),
+                                 symmetric_chebyshev_wts(1), chebyshev_wts(1), s)
             test_symbolic_moments(chebyshev_nds(1), chebyshev_wts(1), s, s-1)
         end
 
         for s in 2:5
-            test_symbolic_family(chebyshev_pts(2), chebyshev_nds(2),
-                                 chebyshev_pt_weights(2), chebyshev_wts(2), s)
+            test_symbolic_family(symmetric_chebyshev_nds(2), chebyshev_nds(2),
+                                 symmetric_chebyshev_wts(2), chebyshev_wts(2), s)
             test_symbolic_moments(chebyshev_nds(2), chebyshev_wts(2), s, s-1)
         end
 
-        @test exactly(chebyshev_points(symtype(), 2, Val(1)), [-sqrt(SymPyPythonCall.Sym(2))/2,
+        @test exactly(symmetric_chebyshev_nodes(symtype(), 2, Val(1)), [-sqrt(SymPyPythonCall.Sym(2))/2,
                                                                 sqrt(SymPyPythonCall.Sym(2))/2])
-        @test exactly(chebyshev_points(symtype(), 3, Val(2)), [-1, 0, 1])
+        @test exactly(symmetric_chebyshev_nodes(symtype(), 3, Val(2)), [-1, 0, 1])
         @test exactly(chebyshev_weights(symtype(), 3, Val(1)), [2//9, 5//9, 2//9])
 
-        @test_throws ErrorException chebyshev_points(symtype(), 1, Val(2))
+        @test_throws ErrorException symmetric_chebyshev_nodes(symtype(), 1, Val(2))
         @test_throws ErrorException chebyshev_nodes(symtype(), 1, Val(2))
 
         # the aliases dispatch to the same closed forms
         for s in 1:5
-            @test gauss_chebyshev_points(symtype(), s) == chebyshev_points(symtype(), s, Val(1))
+            @test symmetric_gauss_chebyshev_nodes(symtype(), s) == symmetric_chebyshev_nodes(symtype(), s, Val(1))
             @test gauss_chebyshev_weights(symtype(), s) == chebyshev_weights(symtype(), s, Val(1))
         end
 
         for s in 2:5
-            @test lobatto_chebyshev_points(symtype(), s) == chebyshev_points(symtype(), s, Val(2))
+            @test symmetric_lobatto_chebyshev_nodes(symtype(), s) == symmetric_chebyshev_nodes(symtype(), s, Val(2))
             @test lobatto_chebyshev_weights(symtype(), s) == chebyshev_weights(symtype(), s, Val(2))
         end
     end
 
     @testset "$(rpad("Clenshaw-Curtis",60))" begin
         for s in 2:5
-            test_symbolic_family(clenshaw_curtis_points, clenshaw_curtis_nodes,
-                                 clenshaw_curtis_point_weights, clenshaw_curtis_weights, s)
+            test_symbolic_family(symmetric_clenshaw_curtis_nodes, clenshaw_curtis_nodes,
+                                 symmetric_clenshaw_curtis_weights, clenshaw_curtis_weights, s)
             test_symbolic_moments(clenshaw_curtis_nodes, clenshaw_curtis_weights, s, s-1)
         end
 
         @test exactly(clenshaw_curtis_weights(symtype(), 3), [1//6, 2//3, 1//6])
         @test exactly(clenshaw_curtis_weights(symtype(), 5), [1//30, 4//15, 2//5, 4//15, 1//30])
 
-        @test_throws ErrorException clenshaw_curtis_points(symtype(), 1)
+        @test_throws ErrorException symmetric_clenshaw_curtis_nodes(symtype(), 1)
         @test_throws ErrorException clenshaw_curtis_weights(symtype(), 1)
     end
 
@@ -261,9 +261,9 @@ chebyshev_wts(kind)          = (T, s) -> chebyshev_weights(T, s, Val(kind))
         # Tanh-Sinh is the one family without an exact variant: the number of nodes is not
         # given in advance but follows from where they stop being resolvable in `T`, which
         # a type that does not round cannot answer.
-        @test_throws ArgumentError tanh_sinh_points(symtype(), 2)
+        @test_throws ArgumentError symmetric_tanh_sinh_nodes(symtype(), 2)
         @test_throws ArgumentError tanh_sinh_nodes(symtype(), 2)
-        @test_throws ArgumentError tanh_sinh_point_weights(symtype(), 2)
+        @test_throws ArgumentError symmetric_tanh_sinh_weights(symtype(), 2)
         @test_throws ArgumentError tanh_sinh_weights(symtype(), 2)
         @test_throws ArgumentError TanhSinhQuadrature(symtype(), 2)
     end

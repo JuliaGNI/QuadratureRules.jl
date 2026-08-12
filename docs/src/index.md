@@ -127,13 +127,14 @@ See [Quadrature Rules](@ref) for a derivation of each rule.
 
 ## Accessing Nodes and Weights Directly
 
-The nodes and weights of each rule are also available without constructing the rule.
-Functions named `*_points` and `*_point_weights` work on the interval ``[-1,+1]``, where
-the weights sum to ``2``, and functions named `*_nodes` and `*_weights` on the interval
-``[0,1]``, where they sum to ``1`` — for every rule but tanh-sinh, which reaches those
-sums only up to its truncation error:
+The nodes and weights of each rule are also available without constructing the rule. The
+two conventions are told apart by the interval they live on: functions named
+`symmetric_*_nodes` and `symmetric_*_weights` work on the symmetric interval ``[-1,+1]``,
+where the weights sum to ``2``, and functions named `*_nodes` and `*_weights` on the unit
+interval ``[0,1]``, where they sum to ``1`` — for every rule but tanh-sinh, which reaches
+those sums only up to its truncation error:
 ```jldoctest intro
-julia> gauss_legendre_points(2)
+julia> symmetric_gauss_legendre_nodes(2)
 2-element Vector{Float64}:
  -0.5773502691896257
   0.5773502691896257
@@ -149,12 +150,13 @@ julia> gauss_legendre_weights(2)
  0.5
 ```
 
-These exist for all rules, i.e., as [`gauss_legendre_points`](@ref),
-[`lobatto_legendre_points`](@ref), [`radau_legendre_points`](@ref),
-[`chebyshev_points`](@ref), [`gauss_chebyshev_points`](@ref),
-[`lobatto_chebyshev_points`](@ref), [`clenshaw_curtis_points`](@ref) and
-[`tanh_sinh_points`](@ref), together with the corresponding `*_nodes`, `*_point_weights`
-and `*_weights` functions.
+These exist for all rules, i.e., as [`symmetric_gauss_legendre_nodes`](@ref),
+[`symmetric_lobatto_legendre_nodes`](@ref), [`symmetric_radau_legendre_nodes`](@ref),
+[`symmetric_chebyshev_nodes`](@ref), [`symmetric_gauss_chebyshev_nodes`](@ref),
+[`symmetric_lobatto_chebyshev_nodes`](@ref), [`symmetric_clenshaw_curtis_nodes`](@ref) and
+[`symmetric_tanh_sinh_nodes`](@ref), together with the corresponding `*_nodes`,
+`symmetric_*_weights` and `*_weights` functions. The prefix names the interval, not the
+node set — a Radau rule has deliberately asymmetric nodes on either interval.
 
 The Radau family takes the prescribed endpoint as a further argument, `:left` or `:right`,
 since the two variants are different rules:
