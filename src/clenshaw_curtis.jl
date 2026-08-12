@@ -56,22 +56,28 @@ w_k = \frac{c_k}{n} \left( 1 - \sum_{j=1}^{\lfloor n/2 \rfloor}
 
 with ``c_k = 1`` at the endpoints and ``2`` otherwise, and ``b_j = 1`` for the last term
 of an even sum and ``2`` otherwise; a further factor ``1/2`` maps the rule to ``[0,1]``.
+This is the explicit form given by Reid; see the
+[Clenshaw-Curtis](@ref "Clenshaw-Curtis quadrature") section of the manual for the
+derivation and for the literature.
 
 Being an interpolatory rule on `s` nodes, it is exact for polynomials of degree
 ``\le s-1``, so its **order is `s`**. For odd `s` it gains one further degree by
-symmetry, which the reported order does not reflect. All weights are positive.
+symmetry, which the reported order does not reflect. All weights are positive, which is
+what guarantees convergence for every continuous integrand.
 
 Although its order is only about half that of [`GaussLegendreQuadrature`](@ref) with the
-same number of nodes, Clenshaw-Curtis converges at a comparable rate for smooth
-integrands in practice, and its nodes are given in closed form, requiring no root
-finding.
+same number of nodes, Clenshaw-Curtis converges at essentially the same rate for
+integrands that are not analytic in a sizable neighbourhood of the interval, and its
+nodes are given in closed form, requiring no root finding.
 
 Throws an `ErrorException` for `s == 1`.
 
 # Arguments
 - `T`: element type of the resulting rule, `Float64` if omitted.
 - `s`: number of nodes.
-- `IT`: arithmetic in which nodes and weights are computed, `BigFloat` by default.
+- `IT`: arithmetic in which nodes and weights are computed, `BigFloat` by default. The
+  weight sum costs ``O(s^2)`` operations, so `IT=Float64` is roughly two orders of
+  magnitude faster and is the better choice when `T` is `Float64` anyway.
 
 ```jldoctest
 julia> ClenshawCurtisQuadrature(3)     # Simpson's rule
@@ -92,9 +98,9 @@ function ClenshawCurtisQuadrature(::Type{T}, s::Integer; IT=BigFloat) where {T}
 
     b(j,n) = fld(n,2) == j == cld(n,2) ? IT(1) : IT(2)
     c(k,n) = mod(k,n) == 0 ? IT(1) : IT(2)
-    ϑ(k,n) = @big 2π * k / n
+    ϑ(k,n) = 2 * IT(π) * k / n
 
-    cctrm(k,j,n) = @big b(j,n) / ( 4 * j^2 - 1 ) * cos(j * ϑ(k,n))
+    cctrm(k,j,n) = b(j,n) / IT( 4 * j^2 - 1 ) * cos(j * ϑ(k,n))
     ccsum(k,n) = c(k,n) / IT(2n) * ( IT(1) - mapreduce(j -> cctrm(k,j,n), +, 1:div(n,2); init = zero(IT)) )
 
     x = clenshaw_curtis_nodes(IT, s)
