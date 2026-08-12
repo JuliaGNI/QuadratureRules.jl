@@ -1,6 +1,6 @@
 """
-    clenshaw_curtis_points(s; IT=BigFloat)
-    clenshaw_curtis_points(T, s; IT=BigFloat)
+    clenshaw_curtis_points(s; IT)
+    clenshaw_curtis_points(T, s; IT)
 
 The `s` Clenshaw-Curtis points on the interval ``[-1,+1]``, i.e., the Chebyshev points
 of the second kind, cf. [`chebyshev_points`](@ref). They include both endpoints.
@@ -11,8 +11,8 @@ clenshaw_curtis_points(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_p
 clenshaw_curtis_points(s; kwargs...) = clenshaw_curtis_points(Float64, s; kwargs...)
 
 """
-    clenshaw_curtis_nodes(s; IT=BigFloat)
-    clenshaw_curtis_nodes(T, s; IT=BigFloat)
+    clenshaw_curtis_nodes(s; IT)
+    clenshaw_curtis_nodes(T, s; IT)
 
 The `s` Clenshaw-Curtis nodes on the interval ``[0,1]``, i.e., the Chebyshev nodes of
 the second kind, cf. [`chebyshev_nodes`](@ref). The first and last node are `0` and `1`.
@@ -34,8 +34,8 @@ clenshaw_curtis_nodes(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_no
 clenshaw_curtis_nodes(s; kwargs...) = clenshaw_curtis_nodes(Float64, s; kwargs...)
 
 @doc raw"""
-    clenshaw_curtis_weights(s; IT=BigFloat)
-    clenshaw_curtis_weights(T, s; IT=BigFloat)
+    clenshaw_curtis_weights(s; IT)
+    clenshaw_curtis_weights(T, s; IT)
 
 The `s` Clenshaw-Curtis weights for the interval ``[0,1]``, belonging to the nodes
 returned by [`clenshaw_curtis_nodes`](@ref) and summing to ``1``.
@@ -65,7 +65,7 @@ julia> clenshaw_curtis_weights(3)
 
 See also [`clenshaw_curtis_point_weights`](@ref) for the same weights on ``[-1,+1]``.
 """
-function clenshaw_curtis_weights(::Type{T}, s::Integer; IT=BigFloat) where {T}
+function clenshaw_curtis_weights(::Type{T}, s::Integer; IT=_default_arithmetic(T)) where {T}
     if s == 1
         throw(ErrorException("Clenshaw-Curtis quadrature is not defined for one stage."))
     end
@@ -83,8 +83,8 @@ end
 clenshaw_curtis_weights(s; kwargs...) = clenshaw_curtis_weights(Float64, s; kwargs...)
 
 @doc raw"""
-    clenshaw_curtis_point_weights(s; IT=BigFloat)
-    clenshaw_curtis_point_weights(T, s; IT=BigFloat)
+    clenshaw_curtis_point_weights(s; IT)
+    clenshaw_curtis_point_weights(T, s; IT)
 
 The `s` Clenshaw-Curtis weights for the interval ``[-1,+1]``, i.e., the weights of
 [`clenshaw_curtis_weights`](@ref) doubled so that they sum to ``2``.
@@ -99,7 +99,7 @@ julia> clenshaw_curtis_point_weights(3)
  0.3333333333333333
 ```
 """
-function clenshaw_curtis_point_weights(::Type{T}, s::Integer; IT=BigFloat) where {T}
+function clenshaw_curtis_point_weights(::Type{T}, s::Integer; IT=_default_arithmetic(T)) where {T}
     T.(unscale_weights(clenshaw_curtis_weights(IT, s; IT=IT)))
 end
 
@@ -107,8 +107,8 @@ clenshaw_curtis_point_weights(s; kwargs...) = clenshaw_curtis_point_weights(Floa
 
 
 @doc raw"""
-    ClenshawCurtisQuadrature(s; IT=BigFloat)
-    ClenshawCurtisQuadrature(T, s; IT=BigFloat)
+    ClenshawCurtisQuadrature(s; IT)
+    ClenshawCurtisQuadrature(T, s; IT)
 
 The Clenshaw-Curtis quadrature rule with `s` nodes on the interval ``[0,1]``.
 
@@ -149,7 +149,8 @@ Throws an `ErrorException` for `s == 1`.
 # Arguments
 - `T`: element type of the resulting rule, `Float64` if omitted.
 - `s`: number of nodes.
-- `IT`: arithmetic in which nodes and weights are computed, `BigFloat` by default.
+- `IT`: arithmetic in which nodes and weights are computed, `BigFloat` for a floating point
+  `T` and `T` itself otherwise.
 
 !!! note "Why `BigFloat` is the default"
     The weight sum costs ``O(s^2)`` operations, so a lower working precision such as
@@ -174,7 +175,7 @@ See also [`LobattoChebyshevQuadrature`](@ref), which is the same rule, and
 [`GaussChebyshevQuadrature`](@ref), which is the analogous rule on the Chebyshev points
 of the first kind.
 """
-function ClenshawCurtisQuadrature(::Type{T}, s::Integer; IT=BigFloat) where {T}
+function ClenshawCurtisQuadrature(::Type{T}, s::Integer; IT=_default_arithmetic(T)) where {T}
     if s == 1
         throw(ErrorException("Clenshaw-Curtis quadrature is not defined for one stage."))
     end

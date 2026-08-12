@@ -1,4 +1,15 @@
 
+"""
+The arithmetic in which nodes and weights are computed by default for the element type `T`.
+
+Floating point types are computed in `BigFloat` and rounded to `T` at the very end, so that
+the result is accurate to full precision in `T`. Every other type, in particular a symbolic
+one, is computed in itself, so that exact arithmetic stays exact.
+"""
+_default_arithmetic(::Type{T}) where {T<:AbstractFloat} = BigFloat
+_default_arithmetic(::Type{T}) where {T} = T
+
+
 "Legendre polynomial P_s(x) of degree s defined on the interval [-1..+1], evaluated by the three-term recurrence."
 function _legendre(j::Int, x::T) where {T}
     if j <= 0
@@ -46,6 +57,19 @@ function _newton_roots(p::Polynomial{T}, x₀::AbstractVector; maxiter=100) wher
 
     return x
 end
+
+
+"""
+The roots of the polynomial `p`, all assumed to be real and simple.
+
+For floating point coefficients the double precision approximations `x₀` are refined with
+Newton's method in the arithmetic of `p`. For exact coefficients, in particular symbolic
+ones, the roots are computed exactly as the eigenvalues of the companion matrix and `x₀` is
+ignored. In both cases they come out in no particular order, so the caller sorts them.
+"""
+_roots(p::Polynomial{T}, x₀) where {T<:AbstractFloat} = _newton_roots(p, x₀)
+
+_roots(p::Polynomial{T}, x₀) where {T} = Polynomials.roots(p)
 
 
 "Shift and scale nodes from the interval [-1,+1] to the interval [0,1]."

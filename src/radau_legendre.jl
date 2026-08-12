@@ -1,7 +1,7 @@
 
 @doc raw"""
-    radau_legendre_points(s, endpoint; IT=BigFloat)
-    radau_legendre_points(T, s, ::Val{endpoint}; IT=BigFloat)
+    radau_legendre_points(s, endpoint; IT)
+    radau_legendre_points(T, s, ::Val{endpoint}; IT)
 
 The `s` Radau-Legendre points on the interval ``[-1,+1]``, i.e., one prescribed endpoint
 together with the ``s-1`` free points that maximise the degree of exactness.
@@ -13,10 +13,11 @@ Which endpoint is prescribed is selected by `endpoint`:
 - `:right` includes ``+1``, the convention underlying the Radau IIA methods.
 
 The left points are the ``s`` roots of ``P_{s-1} + P_s``, one of which is exactly ``-1``.
-They are Newton-refined in the arithmetic `IT` starting from the double precision
-approximations of `FastGaussQuadrature.gaussradau`, and the prescribed endpoint is then set
-to exactly ``-1``. The right points are obtained by reflection, ``x \mapsto -x``, which
-makes the two variants exact mirror images of each other.
+They are computed in the arithmetic `IT`, either Newton-refined from the double precision
+approximations of `FastGaussQuadrature.gaussradau` or, for an exact `IT` such as a symbolic
+one, exactly from the companion matrix, and the prescribed endpoint is then set to exactly
+``-1``. The right points are obtained by reflection, ``x \mapsto -x``, which makes the two
+variants exact mirror images of each other.
 
 There is deliberately no default for `endpoint`: the two variants are not interchangeable,
 and silently choosing one would be easy to overlook.
@@ -25,7 +26,8 @@ and silently choosing one would be easy to overlook.
 - `T`: element type of the returned vector, `Float64` if omitted.
 - `s`: number of points.
 - `endpoint`: `:left` or `:right`, the endpoint included among the points.
-- `IT`: arithmetic in which the roots are computed.
+- `IT`: arithmetic in which the roots are computed, `BigFloat` for a floating point `T` and
+  `T` itself otherwise.
 
 ```jldoctest
 julia> radau_legendre_points(2, :left)
@@ -41,23 +43,23 @@ julia> radau_legendre_points(2, :right)
 
 See also [`radau_legendre_nodes`](@ref) for the same points on ``[0,1]``.
 """
-function radau_legendre_points(::Type{T}, s::Integer, ::Val{:left}; IT=BigFloat) where {T}
+function radau_legendre_points(::Type{T}, s::Integer, ::Val{:left}; IT=_default_arithmetic(T)) where {T}
     P = _legendre_polynomial(s-1, IT) + _legendre_polynomial(s, IT)
-    x = sort(_newton_roots(P, FastGaussQuadrature.gaussradau(s)[1]))
+    x = sort(_roots(P, FastGaussQuadrature.gaussradau(s)[1]))
     x[begin] = -1
 
     T.(x)
 end
 
-function radau_legendre_points(::Type{T}, s::Integer, ::Val{:right}; IT=BigFloat) where {T}
+function radau_legendre_points(::Type{T}, s::Integer, ::Val{:right}; IT=_default_arithmetic(T)) where {T}
     T.(-reverse(radau_legendre_points(IT, s, Val(:left); IT=IT)))
 end
 
 radau_legendre_points(s, endpoint; kwargs...) = radau_legendre_points(Float64, s, Val(endpoint); kwargs...)
 
 @doc raw"""
-    radau_legendre_nodes(s, endpoint; IT=BigFloat)
-    radau_legendre_nodes(T, s, ::Val{endpoint}; IT=BigFloat)
+    radau_legendre_nodes(s, endpoint; IT)
+    radau_legendre_nodes(T, s, ::Val{endpoint}; IT)
 
 The `s` Radau-Legendre nodes on the interval ``[0,1]``, i.e., the Radau-Legendre points
 shifted and scaled from ``[-1,+1]`` to ``[0,1]``.
@@ -79,7 +81,7 @@ julia> radau_legendre_nodes(2, :right)
  1.0
 ```
 """
-function radau_legendre_nodes(::Type{T}, s::Integer, endpoint::Val; IT=BigFloat) where {T}
+function radau_legendre_nodes(::Type{T}, s::Integer, endpoint::Val; IT=_default_arithmetic(T)) where {T}
     T.(shift_nodes(radau_legendre_points(IT, s, endpoint; IT=IT)))
 end
 
@@ -111,8 +113,8 @@ function _radau_legendre(s, ::Val{:right}, IT)
 end
 
 @doc raw"""
-    radau_legendre_point_weights(s, endpoint; IT=BigFloat)
-    radau_legendre_point_weights(T, s, ::Val{endpoint}; IT=BigFloat)
+    radau_legendre_point_weights(s, endpoint; IT)
+    radau_legendre_point_weights(T, s, ::Val{endpoint}; IT)
 
 The `s` Radau-Legendre weights for the interval ``[-1,+1]``, belonging to the points
 returned by [`radau_legendre_points`](@ref) and summing to ``2``.
@@ -138,7 +140,7 @@ julia> radau_legendre_point_weights(2, :left)
 
 See also [`radau_legendre_weights`](@ref) for the same weights on ``[0,1]``.
 """
-function radau_legendre_point_weights(::Type{T}, s::Integer, endpoint::Val; IT=BigFloat) where {T}
+function radau_legendre_point_weights(::Type{T}, s::Integer, endpoint::Val; IT=_default_arithmetic(T)) where {T}
     _, w = _radau_legendre(s, endpoint, IT)
 
     T.(w)
@@ -147,8 +149,8 @@ end
 radau_legendre_point_weights(s, endpoint; kwargs...) = radau_legendre_point_weights(Float64, s, Val(endpoint); kwargs...)
 
 @doc raw"""
-    radau_legendre_weights(s, endpoint; IT=BigFloat)
-    radau_legendre_weights(T, s, ::Val{endpoint}; IT=BigFloat)
+    radau_legendre_weights(s, endpoint; IT)
+    radau_legendre_weights(T, s, ::Val{endpoint}; IT)
 
 The `s` Radau-Legendre weights for the interval ``[0,1]``, i.e., the weights of
 [`radau_legendre_point_weights`](@ref) halved so that they sum to ``1``.
@@ -163,7 +165,7 @@ julia> radau_legendre_weights(2, :left)
  0.75
 ```
 """
-function radau_legendre_weights(::Type{T}, s::Integer, endpoint::Val; IT=BigFloat) where {T}
+function radau_legendre_weights(::Type{T}, s::Integer, endpoint::Val; IT=_default_arithmetic(T)) where {T}
     T.(scale_weights(radau_legendre_point_weights(IT, s, endpoint; IT=IT)))
 end
 
@@ -186,8 +188,8 @@ end
 
 
 @doc raw"""
-    RadauLegendreQuadrature(s, endpoint; IT=BigFloat, fast=false)
-    RadauLegendreQuadrature(T, s, ::Val{endpoint}; IT=BigFloat, fast=false)
+    RadauLegendreQuadrature(s, endpoint; IT, fast=false)
+    RadauLegendreQuadrature(T, s, ::Val{endpoint}; IT, fast=false)
 
 The Radau-Legendre quadrature rule with `s` nodes on the interval ``[0,1]``.
 
@@ -235,7 +237,7 @@ julia> RadauLegendreQuadrature(3, :right)(x -> x^4)   # exact up to degree 2*3-2
 
 See also [`GaussLegendreQuadrature`](@ref) and [`LobattoLegendreQuadrature`](@ref).
 """
-function RadauLegendreQuadrature(::Type{T}, s::Integer, endpoint::Val; IT=BigFloat, fast=false) where {T}
+function RadauLegendreQuadrature(::Type{T}, s::Integer, endpoint::Val; IT=_default_arithmetic(T), fast=false) where {T}
     if fast
         return _radau_legendre_fast(s, T, endpoint)
     end

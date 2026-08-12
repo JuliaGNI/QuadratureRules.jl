@@ -104,6 +104,14 @@ julia> GaussLegendreQuadrature(5) ≈ GaussLegendreQuadrature(5; fast=true)
 true
 ```
 
+An element type that does not round has nothing to gain from a higher working precision,
+so for anything but a floating point type `IT` defaults to that type itself and the rule
+is computed exactly. With the element type of a computer algebra system this yields the
+nodes and weights in closed form — `gauss_legendre_nodes(typeof(Sym(1)), 2)` returns
+`1/2 ∓ sqrt(3)/6` — which is how downstream packages tabulate their methods symbolically.
+See [Exact and symbolic arithmetic](@ref) for the details and for the one rule that is
+excluded.
+
 [`TanhSinhQuadrature`](@ref) is the exception to both statements. It is the trapezoidal rule
 after a double-exponential change of variables, so its argument is a refinement level `n`
 rather than a number of nodes — the latter follows from the level and the precision — and it

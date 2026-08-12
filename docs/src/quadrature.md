@@ -334,6 +334,56 @@ to full precision, `BigFloat` is the default everywhere.
 Where the extra accuracy is not needed, the Legendre rules accept `fast=true`, which
 takes the nodes and weights directly from FastGaussQuadrature.jl in double precision.
 
+
+## Exact and symbolic arithmetic
+
+Everything said so far describes what happens for a floating point element type. High
+precision is a workaround for arithmetic that rounds, though, and if `T` does not round
+there is nothing to work around: the working precision then defaults to `T` itself, and
+nodes and weights come out exactly.
+
+This is what happens with the element type of a computer algebra system such as
+[SymPy.jl](https://github.com/JuliaPy/SymPy.jl) or
+[SymPyPythonCall.jl](https://github.com/jverzani/SymPyPythonCall.jl):
+
+```julia
+julia> using QuadratureRules, SymPyPythonCall
+
+julia> simplify.(gauss_legendre_nodes(typeof(Sym(1)), 2))
+2-element Vector{Sym{PythonCall.Py}}:
+ 1/2 - sqrt(3)/6
+ sqrt(3)/6 + 1/2
+
+julia> simplify.(radau_legendre_weights(typeof(Sym(1)), 3, :right))
+3-element Vector{Sym{PythonCall.Py}}:
+ 4/9 - sqrt(6)/36
+ sqrt(6)/36 + 4/9
+             1/9
+```
+
+Two things change on this path, and neither is visible from the outside. The roots of the
+Legendre polynomial can no longer be refined from a double precision guess, so they are
+computed exactly instead, as the eigenvalues of the polynomial's companion matrix — which a
+computer algebra system resolves into radicals. And the Chebyshev and Clenshaw-Curtis closed
+forms are evaluated at the exact ``\pi`` rather than at a rounded one. The closed forms for
+the weights are already written in terms of the element type and need no change at all.
+
+Downstream this is what lets a package like
+[RungeKutta.jl](https://github.com/JuliaGNI/RungeKutta.jl) tabulate its methods symbolically,
+by asking for the coefficients at a symbolic element type and typesetting the result.
+
+Two caveats. Exact node computation is only as good as the algebra system behind it; SymPy
+resolves the roots as radicals up to the quartic and falls back on implicit representations
+beyond it, so this is a facility for the small stage numbers that tableaus use, not a
+replacement for the numerical path. And [`TanhSinhQuadrature`](@ref) does not take part: its
+node count is not given in advance but follows from where nodes and weights stop being
+resolvable in `T`, which a type that does not round cannot answer, so it accepts floating
+point element types only and throws an `ArgumentError` for anything else.
+
+For an element type that merely *wraps* numbers rather than computing exactly, pass `IT`
+explicitly — `gauss_legendre_nodes(T, s; IT=BigFloat)` computes the rule in `BigFloat` as
+usual and converts at the end, exactly as it does for a floating point `T`.
+
 ```@example
 using QuadratureRules
 
