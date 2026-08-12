@@ -15,5 +15,11 @@ fast $O(n \log n)$ alternative. [davis1984](@citet) is the standard monograph on
 integration, and [trefethen2019](@citet) covers the approximation theory that the convergence
 results rest on.
 
+The tanh-sinh rule goes back to [takahasi1974](@citet), who introduced the double-exponential
+transformation; [mori2001](@citet) surveys it and its relatives, and [mori2005](@citet) tells
+the story of its discovery. [trefethen2014](@citet) explains why the trapezoidal rule
+underlying it is spectrally accurate on the real line, and [bailey2005](@citet) documents its
+role as the standard scheme for high-precision quadrature.
+
 ```@bibliography
 ```

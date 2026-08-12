@@ -210,6 +210,77 @@ distinction is of little practical consequence. See the
 [Convergence](@ref) discussion for a numerical comparison.
 
 
+## Variable transformations and the double-exponential formula
+
+Every rule discussed so far is interpolatory: it fixes a set of nodes, integrates the
+polynomial through them, and is characterised by a degree of exactness. There is a second,
+quite different way to build an accurate rule, and [`TanhSinhQuadrature`](@ref) is the one
+representative of it in this package.
+
+The starting point is that the humble trapezoidal rule, which is only of order 2 on a finite
+interval, becomes *spectrally* accurate on the whole real line. If $g$ is analytic and
+suitably small in the strip $|\operatorname{Im} t| < d$, the infinite trapezoidal sum with
+step $h$ satisfies
+
+```math
+\Bigg| \int_{-\infty}^{\infty} g(t) \, dt - h \sum_{k=-\infty}^{\infty} g(k h) \Bigg|
+= \mathcal{O} \big( e^{-2 \pi d / h} \big) ,
+```
+
+because the error is controlled by the Fourier transform of $g$, which decays
+exponentially at the rate set by the width of the strip [trefethen2014](@cite). The
+difficulty is that the sum is infinite. It can only be truncated cheaply if $g$ itself
+decays very fast.
+
+That is exactly what a well-chosen change of variables arranges. Substituting
+
+```math
+x = \tanh \left( \frac{\pi}{2} \sinh t \right)
+```
+
+maps $\mathbb{R}$ onto the open interval $(-1,+1)$, and
+
+```math
+\frac{dx}{dt} = \frac{\tfrac{\pi}{2} \cosh t}{\cosh^2 \big( \tfrac{\pi}{2} \sinh t \big)}
+= \mathcal{O} \big( e^{- \tfrac{\pi}{2} e^{|t|}} \big) .
+```
+
+The transformed integrand $f(x(t)) \, x'(t)$ therefore vanishes *double
+exponentially* — hence the name **double-exponential formula**, due to
+[takahasi1974](@citet) — and the sum may be truncated after a few dozen terms. Balancing the
+discretisation error against the truncation error gives, for $N$ nodes,
+
+```math
+| I - I_N | = \mathcal{O} \big( e^{-c N / \log N} \big) ,
+```
+
+which is optimal in a precise sense among transformations of this kind [mori2001](@cite);
+[mori2005](@citet) recounts how the formula was found.
+
+Two features distinguish such a rule sharply from the interpolatory ones.
+
+First, **it has no degree of exactness at all.** The truncated sum reproduces no polynomial
+exactly, not even a constant: the weights sum to one only up to the truncation error. The
+order reported by [`order`](@ref) is consequently `0` for tanh-sinh, which is the honest
+statement that no polynomial is integrated exactly, and its accuracy has to be described by
+the convergence rate above instead. In practice each halving of $h$ roughly *doubles* the
+number of correct digits.
+
+Second, the transformation sends both endpoints to infinity, so the nodes never reach them
+and an integrand that is singular there can be passed in unchanged. This is what tanh-sinh
+is for: no interpolatory rule copes with $\int_0^1 x^{-1/2} \, dx$, because polynomial
+approximation of $x^{-1/2}$ near the origin is hopeless, whereas tanh-sinh handles it as a
+matter of course.
+
+The catch is that the benefit is bounded by the arithmetic. A node of type `T` cannot
+approach an endpoint closer than about `eps(T)`, so for an integrand growing like
+$x^{-1/2}$ the neglected tail is of size $\sqrt{\texttt{eps(T)}}$ — about 8 digits in
+`Float64` — however many levels are used. Increasing the *precision* rather than the number
+of nodes is what buys accuracy here, which is why tanh-sinh is the standard tool of
+high-precision numerical integration [bailey2005](@cite) and sits naturally in a package
+built around arbitrary-precision rules.
+
+
 ## Composite rules and convergence
 
 For a fixed rule of order $p$, subdividing $[a,b]$ into $n$ subintervals of length

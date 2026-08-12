@@ -73,6 +73,14 @@ LobattoChebyshevQuadrature
 ChebyshevQuadrature
 ```
 
+[`TanhSinhQuadrature`](@ref) belongs here too, but differs from the rules above in two
+respects: its argument is a refinement level `n` rather than a number of nodes, and it has no
+polynomial degree of exactness, so its [`order`](@ref) is `0`.
+
+```@docs
+TanhSinhQuadrature
+```
+
 
 ## Points and Nodes
 
@@ -109,6 +117,13 @@ clenshaw_curtis_points
 clenshaw_curtis_nodes
 ```
 
+### Tanh-Sinh
+
+```@docs
+tanh_sinh_points
+tanh_sinh_nodes
+```
+
 
 ## Internals
 
@@ -119,6 +134,7 @@ of the public API and may change without notice.
 QuadratureRules._legendre
 QuadratureRules._legendre_polynomial
 QuadratureRules._newton_roots
+QuadratureRules._tanh_sinh
 QuadratureRules.shift_nodes
 QuadratureRules.unshift_nodes
 QuadratureRules.scale_weights
