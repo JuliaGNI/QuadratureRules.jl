@@ -8,6 +8,32 @@ Julia reading of `0.x`: a bump of the *minor* version may break.
 
 ## [Unreleased]
 
+### Added
+
+- **The nodes and weights are now documented on the unit interval as well as the symmetric
+  one.** Every closed form was stated only in the `SymmetricInterval` variable ``x_i``, even
+  though `UnitInterval` is the default, so a reader who knows a node family from the
+  Runge-Kutta literature — where it is given on ``[0,1]`` — could not match it against the
+  text. The `*_nodes` docstrings and the manual now also give the shifted characterisations
+  ``P_s(2x-1)`` (Gauss), ``d^{s-2}/dx^{s-2}((x-x^2)^{s-1})`` (Lobatto) and
+  ``d^{s-1}/dx^{s-1}(x^s(x-1)^{s-1})`` / ``d^{s-1}/dx^{s-1}(x^{s-1}(x-1)^s)`` (Radau left and
+  right), and the `*_weights` docstrings the corresponding closed forms in the unit-interval
+  nodes ``c_i``. The Lobatto form is in fact simpler there, the halving cancelling the
+  numerator. The Radau expressions are documentation only: the implementation still reflects
+  the left nodes rather than evaluating the mirrored polynomial, so that the two variants stay
+  exact mirror images.
+- **The Rodrigues formula for the Legendre polynomial** is documented alongside the three-term
+  recurrence, in both `QuadratureRules._legendre` and the manual, with the reason the
+  recurrence is used for evaluation instead. It is what relates ``P_{s-1}'`` to the
+  derivative form of the Lobatto nodes, a step the manual previously asserted without stating
+  the identity it rests on.
+- **The moment conditions are described as a construction, not only as a test.** For a
+  prescribed node set they are a transposed-Vandermonde system in the weights; the manual now
+  says so, notes that this package uses closed forms instead because that system is badly
+  conditioned for larger `s`, and mentions that the Runge-Kutta literature defines several
+  families through exactly these conditions under the name of the simplifying assumption
+  ``B(s)``.
+
 ## [0.2.0] – 2026-08-13
 
 The first release since the package was substantially reworked. It is **breaking**: the

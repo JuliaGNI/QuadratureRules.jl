@@ -20,7 +20,28 @@ _default_arithmetic(::Type{T}) where {T<:_FloatLike} = BigFloat
 _default_arithmetic(::Type{T}) where {T} = T
 
 
-"Legendre polynomial P_s(x) of degree s defined on the interval [-1..+1], evaluated by the three-term recurrence."
+@doc raw"""
+The Legendre polynomial ``P_j(x)`` of degree ``j`` on the interval ``[-1,+1]``, evaluated by
+the three-term recurrence
+
+```math
+j \, P_j (x) = (2j-1) \, x \, P_{j-1} (x) - (j-1) \, P_{j-2} (x) ,
+\qquad P_0 = 1 , \quad P_1 = x .
+```
+
+The recurrence is used rather than the equivalent Rodrigues formula
+
+```math
+P_j (x) = \frac{1}{j! \, 2^j} \, \frac{d^j}{dx^j} \big( x^2 - 1 \big)^j ,
+```
+
+because it costs ``O(j)`` operations instead of building and differentiating a polynomial of
+degree ``2j``. The Rodrigues form is what relates ``P_{s-1}'`` to the ``(s-2)``-nd derivative
+of ``(1-x^2)^{s-1}`` used for the Lobatto nodes, cf. [`lobatto_legendre_nodes`](@ref).
+
+Works for any `x` supporting arithmetic, including a `Polynomial` — see
+[`QuadratureRules._legendre_polynomial`](@ref) — and symbolic types.
+"""
 function _legendre(j::Int, x::T) where {T}
     if j <= 0
         return one(T)

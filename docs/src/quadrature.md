@@ -85,6 +85,15 @@ enough to test the monomials, which on $[0,1]$ gives the *moment conditions*
 \qquad k = 0, 1, \dots, d .
 ```
 
+Read the other way round, the moment conditions are not merely a test but a *construction*:
+for a prescribed node set $c_i$ they are a linear system in the weights, with the transposed
+Vandermonde matrix $c_i^k$ as coefficient matrix, and solving the first $s$ of them yields the
+interpolatory weights. This package does not take that route — every family has a closed form,
+and the Vandermonde system becomes badly conditioned as $s$ grows, so evaluating the closed
+form in a wide working precision is both cheaper and more accurate. It is worth knowing about
+because the Runge-Kutta literature defines several node families through exactly these
+conditions, under the name of the *simplifying assumption* $B(s)$.
+
 Throughout this package the *order* $p$ reported by [`order`](@ref) is related to the
 degree of exactness by $p = d + 1$: a rule of order $p$ integrates polynomials of degree
 $\le p - 1$ exactly. The order is the quantity that governs the convergence rate of a

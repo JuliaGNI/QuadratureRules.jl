@@ -83,7 +83,9 @@ nodes it integrates polynomials up to degree $2s-1$ exactly, so its order is $2s
 ### Nodes
 
 The nodes are the roots of the Legendre polynomial $P_s$, mapped from $[-1,+1]$ to
-$[0,1]$. The polynomial itself is built from the three-term recurrence
+$[0,1]$. Equivalently, on $[0,1]$ they are the roots of the *shifted* Legendre polynomial
+$P_s (2x-1)$, which is how they are usually stated in the Runge-Kutta literature. The
+polynomial itself is built from the three-term recurrence
 
 ```math
 j \, P_j (x) = (2j-1) \, x \, P_{j-1} (x) - (j-1) \, P_{j-2} (x) ,
@@ -92,7 +94,15 @@ j \, P_j (x) = (2j-1) \, x \, P_{j-1} (x) - (j-1) \, P_{j-2} (x) ,
 
 which is implemented by [`QuadratureRules._legendre`](@ref). The same routine is used
 both to evaluate $P_j$ at a number and to construct it as a `Polynomial`, by starting the
-recurrence from the polynomial $x$ instead of a scalar.
+recurrence from the polynomial $x$ instead of a scalar. The equivalent Rodrigues formula
+
+```math
+P_j (x) = \frac{1}{j! \, 2^j} \, \frac{d^j}{dx^j} \big( x^2 - 1 \big)^j
+```
+
+is not used for evaluation — it would build and differentiate a polynomial of degree $2j$
+where the recurrence costs $O(j)$ operations — but it is what relates $P_{s-1}'$ to the
+derivative form of the Lobatto nodes below.
 
 Its roots have no closed form. They are obtained by taking the double precision values
 from `FastGaussQuadrature.gausslegendre` — which for small `s` computes them by the
@@ -117,6 +127,17 @@ it to one at $x_i$. The division is carried out exactly with `Polynomials.÷`, t
 is integrated symbolically, and the result is evaluated at the endpoints — all in the
 arithmetic `IT`, so no accuracy is lost. Finally the nodes are shifted and the weights
 halved to move the rule to $[0,1]$.
+
+In terms of the $[0,1]$ nodes $c_i$ the same weights read
+
+```math
+b_i = \bigg( \frac{dP}{dx} (c_i) \bigg)^{-2}
+      \int \limits_0^1 \bigg( \frac{P(x)}{x - c_i} \bigg)^{2} dx ,
+      \qquad P(x) = P_s (2x-1) ,
+```
+
+the halving being accounted for by the factor $2$ that $dx$ contributes and the factor $4$
+that $P'^2$ does.
 
 ```@repl rules
 quad = GaussLegendreQuadrature(3)
@@ -165,6 +186,16 @@ exactly, they are set
 to $\mp 1$ afterwards rather than left to the root finder, so that
 [`lobatto_legendre_nodes`](@ref) returns exactly `0` and `1` at the ends.
 
+On $[0,1]$ the same polynomial reads
+
+```math
+\frac{d^{\,s-2}}{dx^{\,s-2}} \, \big( (x - x^2)^{s-1} \big) ,
+```
+
+since $x - x^2 = (1 - \xi^2)/4$ under $x = (\xi+1)/2$ and a constant factor does not move
+roots. This is the form in which the Lobatto nodes are usually stated in the Runge-Kutta
+literature.
+
 ### Weights
 
 For the Lobatto family the weights are available in closed form,
@@ -175,7 +206,12 @@ w_i = \frac{2}{s \, (s-1) \, \big[ P_{s-1} (x_i) \big]^{2}} ,
 
 a formula which is valid at the endpoints as well as at the interior nodes. Evaluating
 $P_{s-1}$ through the same recurrence used for the nodes and rescaling to $[0,1]$
-completes the rule.
+completes the rule. In terms of the $[0,1]$ nodes $c_j$ the halving cancels the numerator,
+leaving the tabulated form
+
+```math
+b_j = \frac{1}{s \, (s-1) \, \big[ P_{s-1} (2 c_j - 1) \big]^{2}} .
+```
 
 ```@repl rules
 LobattoLegendreQuadrature(3)      # Simpson's rule
@@ -230,6 +266,22 @@ that [`radau_legendre_nodes`](@ref) returns exactly `0` there. The right points 
 by reflection, $x \mapsto -x$, which makes the two variants exact mirror images rather than
 two independent root finds.
 
+Feeding the Jacobi-Rodrigues formula above through the map to $[0,1]$ turns $R$ into a
+differentiated product, which is the form in which the Radau nodes are usually stated in the
+Runge-Kutta literature: on $[0,1]$ they are the roots of
+
+```math
+\frac{d^{\,s-1}}{dx^{\,s-1}} \big( x^s (x - 1)^{s-1} \big)
+\qquad \text{(left)} , \qquad
+\frac{d^{\,s-1}}{dx^{\,s-1}} \big( x^{s-1} (x - 1)^s \big)
+\qquad \text{(right)} ,
+```
+
+each of degree $s$, and mirror images of one another under $x \mapsto 1-x$ just as the node
+sets are. Note that these are stated for reference only: the implementation deliberately
+reflects the left nodes rather than evaluating the mirrored polynomial, because the recurrence
+for $P_{s-1}(-x)$ does not reproduce $P_{s-1}(x)$ bit for bit.
+
 ```@repl rules
 radau_legendre_nodes(3, :left; interval = SymmetricInterval())
 radau_legendre_nodes(3, :right; interval = SymmetricInterval())
@@ -245,7 +297,14 @@ w_i = \frac{1 \mp x_i}{s^2 \, \big[ P_{s-1} (x_i) \big]^{2}} ,
 
 with the upper sign for the left variant and the lower one for the right. As in the Lobatto
 case the single formula covers the prescribed endpoint as well: there
-$\big[ P_{s-1} (\mp 1) \big]^2 = 1$, so it collapses to the familiar $2/s^2$.
+$\big[ P_{s-1} (\mp 1) \big]^2 = 1$, so it collapses to the familiar $2/s^2$. In terms of the
+$[0,1]$ nodes $c_i$ this reads
+
+```math
+b_i = \frac{1 \mp (2 c_i - 1)}{2 \, s^2 \, \big[ P_{s-1} (2 c_i - 1) \big]^{2}} ,
+```
+
+so that the prescribed endpoint carries $1/s^2$.
 
 ```@repl rules
 RadauLegendreQuadrature(2, :right)
