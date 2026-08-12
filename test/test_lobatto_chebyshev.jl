@@ -1,13 +1,17 @@
 import FastTransforms
-import QuadratureRules: shift_nodes, unshift_nodes
+import QuadratureRules: scale_weights, unscale_weights, shift_nodes, unshift_nodes
 
 @testset "$(rpad("Lobatto-Chebyshev",80))" begin
 
     @test_throws ErrorException LobattoChebyshevQuadrature(1)
     @test_throws ErrorException chebyshev_points(Float64, 1, Val(2))
     @test_throws ErrorException chebyshev_nodes(Float64, 1, Val(2))
+    @test_throws ErrorException chebyshev_weights(Float64, 1, Val(2))
+    @test_throws ErrorException chebyshev_point_weights(Float64, 1, Val(2))
     @test_throws ErrorException lobatto_chebyshev_points(1)
     @test_throws ErrorException lobatto_chebyshev_nodes(1)
+    @test_throws ErrorException lobatto_chebyshev_weights(1)
+    @test_throws ErrorException lobatto_chebyshev_point_weights(1)
 
     for s in 2:10
         @test LobattoChebyshevQuadrature(s) == ChebyshevQuadrature(s, 2)
@@ -31,9 +35,23 @@ import QuadratureRules: shift_nodes, unshift_nodes
 
         @test unshift_nodes(chebyshev_nodes(Float64, s, Val(2))) ≈ chebyshev_points(Float64, s, Val(2))
 
+        @test chebyshev_weights(Float64, s, Val(2)) == weights(LobattoChebyshevQuadrature(s))
+        @test lobatto_chebyshev_weights(Float64, s)       == chebyshev_weights(Float64, s, Val(2))
+        @test lobatto_chebyshev_point_weights(Float64, s) == chebyshev_point_weights(Float64, s, Val(2))
+        @test lobatto_chebyshev_weights(s)       == lobatto_chebyshev_weights(Float64, s)
+        @test lobatto_chebyshev_point_weights(s) == lobatto_chebyshev_point_weights(Float64, s)
+        @test chebyshev_weights(s, 2)       == chebyshev_weights(Float64, s, Val(2))
+        @test chebyshev_point_weights(s, 2) == chebyshev_point_weights(Float64, s, Val(2))
+
+        # here the weights for [0,1] are primary and those for [-1,+1] are derived
+        @test unscale_weights(chebyshev_weights(BigFloat, s, Val(2))) == chebyshev_point_weights(BigFloat, s, Val(2))
+        @test scale_weights(chebyshev_point_weights(Float64, s, Val(2))) ≈ chebyshev_weights(Float64, s, Val(2))
+        @test sum(chebyshev_point_weights(Float64, s, Val(2))) ≈ 2
+
         # the Chebyshev points of the second kind are exactly the Clenshaw-Curtis
         # nodes, so the interpolatory rule on them is the Clenshaw-Curtis rule
         @test LobattoChebyshevQuadrature(s) == ClenshawCurtisQuadrature(s)
+        @test lobatto_chebyshev_weights(BigFloat, s) == clenshaw_curtis_weights(BigFloat, s)
         @test LobattoChebyshevQuadrature(BigFloat, s) == ClenshawCurtisQuadrature(BigFloat, s)
         @test order(LobattoChebyshevQuadrature(s)) == (isodd(s) ? s+1 : s)
 
