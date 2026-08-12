@@ -38,11 +38,12 @@ Most of the classical theory is instead formulated on the symmetric interval $[-
 which is where orthogonal polynomials such as the Legendre and Chebyshev polynomials are
 defined. The package follows this convention internally and offers both views:
 
-- the `*_points` functions return the nodes on $[-1,+1]$,
-- the `*_nodes` functions return them on $[0,1]$,
+- the `*_points` and `*_point_weights` functions work on $[-1,+1]$,
+- the `*_nodes` and `*_weights` functions work on $[0,1]$,
 
-related by $c_i = (x_i + 1) / 2$. The weights are scaled correspondingly by a factor
-$1/2$. See [Points and Nodes](@ref) for the full list.
+related by $c_i = (x_i + 1) / 2$, with the weights scaled correspondingly by a factor
+$1/2$ so that they sum to $1$ rather than $2$. See
+[Points, Nodes and Weights](@ref) for the full list.
 
 
 ## Interpolatory quadrature
@@ -147,8 +148,12 @@ endpoints are needed anyway, as in finite element methods, collocation schemes a
 variational integrators, where the endpoint values are shared between neighbouring
 elements or time steps.
 
-Radau rules are listed here for completeness; they are **not** currently provided by this
-package.
+The Radau family is implemented as [`RadauLegendreQuadrature`](@ref). It prescribes one
+endpoint and leaves the other free, which is the asymmetric middle ground between the two:
+a single point of contact with the boundary, bought for a single degree of exactness. Which
+endpoint is prescribed is a genuine choice rather than a convention, so it is passed
+explicitly as `:left` or `:right`. The one-sided constraint is what makes these nodes the
+basis of the stiffly accurate Radau IA and Radau IIA collocation methods.
 
 
 ## Chebyshev-based rules

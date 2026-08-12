@@ -67,6 +67,7 @@ precision. Each has a method taking an explicit element type `T` and one default
 ```@docs
 GaussLegendreQuadrature
 LobattoLegendreQuadrature
+RadauLegendreQuadrature
 ClenshawCurtisQuadrature
 GaussChebyshevQuadrature
 LobattoChebyshevQuadrature
@@ -82,26 +83,41 @@ TanhSinhQuadrature
 ```
 
 
-## Points and Nodes
+## Points, Nodes and Weights
 
-The nodes of every rule are also available on their own, without the corresponding
-weights. Two conventions are offered throughout:
+The nodes and weights of every rule are also available on their own, without having to
+construct the rule. Two conventions are offered throughout:
 
-- the `*_points` functions return the nodes on the interval ``[-1,+1]``, the interval on
-  which the classical theory is formulated,
-- the `*_nodes` functions return them on the interval ``[0,1]``, the reference interval
-  used by [`QuadratureRule`](@ref),
+- the `*_points` and `*_point_weights` functions work on the interval ``[-1,+1]``, the
+  interval on which the classical theory is formulated, and their weights sum to ``2``,
+- the `*_nodes` and `*_weights` functions work on the interval ``[0,1]``, the reference
+  interval used by [`QuadratureRule`](@ref), and their weights sum to ``1``,
 
-related by ``c_i = (x_i + 1)/2``. Each function has a method taking an explicit element
-type `T` and one defaulting to `Float64`.
+related by ``c_i = (x_i + 1)/2`` and ``b_i = w_i / 2``. Each function has a method taking
+an explicit element type `T` and one defaulting to `Float64`.
+
+Within each family one convention is primary and the other is derived from it, so that the
+two agree exactly at equal working precision and up to rounding across precisions. The
+nodes are always derived from the points. For the weights it depends on the family: the
+Legendre closed forms are formulated on ``[-1,+1]``, so there the `*_point_weights` are
+primary, whereas the Chebyshev and Clenshaw-Curtis formulas already carry the
+normalisation to ``[0,1]``, so there the `*_weights` are.
 
 ### Legendre
 
 ```@docs
 gauss_legendre_points
 gauss_legendre_nodes
+gauss_legendre_point_weights
+gauss_legendre_weights
 lobatto_legendre_points
 lobatto_legendre_nodes
+lobatto_legendre_point_weights
+lobatto_legendre_weights
+radau_legendre_points
+radau_legendre_nodes
+radau_legendre_point_weights
+radau_legendre_weights
 ```
 
 ### Chebyshev
@@ -109,12 +125,20 @@ lobatto_legendre_nodes
 ```@docs
 chebyshev_points
 chebyshev_nodes
+chebyshev_point_weights
+chebyshev_weights
 gauss_chebyshev_points
 gauss_chebyshev_nodes
+gauss_chebyshev_point_weights
+gauss_chebyshev_weights
 lobatto_chebyshev_points
 lobatto_chebyshev_nodes
+lobatto_chebyshev_point_weights
+lobatto_chebyshev_weights
 clenshaw_curtis_points
 clenshaw_curtis_nodes
+clenshaw_curtis_point_weights
+clenshaw_curtis_weights
 ```
 
 ### Tanh-Sinh
@@ -138,6 +162,7 @@ QuadratureRules._tanh_sinh
 QuadratureRules.shift_nodes
 QuadratureRules.unshift_nodes
 QuadratureRules.scale_weights
+QuadratureRules.unscale_weights
 QuadratureRules.shift!
 QuadratureRules.unshift!
 ```
