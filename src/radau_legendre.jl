@@ -91,7 +91,8 @@ julia> radau_legendre_nodes(2, :left; interval = SymmetricInterval())
 ```
 """
 function radau_legendre_nodes(::Type{T}, s::Integer, endpoint::Val;
-                              IT=_default_arithmetic(T), interval=UnitInterval()) where {T}
+                              IT=_default_arithmetic(T),
+                              interval::QuadratureInterval=UnitInterval()) where {T}
     T.(_nodes_from_symmetric(_radau_legendre_nodes(s, endpoint, IT), interval))
 end
 
@@ -133,7 +134,8 @@ julia> radau_legendre_weights(2, :left; interval = SymmetricInterval())
 ```
 """
 function radau_legendre_weights(::Type{T}, s::Integer, endpoint::Val;
-                                IT=_default_arithmetic(T), interval=UnitInterval()) where {T}
+                                IT=_default_arithmetic(T),
+                                interval::QuadratureInterval=UnitInterval()) where {T}
     _, w = _radau_legendre(s, endpoint, IT)
 
     T.(_weights_from_symmetric(w, interval))

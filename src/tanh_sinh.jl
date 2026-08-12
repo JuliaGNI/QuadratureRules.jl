@@ -147,7 +147,8 @@ julia> x == -reverse(x)
 true
 ```
 """
-function tanh_sinh_nodes(::Type{T}, n::Integer; IT=BigFloat, interval=UnitInterval()) where {T}
+function tanh_sinh_nodes(::Type{T}, n::Integer; IT=BigFloat,
+                         interval::QuadratureInterval=UnitInterval()) where {T}
     c, _ = _tanh_sinh(T, n; IT=IT)
     T.(_nodes_from_unit(c, interval))
 end
@@ -189,7 +190,8 @@ julia> isapprox(sum(tanh_sinh_weights(1; interval = SymmetricInterval())), 2; at
 true
 ```
 """
-function tanh_sinh_weights(::Type{T}, n::Integer; IT=BigFloat, interval=UnitInterval()) where {T}
+function tanh_sinh_weights(::Type{T}, n::Integer; IT=BigFloat,
+                           interval::QuadratureInterval=UnitInterval()) where {T}
     _, b = _tanh_sinh(T, n; IT=IT)
     T.(_weights_from_unit(b, interval))
 end
@@ -288,8 +290,7 @@ true
 
 See also [`tanh_sinh_nodes`](@ref) and [`tanh_sinh_weights`](@ref) for the nodes and weights
 alone, and [`GaussLegendreQuadrature`](@ref), which is the better choice for an integrand that
-is
-smooth up to and including the endpoints.
+is smooth up to and including the endpoints.
 """
 function TanhSinhQuadrature(::Type{T}, n::Integer; IT=BigFloat) where {T}
     c, b = _tanh_sinh(T, n; IT=IT)

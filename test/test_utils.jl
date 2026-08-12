@@ -61,8 +61,12 @@ struct NotANumber end
     @test UnitInterval() isa QuadratureInterval
     @test SymmetricInterval() isa QuadratureInterval
 
-    # an interval the mapping does not know about is a MethodError, not a silent [0,1]
-    @test_throws MethodError gauss_legendre_nodes(2; interval = :symmetric)
-    @test_throws MethodError gauss_legendre_weights(2; interval = :symmetric)
+    # An interval outside the type is a TypeError, not a silent [0,1]. The keyword is
+    # annotated, so this is raised at the accessor itself and names both the keyword and
+    # the expected supertype, rather than surfacing as a MethodError on a private helper.
+    @test_throws TypeError gauss_legendre_nodes(2; interval = :symmetric)
+    @test_throws TypeError gauss_legendre_weights(2; interval = :symmetric)
+    @test_throws TypeError tanh_sinh_nodes(1; interval = :symmetric)
+    @test_throws TypeError radau_legendre_nodes(2, :left; interval = :symmetric)
 
 end

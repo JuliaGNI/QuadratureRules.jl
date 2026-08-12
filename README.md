@@ -116,7 +116,6 @@ These exist for all rules, i.e., as `gauss_legendre_nodes`, `lobatto_legendre_no
 corresponding `*_weights` functions. Note that `SymmetricInterval` describes the interval, not
 the node set — a Radau rule has deliberately asymmetric nodes on either interval.
 
-
 The Radau rules take the prescribed endpoint as a further argument, `:left` or `:right`,
 since the two variants are different rules:
 ```julia

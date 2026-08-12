@@ -77,7 +77,7 @@ julia> clenshaw_curtis_weights(3; interval = SymmetricInterval())
 ```
 """
 function clenshaw_curtis_weights(::Type{T}, s::Integer; IT=_default_arithmetic(T),
-                                 interval=UnitInterval()) where {T}
+                                 interval::QuadratureInterval=UnitInterval()) where {T}
     T.(_weights_from_unit(_clenshaw_curtis_weights(s, IT), interval))
 end
 

@@ -27,7 +27,9 @@ The accumulated breaking changes below warrant a **0.2.0** release.
   the new abstract type `QuadratureInterval`. What used to be encoded by two different words —
   *point* versus *node*, neither of which names an interval — is now an argument that says
   which interval it is. `SymmetricInterval` describes the interval, not the node set: a Radau
-  rule has deliberately asymmetric nodes on either interval.
+  rule has deliberately asymmetric nodes on either interval. The keyword is annotated
+  `::QuadratureInterval`, so anything else — a bare `:symmetric`, say — is a `TypeError`
+  naming the keyword, never a silent fallback to `[0,1]`.
 
   This drops 16 exported names and matches how the package already selects the Radau endpoint
   and the Chebyshev kind. The 16 removed functions map to keyword calls mechanically:

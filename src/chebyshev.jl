@@ -69,7 +69,7 @@ julia> chebyshev_nodes(3, 1; interval = SymmetricInterval())
 ```
 """
 function chebyshev_nodes(::Type{T}, s::Integer, kind::Val; IT=_default_arithmetic(T),
-                         interval=UnitInterval()) where {T}
+                         interval::QuadratureInterval=UnitInterval()) where {T}
     T.(_nodes_from_symmetric(_chebyshev_nodes(s, kind, IT), interval))
 end
 
@@ -132,7 +132,7 @@ julia> chebyshev_weights(3, 1; interval = SymmetricInterval())
 ```
 """
 function chebyshev_weights(::Type{T}, s::Integer, kind::Val; IT=_default_arithmetic(T),
-                           interval=UnitInterval()) where {T}
+                           interval::QuadratureInterval=UnitInterval()) where {T}
     T.(_weights_from_unit(_chebyshev_weights(s, kind, IT), interval))
 end
 

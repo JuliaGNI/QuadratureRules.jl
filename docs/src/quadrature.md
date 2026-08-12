@@ -354,7 +354,7 @@ julia> simplify.(gauss_legendre_nodes(typeof(Sym(1)), 2))
  1/2 - sqrt(3)/6
  sqrt(3)/6 + 1/2
 
-julia> simplify.(radau_legendre_weights(typeof(Sym(1)), 3, :right))
+julia> simplify.(radau_legendre_weights(typeof(Sym(1)), 3, Val(:right)))
 3-element Vector{Sym{PythonCall.Py}}:
  4/9 - sqrt(6)/36
  sqrt(6)/36 + 4/9

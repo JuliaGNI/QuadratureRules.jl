@@ -1,3 +1,4 @@
+import QuadratureRules: scale_weights, shift_nodes
 
 @testset "$(rpad("Working Precision",80))" begin
 
@@ -78,6 +79,11 @@
 
             # UnitInterval() is the default, and naming it explicitly changes nothing
             @test c == nodefunction(T, s; IT=IT, interval = UnitInterval())
+
+            # the two intervals describe the same rule, so they must agree under the affine
+            # map. Only `≈`: at IT = T the two are rounded independently. Without this a
+            # mis-wired mapping would pass, the unit nodes being contained in [-1,+1] too.
+            @test c ≈ shift_nodes(x)
         end
 
         for weightfunction in WEIGHTS, s in 2:8
@@ -94,6 +100,7 @@
             @test sum(b) ≈ one(T)  atol = tol * eps(T)
 
             @test b == weightfunction(T, s; IT=IT, interval = UnitInterval())
+            @test b ≈ scale_weights(w)
         end
 
         for kind in (1, 2), s in 2:8

@@ -49,7 +49,7 @@ julia> lobatto_legendre_nodes(3; interval = SymmetricInterval())
 ```
 """
 function lobatto_legendre_nodes(::Type{T}, s::Integer; IT=_default_arithmetic(T),
-                                interval=UnitInterval()) where {T}
+                                interval::QuadratureInterval=UnitInterval()) where {T}
     T.(_nodes_from_symmetric(_lobatto_legendre_nodes(s, IT), interval))
 end
 
@@ -99,7 +99,7 @@ julia> lobatto_legendre_weights(3; interval = SymmetricInterval())
 ```
 """
 function lobatto_legendre_weights(::Type{T}, s::Integer; IT=_default_arithmetic(T),
-                                  interval=UnitInterval()) where {T}
+                                  interval::QuadratureInterval=UnitInterval()) where {T}
     w = _lobatto_legendre_weights(_lobatto_legendre_nodes(s, IT))
 
     T.(_weights_from_symmetric(w, interval))

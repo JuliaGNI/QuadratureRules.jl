@@ -43,7 +43,7 @@ julia> gauss_legendre_nodes(2; interval = SymmetricInterval())
 ```
 """
 function gauss_legendre_nodes(::Type{T}, s::Integer; IT=_default_arithmetic(T),
-                              interval=UnitInterval()) where {T}
+                              interval::QuadratureInterval=UnitInterval()) where {T}
     T.(_nodes_from_symmetric(_gauss_legendre_nodes(s, IT), interval))
 end
 
@@ -98,7 +98,7 @@ julia> gauss_legendre_weights(2; interval = SymmetricInterval())
 ```
 """
 function gauss_legendre_weights(::Type{T}, s::Integer; IT=_default_arithmetic(T),
-                                interval=UnitInterval()) where {T}
+                                interval::QuadratureInterval=UnitInterval()) where {T}
     w = _gauss_legendre_weights(_gauss_legendre_nodes(s, IT))
 
     T.(_weights_from_symmetric(w, interval))
