@@ -31,7 +31,22 @@ import QuadratureRules: shift_nodes, unshift_nodes
 
         @test unshift_nodes(chebyshev_nodes(Float64, s, Val(2))) ≈ chebyshev_points(Float64, s, Val(2))
 
-        # TODO test weights
+        # the Chebyshev points of the second kind are exactly the Clenshaw-Curtis
+        # nodes, so the interpolatory rule on them is the Clenshaw-Curtis rule
+        @test LobattoChebyshevQuadrature(s) == ClenshawCurtisQuadrature(s)
+        @test LobattoChebyshevQuadrature(BigFloat, s) == ClenshawCurtisQuadrature(BigFloat, s)
+        @test order(LobattoChebyshevQuadrature(s)) == s
+
+        let q = LobattoChebyshevQuadrature(BigFloat, s)
+            @test nodes(q)[begin] == 0
+            @test nodes(q)[end]   == 1
+            @test issorted(nodes(q), lt = <)
+            @test all(bᵢ > 0 for bᵢ in weights(q))
+
+            for k in 0:order(q)-1
+                @test sum(weights(q) .* nodes(q).^k) ≈ 1 / BigFloat(k+1)  atol=1E-60
+            end
+        end
 
     end
 

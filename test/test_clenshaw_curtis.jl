@@ -8,8 +8,17 @@ import QuadratureRules: scale_weights, shift_nodes, unshift_nodes
     for s in 2:10
         @test ClenshawCurtisQuadrature(s) == ClenshawCurtisQuadrature(Float64, s)
 
-        @test sum(weights(GaussChebyshevQuadrature(s))) ≈ 1
-        
+        @test sum(weights(ClenshawCurtisQuadrature(s))) ≈ 1
+        @test order(ClenshawCurtisQuadrature(s)) == s
+
+        # an s-node interpolatory rule integrates polynomials up to degree s-1 exactly
+        let q = ClenshawCurtisQuadrature(BigFloat, s)
+            for k in 0:order(q)-1
+                @test sum(weights(q) .* nodes(q).^k) ≈ 1 / BigFloat(k+1)  atol=1E-60
+            end
+        end
+
+
         μ = FastTransforms.chebyshevmoments1(Float64, s)
         b = scale_weights(reverse(FastTransforms.clenshawcurtisweights(μ)))
         c = shift_nodes(reverse(FastTransforms.clenshawcurtisnodes(Float64, s)))

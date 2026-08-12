@@ -25,7 +25,19 @@ import QuadratureRules: shift_nodes, unshift_nodes
 
         @test unshift_nodes(chebyshev_nodes(Float64, s, Val(1))) ≈ chebyshev_points(Float64, s, Val(1))
 
-        # TODO test weights
+        # Gauss-Chebyshev is Fejér's first rule: an interpolatory rule on the s
+        # Chebyshev points of the first kind, hence exact up to degree s-1
+        @test order(GaussChebyshevQuadrature(s)) == s
+
+        let q = GaussChebyshevQuadrature(BigFloat, s)
+            @test all(0 ≤ cᵢ ≤ 1 for cᵢ in nodes(q))
+            @test issorted(nodes(q), lt = <)
+            @test all(bᵢ > 0 for bᵢ in weights(q))
+
+            for k in 0:order(q)-1
+                @test sum(weights(q) .* nodes(q).^k) ≈ 1 / BigFloat(k+1)  atol=1E-60
+            end
+        end
 
     end
 
