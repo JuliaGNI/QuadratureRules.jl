@@ -76,7 +76,7 @@ w_i = \frac{2}{s \, (s-1) \, \big[ P_{s-1}(x_i) \big]^2} ,
 ```
 
 which holds for the interior points and for the two endpoints alike. Throws an
-`ErrorException` for `s == 1`. See [`gauss_legendre_points`](@ref) for the arguments.
+`ErrorException` for `s == 1`. See [`lobatto_legendre_points`](@ref) for the arguments.
 
 ```jldoctest
 julia> lobatto_legendre_point_weights(3)
@@ -104,7 +104,7 @@ The `s` Lobatto-Legendre weights for the interval ``[0,1]``, i.e., the weights o
 [`lobatto_legendre_point_weights`](@ref) halved so that they sum to ``1``.
 
 These are the weights of [`LobattoLegendreQuadrature`](@ref). Throws an `ErrorException`
-for `s == 1`. See [`gauss_legendre_points`](@ref) for the arguments.
+for `s == 1`. See [`lobatto_legendre_points`](@ref) for the arguments.
 
 ```jldoctest
 julia> lobatto_legendre_weights(3)
