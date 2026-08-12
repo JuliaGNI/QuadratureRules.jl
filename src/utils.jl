@@ -31,6 +31,38 @@ function _shifted_legendre(s, T=BigFloat)
 end
 
 
+"""
+Refine the approximate roots `x₀` of the polynomial `p` with Newton's method.
+
+The iteration is carried out in the arithmetic of `p`'s coefficients and runs
+until the correction stops decreasing, i.e., until the roots are accurate to
+the working precision. This is used to compute quadrature nodes in arbitrary
+precision from double precision initial guesses. All roots are assumed to be
+real and simple.
+"""
+function _newton_roots(p::Polynomial{T}, x₀::AbstractVector; maxiter=100) where {T}
+    dp = Polynomials.derivative(p)
+    x  = Vector{T}(undef, length(x₀))
+
+    for i in eachindex(x₀)
+        xᵢ = T(x₀[i])
+        δ  = p(xᵢ) / dp(xᵢ)
+        xᵢ -= δ
+
+        for _ in 2:maxiter
+            δ̃ = p(xᵢ) / dp(xᵢ)
+            xᵢ -= δ̃
+            (iszero(δ̃) || abs(δ̃) ≥ abs(δ)) && break
+            δ = δ̃
+        end
+
+        x[i] = xᵢ
+    end
+
+    return x
+end
+
+
 "Shift and scale nodes from the interval [-1,+1] to the interval [0,1]."
 function shift_nodes(c)
     (c .+ 1) ./ 2

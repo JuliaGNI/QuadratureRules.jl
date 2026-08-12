@@ -16,7 +16,7 @@ function GaussLegendreQuadrature(::Type{T}, s::Integer; IT=BigFloat, fast=false)
     P = _shifted_legendre(s,IT)
     D = Polynomials.derivative(P)
 
-    c = sort(IT.(Polynomials.roots(P)))
+    c = sort(_newton_roots(P, shift_nodes(FastGaussQuadrature.gausslegendre(s)[1])))
 
     inti(i) = begin
         I = Polynomials.integrate( ( P ÷ Polynomial(IT[-c[i], 1]) )^2 )

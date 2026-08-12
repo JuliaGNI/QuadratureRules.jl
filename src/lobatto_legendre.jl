@@ -20,7 +20,7 @@ function LobattoLegendreQuadrature(::Type{T}, s::Integer; IT=BigFloat, fast=fals
 
     D(k) = Polynomials.derivative(Polynomial(IT[0, 1, -1])^(k-1), k-2)
     P(k,x) = Polynomials.derivative(Polynomial(IT[-1, 0, 1])^k, k)(x) / factorial(k) / 2^k
-    c = sort(IT.(Polynomials.roots(D(s)))); c[begin] = 0; c[end] = 1;
+    c = sort(_newton_roots(D(s), shift_nodes(FastGaussQuadrature.gausslobatto(s)[1]))); c[begin] = 0; c[end] = 1;
     b = [ 1 / ( s*(s-1) * P(s-1, 2c[i] - 1)^2 ) for i in 1:s ]
     return QuadratureRule(2s-2, c, b, T)
 end
