@@ -11,7 +11,10 @@ for the meaning of the reported order.
 
 Two groups can be distinguished. The *tabulated* rules have a fixed, small number of
 nodes and are written out explicitly. The *generated* rules are computed on the fly for
-an arbitrary number of nodes `s` and in arbitrary precision.
+an arbitrary number of nodes `s` and in arbitrary precision. Both are interpolatory.
+[`TanhSinhQuadrature`](@ref) stands outside this division and is treated last: it is not
+interpolatory but the trapezoidal rule after a change of variables, and it is parameterised
+by a refinement level rather than by a number of nodes.
 
 
 ## Tabulated rules
@@ -517,6 +520,10 @@ nnodes.(TanhSinhQuadrature.(1:5))
 Because the truncation criterion below is a threshold in $t$ that all levels share, the node
 set of level `n` is simply the multiples of $2^{-n}$ below that threshold, and the
 implementation can generate it in a single loop at the finest step instead.
+
+The nesting holds while the rule is still resolving, which is the range worth using anyway.
+Past it the pairwise merge described below folds the outermost nodes of consecutive levels
+together, and the inclusion fails — from level 5 in `Float32` and from level 6 in `Float64`.
 
 ### Truncation
 
