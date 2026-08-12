@@ -2,8 +2,9 @@
 @doc raw"""
 Nodes and weights of the tanh-sinh rule of level `n` on the interval ``[0,1]``, computed and
 returned in the arithmetic `IT` and truncated to what the target type `T` can resolve. This
-is the common back end of [`TanhSinhQuadrature`](@ref), [`tanh_sinh_nodes`](@ref) and
-[`tanh_sinh_points`](@ref), so that all three truncate identically.
+is the common back end of [`TanhSinhQuadrature`](@ref), [`tanh_sinh_nodes`](@ref),
+[`tanh_sinh_points`](@ref), [`tanh_sinh_weights`](@ref) and
+[`tanh_sinh_point_weights`](@ref), so that all five truncate identically.
 
 Substituting ``x = \tanh ( \tfrac{\pi}{2} \sinh t )`` and applying the trapezoidal rule with
 step ``h = 2^{-n}`` at ``t = k h`` gives, after the move to ``[0,1]``,
