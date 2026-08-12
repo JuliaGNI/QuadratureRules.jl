@@ -68,6 +68,7 @@ as well as functions for generating quadrature rules with an arbitrary number of
 - `GaussLegendreQuadrature`
 - `LobattoChebyshevQuadrature`
 - `LobattoLegendreQuadrature`
+- `TanhSinhQuadrature`
 
 Each of these takes the number of nodes `s` and, optionally, the element type of the
 resulting rule, e.g. `GaussLegendreQuadrature(BigFloat, 5)`. Nodes and weights are
@@ -75,6 +76,12 @@ computed in an internal working precision, controlled by the keyword argument `I
 defaulting to `BigFloat`, and converted to the requested element type only at the end.
 The Legendre rules additionally accept `fast=true`, which takes nodes and weights
 directly from FastGaussQuadrature.jl in double precision.
+
+`TanhSinhQuadrature` is the exception: it is the trapezoidal rule after a double-exponential
+change of variables, so it takes a refinement level `n` rather than a number of nodes, and it
+has no polynomial degree of exactness — its `order` is reported as `0`. Its nodes never reach
+the endpoints, which makes it the rule to use for an integrand singular there, such as
+`TanhSinhQuadrature(3)(log) ≈ -1`.
 
 
 ## Points and Nodes
@@ -95,8 +102,9 @@ julia> gauss_legendre_nodes(2)
 ```
 
 These exist for all rules, i.e., as `gauss_legendre_points`, `lobatto_legendre_points`,
-`chebyshev_points`, `gauss_chebyshev_points`, `lobatto_chebyshev_points` and
-`clenshaw_curtis_points`, together with the corresponding `*_nodes` functions.
+`chebyshev_points`, `gauss_chebyshev_points`, `lobatto_chebyshev_points`,
+`clenshaw_curtis_points` and `tanh_sinh_points`, together with the corresponding `*_nodes`
+functions.
 
 
 ## References

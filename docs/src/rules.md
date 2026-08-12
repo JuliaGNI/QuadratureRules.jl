@@ -453,6 +453,190 @@ ChebyshevQuadrature(4, 2) == LobattoChebyshevQuadrature(4)
 ```
 
 
+## Tanh-Sinh quadrature
+
+[`TanhSinhQuadrature`](@ref) is the odd one out. It is not an interpolatory rule on a
+prescribed node set but the trapezoidal rule applied after a change of variables, the
+*double-exponential formula* of [takahasi1974](@citet). See
+[Variable transformations and the double-exponential formula](@ref) for why that is a good
+idea at all; this section covers how it is computed.
+
+### The substitution
+
+Setting
+
+```math
+x = \tanh \left( \frac{\pi}{2} \sinh t \right) , \qquad t \in \mathbb{R} ,
+```
+
+turns $\int_{-1}^{+1} f(x) \, dx$ into an integral over the whole real line, to which the
+trapezoidal rule with step $h$ is applied at the abscissae $t = k h$:
+
+```math
+\int_{-1}^{+1} f(x) \, dx \approx h \sum_{k \in \mathbb{Z}} w_k \, f(x_k) ,
+\qquad
+x_k = \tanh \left( \frac{\pi}{2} \sinh (k h) \right) ,
+\qquad
+w_k = \frac{\tfrac{\pi}{2} \cosh (k h)}{\cosh^2 \big( \tfrac{\pi}{2} \sinh (k h) \big)} .
+```
+
+The weights are just $dx/dt$ evaluated at the abscissae. Since $dx/dt$ decays like
+$\exp ( - \tfrac{\pi}{2} e^{|t|} )$, the sum can be truncated after a modest number of
+terms.
+
+### The logistic form
+
+Mapping to $[0,1]$ turns the transformation into the logistic sigmoid,
+
+```math
+c_k = \frac{1 + x_k}{2} = \frac{1}{1 + e^{-\pi \sinh (k h)}} ,
+\qquad
+1 - c_k = \frac{1}{1 + e^{+\pi \sinh (k h)}} ,
+```
+
+and this, not $(1 + \tanh u)/2$, is what the implementation evaluates. The reason is
+cancellation: the whole point of the outermost nodes is *how close they are to the
+endpoints*, and $1 - \tanh u$ loses all its significant digits for large $u$, whereas
+$1/(1 + e^{2u})$ delivers the small number directly. The rule is assembled from these
+offsets in symmetric pairs about the centre node $c_0 = 1/2$, so that the weight vector
+comes out symmetric to the last bit and the nodes ascending by construction.
+
+### Levels and nesting
+
+The parameter of the rule is not a node count but a **level** `n`, which fixes the step size
+$h = 2^{-n}$. Halving $h$ retains every previous abscissa and inserts one new one between
+each pair, so the levels are nested — a property inherited from the trapezoidal rule and the
+reason the classical implementations refine level by level, reusing all previous integrand
+values:
+
+```@repl rules
+issubset(tanh_sinh_nodes(2), tanh_sinh_nodes(3))
+nnodes.(TanhSinhQuadrature.(1:5))
+```
+
+Because the truncation criterion below is a threshold in $t$ that all levels share, the node
+set of level `n` is simply the multiples of $2^{-n}$ below that threshold, and the
+implementation can generate it in a single loop at the finest step instead.
+
+### Truncation
+
+Where to stop is decided by the target type `T`, not by a tolerance. The sum is truncated at
+the first `k` whose weight rounds to zero in `T` or whose node rounds to an endpoint — of
+either $[0,1]$ or $[-1,+1]$, since the latter carries one bit less next to the endpoints and
+would otherwise degenerate. Should a pair still be indistinguishable in `T` from its
+predecessor, its weight is folded into that predecessor rather than added as a new node,
+which leaves the quadrature sum untouched and keeps the nodes strictly increasing.
+
+The upshot is that **no node ever coincides with an endpoint**, which is precisely what
+allows an integrand singular there to be handed over as it stands:
+
+```@repl rules
+quad = TanhSinhQuadrature(3);
+extrema(nodes(quad))
+quad(x -> 1 / sqrt(x * (1 - x))) - π      # ∫₀¹ dx/√(x(1-x)) = π
+```
+
+### No degree of exactness
+
+The truncated sum integrates no polynomial exactly, not even a constant — its weights sum to
+one only up to the truncation error — so [`order`](@ref) reports `0`. Tanh-sinh is the only
+rule in this package for which the order says nothing about the accuracy:
+
+```@repl rules
+order(TanhSinhQuadrature(3))
+sum(weights(TanhSinhQuadrature(BigFloat, 2))) - 1
+```
+
+### Doubling of digits per level
+
+What describes the accuracy instead is the convergence rate
+$\mathcal{O} ( e^{-cN/\log N} )$, which in practice means that each level roughly doubles the
+number of correct digits until the precision of `T` is exhausted:
+
+```@example rules
+using Printf
+
+#                                                    exact value of ∫₀¹ f(x) dx
+cases = [("exp(x)",     exp,                          exp(big(1)) - 1),
+         ("log(x)",     log,                          big(-1)),
+         ("√x·log(1/x)", x -> sqrt(x) * log(1/x),     big(4)//9)]
+
+for (name, f, exact) in cases
+    errs = [Float64(abs(TanhSinhQuadrature(BigFloat, n)(f) - exact)) for n in 1:5]
+    @printf("%-12s %s\n", name, join((@sprintf("%9.2e", e) for e in errs), " "))
+end
+```
+
+The first column is level 1 and the last level 5; the final entries are at the `BigFloat`
+round-off level and no longer measure the rule. Note that the logarithmic singularity at
+$x = 0$ costs nothing at all — it is integrated just as accurately as $e^x$.
+
+### Comparison with Gauss-Legendre
+
+At an equal number of nodes the two rules are good at opposite things:
+
+```@example rules
+for (level, N) in ((1, 13), (3, 51))
+    ts = TanhSinhQuadrature(level)
+    gl = GaussLegendreQuadrature(N; fast=true)
+
+    for (name, f, exact) in [("exp(x)",    exp,            exp(1) - 1),
+                             ("log(x)",    log,            -1.0),
+                             ("1/sqrt(x)", x -> 1/sqrt(x),  2.0)]
+        @printf("%2d nodes  %-12s tanh-sinh %8.2e   Gauss-Legendre %8.2e\n",
+                N, name, abs(ts(f) - exact), abs(gl(f) - exact))
+    end
+end
+```
+
+For an integrand analytic up to and including the endpoints, Gauss-Legendre is far ahead: at
+13 nodes it has already reached machine precision on $e^x$, where tanh-sinh is still at
+$10^{-5}$, because 13 nodes buy Gauss exactness to degree 25 while tanh-sinh has spent most of
+its nodes resolving the ends of an interval where nothing interesting happens. As soon as
+there is an endpoint singularity the comparison reverses, and not by a small margin.
+Gauss-Legendre is left with about four correct digits on $\log x$ and barely two on
+$x^{-1/2}$ even at 51 nodes, and adding nodes helps it only algebraically, because polynomial
+approximation of those integrands near the origin is hopeless. Tanh-sinh reaches machine
+precision on the first and its intrinsic limit on the second.
+
+The rule of thumb follows: use [`GaussLegendreQuadrature`](@ref) unless the integrand
+misbehaves at an endpoint, and tanh-sinh when it does.
+
+### The `√eps(T)` limit
+
+That limit deserves a closer look, because it is the one thing that must be understood before
+relying on the rule. A node of type `T` cannot come closer to an endpoint than about
+`eps(T)`, so the tail of the transformed integrand beyond the last node is not negligible if
+$f$ grows there. For $f(x) = x^{-1/2}$ it is of size $\sqrt{\texttt{eps(T)}}$, and no
+further level helps:
+
+```@example rules
+for T in (Float32, Float64, BigFloat)
+    errs = [Float64(abs(TanhSinhQuadrature(T, n)(x -> 1/sqrt(x)) - 2)) for n in 3:6]
+    @printf("%-9s %s   √eps = %8.2e\n", T,
+            join((@sprintf("%8.2e", e) for e in errs), " "), sqrt(eps(T)))
+end
+```
+
+The remedy is not more nodes but more precision — 8 correct digits in `Float64`, 39 at the
+default `BigFloat` precision, 78 at twice that. This is the mechanism behind the use of
+tanh-sinh as the workhorse of high-precision quadrature [bailey2005](@cite), and the
+clearest illustration of what this package computes in arbitrary precision *for*.
+
+A logarithmic singularity, by contrast, is integrated to full precision at any type, as the
+convergence table above shows: the tail it leaves behind is of size
+$\texttt{eps(T)} \, \log \texttt{eps(T)}$, which is negligible.
+
+### The useful range of levels
+
+Each level doubles the number of nodes, so the node count grows like $2^n$ while the
+attainable accuracy stops improving once the precision of `T` is reached. There is no point
+in going beyond level 3 for `Float64` or level 5 at the default `BigFloat` precision, and the
+tables above are the evidence. Constructing the rule costs one `sinh`, `cosh` and `exp` per
+node in the working precision `IT`; unlike the Chebyshev rules there is no summation, so
+`IT=BigFloat` is comparatively cheap and there is little reason to lower it.
+
+
 ## Summary
 
 | rule | nodes | endpoints included | order | requires |
@@ -466,12 +650,18 @@ ChebyshevQuadrature(4, 2) == LobattoChebyshevQuadrature(4)
 | [`GaussChebyshevQuadrature`](@ref) | Chebyshev, first kind | no | $s$ / $s+1$ | |
 | [`ClenshawCurtisQuadrature`](@ref) | Chebyshev, second kind | both | $s$ / $s+1$ | $s \ge 2$ |
 | [`LobattoChebyshevQuadrature`](@ref) | Chebyshev, second kind | both | $s$ / $s+1$ | $s \ge 2$ |
+| [`TanhSinhQuadrature`](@ref) | $\tanh \big( \tfrac{\pi}{2} \sinh (k h) \big)$, $h = 2^{-n}$ | no | — | $n \ge 1$ |
 
 The two orders quoted for the Chebyshev-based rules are for an even and an odd number of
 nodes respectively; these rules integrate one additional degree exactly when `s` is odd.
 Every order in the table is sharp, so rules that coincide agree in their order too:
 `ClenshawCurtisQuadrature(3) == LobattoLegendreQuadrature(3)` and
 `GaussChebyshevQuadrature(1) == MidpointQuadrature()`.
+
+The dash in the last row is not an omission. Tanh-sinh is the one rule here with no degree of
+exactness whatever, so [`order`](@ref) reports `0` and its accuracy is described by the
+convergence rate discussed above instead. It also differs in taking a level `n` rather than a
+node count `s`; the number of nodes follows from the truncation and grows like $2^n$.
 
 Not provided: Radau rules, which fix one endpoint, and Fejér's second rule, the
 interpolatory rule on the Chebyshev extrema *excluding* the endpoints.

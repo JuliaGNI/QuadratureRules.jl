@@ -79,6 +79,7 @@ as well as functions for generating quadrature rules with an arbitrary number of
 - [`GaussLegendreQuadrature`](@ref)
 - [`LobattoChebyshevQuadrature`](@ref)
 - [`LobattoLegendreQuadrature`](@ref)
+- [`TanhSinhQuadrature`](@ref)
 
 Each generated rule accepts the number of nodes `s` and, optionally, the element type of
 the resulting rule:
@@ -99,6 +100,16 @@ weights directly from
 in double precision:
 ```jldoctest intro
 julia> GaussLegendreQuadrature(5) ≈ GaussLegendreQuadrature(5; fast=true)
+true
+```
+
+[`TanhSinhQuadrature`](@ref) is the exception to both statements. It is the trapezoidal rule
+after a double-exponential change of variables, so its argument is a refinement level `n`
+rather than a number of nodes — the latter follows from the level and the precision — and it
+has no polynomial degree of exactness, its [`order`](@ref) being reported as `0`. What it
+offers instead is an integrand singular at either endpoint:
+```jldoctest intro
+julia> TanhSinhQuadrature(3)(x -> log(x)) ≈ -1     # ∫₀¹ log x dx
 true
 ```
 
@@ -124,8 +135,9 @@ julia> gauss_legendre_nodes(2)
 
 These exist for all rules, i.e., as [`gauss_legendre_points`](@ref),
 [`lobatto_legendre_points`](@ref), [`chebyshev_points`](@ref),
-[`gauss_chebyshev_points`](@ref), [`lobatto_chebyshev_points`](@ref) and
-[`clenshaw_curtis_points`](@ref), together with the corresponding `*_nodes` functions.
+[`gauss_chebyshev_points`](@ref), [`lobatto_chebyshev_points`](@ref),
+[`clenshaw_curtis_points`](@ref) and [`tanh_sinh_points`](@ref), together with the
+corresponding `*_nodes` functions.
 
 
 ## References
