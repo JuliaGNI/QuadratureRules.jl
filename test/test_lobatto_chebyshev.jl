@@ -1,5 +1,5 @@
 import FastTransforms
-import QuadratureRules: shift_nodes
+import QuadratureRules: chebyshev_points, shift_nodes
 
 @testset "$(rpad("Lobatto-Chebyshev",80))" begin
 
