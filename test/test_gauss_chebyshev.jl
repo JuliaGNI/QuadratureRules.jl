@@ -39,6 +39,17 @@ import QuadratureRules: shift_nodes, unshift_nodes
             end
         end
 
+        # the IT keyword selects the working precision; all choices must agree
+        @test GaussChebyshevQuadrature(Float64, s; IT=Float64) ≈ GaussChebyshevQuadrature(s)
+        @test ChebyshevQuadrature(Float64, s, Val(1); IT=Float64) ≈ ChebyshevQuadrature(s, 1)
+        @test eltype(GaussChebyshevQuadrature(Float32, s; IT=Float32)) == Float32
+
     end
+
+    # keyword arguments are forwarded to the selected rule rather than swallowed,
+    # so that an unsupported keyword is reported instead of silently ignored
+    @test_throws MethodError ChebyshevQuadrature(4, 1; nosuchkeyword=1)
+    @test_throws MethodError ChebyshevQuadrature(4, 2; nosuchkeyword=1)
+    @test_throws MethodError GaussChebyshevQuadrature(4; nosuchkeyword=1)
 
 end

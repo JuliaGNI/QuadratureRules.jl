@@ -271,6 +271,9 @@ order(quad)
 quad(x -> x^4)
 ```
 
+Its weight sum is $O(s^2)$ just as for Clenshaw-Curtis, so the same `IT=Float64` remark
+applies; see [Cost](@ref) below.
+
 
 ## Clenshaw-Curtis quadrature
 

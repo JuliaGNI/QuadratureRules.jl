@@ -124,8 +124,8 @@ lobatto_chebyshev_nodes(::Type{T}, s::Integer) where {T} = chebyshev_nodes(T, s,
 lobatto_chebyshev_nodes(s) = lobatto_chebyshev_nodes(Float64, s)
 
 @doc raw"""
-    GaussChebyshevQuadrature(s)
-    GaussChebyshevQuadrature(T, s)
+    GaussChebyshevQuadrature(s; IT=BigFloat)
+    GaussChebyshevQuadrature(T, s; IT=BigFloat)
 
 The Gauss-Chebyshev quadrature rule with `s` nodes on the interval ``[0,1]``, also known
 as **Fejér's first rule**.
@@ -151,6 +151,13 @@ it gains one further degree by symmetry. All weights are positive.
     approximates the *unweighted* integral ``\int_0^1 f(x) \, dx``, which is what
     [`QuadratureRule`](@ref) evaluates, and is therefore only exact to degree ``s-1``.
 
+# Arguments
+- `T`: element type of the resulting rule, `Float64` if omitted.
+- `s`: number of nodes.
+- `IT`: arithmetic in which nodes and weights are computed, `BigFloat` by default. As for
+  [`ClenshawCurtisQuadrature`](@ref), the weight sum costs ``O(s^2)`` operations, so
+  `IT=Float64` is substantially faster when `T` is `Float64` anyway.
+
 ```jldoctest
 julia> quad = GaussChebyshevQuadrature(3);
 
@@ -163,25 +170,22 @@ julia> quad(x -> x^2)
 
 See also [`ClenshawCurtisQuadrature`](@ref) and [`ChebyshevQuadrature`](@ref).
 """
-function GaussChebyshevQuadrature(::Type{T}, s::Integer) where {T}
-    local tj::BigFloat = 0
-    local th::BigFloat = 0
-
-    c = chebyshev_nodes(BigFloat, s, Val(1))
+function GaussChebyshevQuadrature(::Type{T}, s::Integer; IT=BigFloat) where {T}
+    c = chebyshev_nodes(IT, s, Val(1))
     b = zero(c)
     for i in eachindex(b)
-        tj = 0
-        th = @big π * (2i-1) / (2s)
+        tj = zero(IT)
+        th = IT(π) * (2i-1) / (2s)
         for j in 1:div(s,2)
-            tj += @big cos(2j*th) / (4j^2 - 1)
+            tj += cos(2j*th) / IT(4j^2 - 1)
         end
-        b[i] = @big (1 - 2tj) / s
+        b[i] = (1 - 2tj) / IT(s)
     end
 
     QuadratureRule(s, c, b, T)
 end
 
-GaussChebyshevQuadrature(s) = GaussChebyshevQuadrature(Float64, s)
+GaussChebyshevQuadrature(s; kwargs...) = GaussChebyshevQuadrature(Float64, s; kwargs...)
 
 
 @doc raw"""
@@ -228,15 +232,22 @@ dispatching on the kind of the Chebyshev points:
 - `kind = 1` gives [`GaussChebyshevQuadrature`](@ref), i.e., Fejér's first rule,
 - `kind = 2` gives [`LobattoChebyshevQuadrature`](@ref), i.e., the Clenshaw-Curtis rule.
 
+Keyword arguments are forwarded to the selected rule; both accept `IT`, the arithmetic in
+which nodes and weights are computed. An unsupported keyword raises a `MethodError` rather
+than being silently ignored.
+
 ```jldoctest
 julia> ChebyshevQuadrature(4, 1) == GaussChebyshevQuadrature(4)
 true
 
 julia> ChebyshevQuadrature(4, 2) == LobattoChebyshevQuadrature(4)
 true
+
+julia> ChebyshevQuadrature(8, 1; IT=Float64) ≈ ChebyshevQuadrature(8, 1)
+true
 ```
 """
-ChebyshevQuadrature(::Type{T}, s::Integer, ::Val{1}; kwargs...) where {T} = GaussChebyshevQuadrature(T, s)
+ChebyshevQuadrature(::Type{T}, s::Integer, ::Val{1}; kwargs...) where {T} = GaussChebyshevQuadrature(T, s; kwargs...)
 ChebyshevQuadrature(::Type{T}, s::Integer, ::Val{2}; kwargs...) where {T} = LobattoChebyshevQuadrature(T, s; kwargs...)
 
 ChebyshevQuadrature(s, kind; kwargs...) = ChebyshevQuadrature(Float64, s, Val(kind); kwargs...)
