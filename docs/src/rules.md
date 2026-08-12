@@ -218,7 +218,7 @@ see that the remaining $s-1$ roots are the right ones, note that
 \frac{P_{s-1} (x) + P_s (x)}{1 + x} \; \propto \; P^{(0,1)}_{s-1} (x) ,
 ```
 
-the Jacobi polynomial for the weight $1-x$ on $[-1,+1]$. Its roots are precisely the free
+the Jacobi polynomial for the weight $1+x$ on $[-1,+1]$. Its roots are precisely the free
 nodes of the Gauss rule for that weight, which is what remains after the factor $1+x$ has
 absorbed the prescribed endpoint — exactly the construction
 `FastGaussQuadrature.gaussradau` performs, and the reason $R$ recovers the whole node set

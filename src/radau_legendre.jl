@@ -15,7 +15,7 @@ Which endpoint is prescribed is selected by `endpoint`:
 The left points are the ``s`` roots of ``P_{s-1} + P_s``, one of which is exactly ``-1``.
 They are Newton-refined in the arithmetic `IT` starting from the double precision
 approximations of `FastGaussQuadrature.gaussradau`, and the prescribed endpoint is then set
-to exactly ``\mp 1``. The right points are obtained by reflection, ``x \mapsto -x``, which
+to exactly ``-1``. The right points are obtained by reflection, ``x \mapsto -x``, which
 makes the two variants exact mirror images of each other.
 
 There is deliberately no default for `endpoint`: the two variants are not interchangeable,
