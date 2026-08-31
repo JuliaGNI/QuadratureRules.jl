@@ -1,0 +1,71 @@
+# Symbolic tests, in their own workflow rather than as a second job in CI.yml.
+#
+# CI.yml is byte-identical in all 37 repositories under Packages/ and Experiments/ — that is what
+# makes the required-status-check list static and keeps branch protection from silently going stale.
+# A repository that needs an extra job therefore gets an extra file, never a local edit to CI.yml.
+# See ~/Research/Knowledge/AI/githooks/install-workflows.sh.
+#
+# WHY THESE TESTS ARE NOT IN THE TEST TARGET.
+#
+# SymPyPythonCall provisions a private Python environment with sympy on first use, which the test
+# matrix would pay for in every one of its six entries. They run here instead, once, in the
+# environment of test/symbolic/Project.toml.
+#
+# Coverage IS collected here, unlike anywhere else outside CI.yml's single instrumented entry: the
+# exact branch of the root find and the tanh-sinh guard are reached from these tests alone, so
+# dropping this upload would lose real coverage rather than a duplicate report. Codecov merges the
+# reports of all jobs of a commit.
+#
+# This job is deliberately NOT a required status check — its name does not begin with `Julia `.
+
+name: Symbolic
+
+on:
+    push:
+        branches:
+            - main
+        tags: ["*"]
+    pull_request:
+    workflow_dispatch:
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
+
+jobs:
+    symbolic:
+        name: Symbolic - Julia ${{ matrix.version }} - ${{ matrix.os }}
+        runs-on: ${{ matrix.os }}
+        timeout-minutes: 60
+        permissions:
+            actions: write
+            contents: read
+        strategy:
+            fail-fast: false
+            matrix:
+                version:
+                    - "min"
+                    - "1"
+                os:
+                    - ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7
+            - uses: julia-actions/setup-julia@v3
+              with:
+                  version: ${{ matrix.version }}
+            - uses: julia-actions/cache@v3
+            - name: Instantiate the symbolic test environment
+              run: |
+                  julia --project=test/symbolic -e '
+                    using Pkg
+                    Pkg.develop(PackageSpec(path = pwd()))
+                    Pkg.instantiate()
+                    Pkg.precompile()'
+            - name: Run the symbolic tests
+              run: julia --project=test/symbolic --code-coverage=user test/test_symbolic.jl
+            - uses: julia-actions/julia-processcoverage@v1
+            - uses: codecov/codecov-action@v7
+              with:
+                  files: lcov.info
+                  token: ${{ secrets.CODECOV_TOKEN }}
+                  fail_ci_if_error: false
