@@ -34,7 +34,7 @@ union of the level grids is exactly the multiples of ``2^{-n}`` below that thres
 as it is the rounding in `T` that decides where the infinite sum is cut off. So must `IT`,
 which is not checked, since every candidate is rounded from `IT` to `T` along the way.
 """
-function _tanh_sinh(::Type{T}, n::Integer; IT=BigFloat) where {T}
+function _tanh_sinh(::Type{T}, n::Integer; IT = BigFloat) where {T}
     if n < 1
         throw(ErrorException("Tanh-Sinh quadrature is not defined for less than one level."))
     end
@@ -54,8 +54,8 @@ function _tanh_sinh(::Type{T}, n::Integer; IT=BigFloat) where {T}
     k = 1
 
     while true
-        t  = k * h
-        u  = IT(π) / 2 * sinh(t)
+        t = k * h
+        u = IT(π) / 2 * sinh(t)
         δₖ = inv(1 + exp(2u))
         bₖ = IT(π) / 4 * h * cosh(t) / cosh(u)^2
 
@@ -65,7 +65,7 @@ function _tanh_sinh(::Type{T}, n::Integer; IT=BigFloat) where {T}
         (iszero(T(bₖ)) || iszero(T(δₖ)) || isone(T(1 - δₖ)) || isone(T(1 - 2δₖ))) && break
 
         if !isempty(d) && (T(δₖ) == T(d[end]) || T(1 - δₖ) == T(1 - d[end]) ||
-                           T(2δₖ - 1) == T(2 * d[end] - 1))
+            T(2δₖ - 1) == T(2 * d[end] - 1))
             # The pair is indistinguishable from its predecessor in T. Adding its weight to
             # that pair leaves the quadrature sum and the weight sum unchanged, and keeps
             # the rule strictly monotone in T. Doing it pairwise preserves the symmetry.
@@ -83,7 +83,6 @@ function _tanh_sinh(::Type{T}, n::Integer; IT=BigFloat) where {T}
 
     return c, w
 end
-
 
 @doc raw"""
     tanh_sinh_nodes(n; kwargs...)
@@ -147,9 +146,9 @@ julia> x == -reverse(x)
 true
 ```
 """
-function tanh_sinh_nodes(::Type{T}, n::Integer; IT=BigFloat,
-                         interval::QuadratureInterval=UnitInterval()) where {T}
-    c, _ = _tanh_sinh(T, n; IT=IT)
+function tanh_sinh_nodes(::Type{T}, n::Integer; IT = BigFloat,
+        interval::QuadratureInterval = UnitInterval()) where {T}
+    c, _ = _tanh_sinh(T, n; IT = IT)
     T.(_nodes_from_unit(c, interval))
 end
 
@@ -190,14 +189,13 @@ julia> isapprox(sum(tanh_sinh_weights(1; interval = SymmetricInterval())), 2; at
 true
 ```
 """
-function tanh_sinh_weights(::Type{T}, n::Integer; IT=BigFloat,
-                           interval::QuadratureInterval=UnitInterval()) where {T}
-    _, b = _tanh_sinh(T, n; IT=IT)
+function tanh_sinh_weights(::Type{T}, n::Integer; IT = BigFloat,
+        interval::QuadratureInterval = UnitInterval()) where {T}
+    _, b = _tanh_sinh(T, n; IT = IT)
     T.(_weights_from_unit(b, interval))
 end
 
 tanh_sinh_weights(n; kwargs...) = tanh_sinh_weights(Float64, n; kwargs...)
-
 
 @doc raw"""
     TanhSinhQuadrature(n; IT=BigFloat)
@@ -292,8 +290,8 @@ See also [`tanh_sinh_nodes`](@ref) and [`tanh_sinh_weights`](@ref) for the nodes
 alone, and [`GaussLegendreQuadrature`](@ref), which is the better choice for an integrand that
 is smooth up to and including the endpoints.
 """
-function TanhSinhQuadrature(::Type{T}, n::Integer; IT=BigFloat) where {T}
-    c, b = _tanh_sinh(T, n; IT=IT)
+function TanhSinhQuadrature(::Type{T}, n::Integer; IT = BigFloat) where {T}
+    c, b = _tanh_sinh(T, n; IT = IT)
 
     QuadratureRule(0, c, b, T)
 end

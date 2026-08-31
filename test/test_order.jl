@@ -6,11 +6,11 @@
     # suffices to test the monomials, and since the nodes lie in [0,1] the k-th moment
     # is 1/(k+1). Everything is evaluated in BigFloat so that the two assertions below
     # separate the property of the rule from the round-off of the arithmetic.
-    moment(quad, k) = sum(weights(quad) .* nodes(quad).^k)
+    moment(quad, k) = sum(weights(quad) .* nodes(quad) .^ k)
 
-    exact_to(quad, k)  = isapprox(moment(quad, k), 1 / BigFloat(k+1), atol = 1E-60)
-    exact_upto(quad)   = all(exact_to(quad, k) for k in 0:order(quad)-1)
-    sharp(quad)        = !exact_to(quad, order(quad))
+    exact_to(quad, k) = isapprox(moment(quad, k), 1 / BigFloat(k+1), atol = 1E-60)
+    exact_upto(quad) = all(exact_to(quad, k) for k in 0:(order(quad) - 1))
+    sharp(quad) = !exact_to(quad, order(quad))
 
     # the second assertion is the one that pins the order down. Without it an
     # understated order passes unnoticed, which is how the Chebyshev rules came to
@@ -20,14 +20,12 @@
         @test sharp(quad)
     end
 
-
     @testset "$(rpad("tabulated rules",60))" begin
         for quadrature in (RiemannQuadratureLeft, RiemannQuadratureRight,
-                           MidpointQuadrature, TrapezoidalQuadrature)
+            MidpointQuadrature, TrapezoidalQuadrature)
             test_order(quadrature(BigFloat))
         end
     end
-
 
     @testset "$(rpad("generated rules",60))" begin
         for s in 2:12
@@ -47,30 +45,28 @@
         test_order(RadauLegendreQuadrature(BigFloat, 1, Val(:right)))
     end
 
-
     @testset "$(rpad("reported orders",60))" begin
         for s in 2:12
-            @test order(GaussLegendreQuadrature(s))     == 2s
-            @test order(LobattoLegendreQuadrature(s))   == 2s-2
+            @test order(GaussLegendreQuadrature(s)) == 2s
+            @test order(LobattoLegendreQuadrature(s)) == 2s-2
 
             # Radau prescribes one endpoint, so it sits halfway between the Gauss
             # rules, which prescribe none, and the Lobatto rules, which prescribe both
-            @test order(RadauLegendreQuadrature(s, :left))  == 2s-1
+            @test order(RadauLegendreQuadrature(s, :left)) == 2s-1
             @test order(RadauLegendreQuadrature(s, :right)) == 2s-1
 
             # the Chebyshev rules pick up one degree for an odd number of nodes,
             # because the monomial of degree s they would otherwise fail on is odd
             # about the midpoint of the interval
-            @test order(ClenshawCurtisQuadrature(s))    == (isodd(s) ? s+1 : s)
-            @test order(GaussChebyshevQuadrature(s))    == (isodd(s) ? s+1 : s)
-            @test order(LobattoChebyshevQuadrature(s))  == (isodd(s) ? s+1 : s)
+            @test order(ClenshawCurtisQuadrature(s)) == (isodd(s) ? s+1 : s)
+            @test order(GaussChebyshevQuadrature(s)) == (isodd(s) ? s+1 : s)
+            @test order(LobattoChebyshevQuadrature(s)) == (isodd(s) ? s+1 : s)
         end
 
         @test order(GaussChebyshevQuadrature(1)) == 2
-        @test order(RadauLegendreQuadrature(1, :left))  == 1
+        @test order(RadauLegendreQuadrature(1, :left)) == 1
         @test order(RadauLegendreQuadrature(1, :right)) == 1
     end
-
 
     # Tanh-sinh is the one rule in the package without a degree of exactness. It is the
     # trapezoidal rule after a change of variables, not an interpolatory rule, and its
@@ -83,7 +79,7 @@
             quad = TanhSinhQuadrature(BigFloat, n)
 
             @test order(quad) == 0
-            @test moment(quad, 0) ≈ 1  atol = 1E-5
+            @test moment(quad, 0) ≈ 1 atol = 1E-5
 
             # Never exact, however close it gets — but only asserted while the truncation
             # error is still above the round-off of the moment sum. From level 5 the two are
@@ -99,22 +95,21 @@
         end
     end
 
-
     # Because the order is sharp, a rule is determined by its nodes and weights alone,
     # so rules that coincide compare equal even across families. An interpolatory rule
     # is uniquely determined by its nodes, and these node sets agree exactly.
     @testset "$(rpad("rules that coincide",60))" begin
-        @test ClenshawCurtisQuadrature(2)   == TrapezoidalQuadrature()
-        @test ClenshawCurtisQuadrature(2)   == LobattoLegendreQuadrature(2)
-        @test ClenshawCurtisQuadrature(3)   == LobattoLegendreQuadrature(3)   # Simpson's
+        @test ClenshawCurtisQuadrature(2) == TrapezoidalQuadrature()
+        @test ClenshawCurtisQuadrature(2) == LobattoLegendreQuadrature(2)
+        @test ClenshawCurtisQuadrature(3) == LobattoLegendreQuadrature(3)   # Simpson's
         @test LobattoChebyshevQuadrature(3) == LobattoLegendreQuadrature(3)
 
-        @test GaussChebyshevQuadrature(1)   == MidpointQuadrature()
-        @test GaussChebyshevQuadrature(1)   == GaussLegendreQuadrature(1)
-        @test MidpointQuadrature()          == GaussLegendreQuadrature(1)
+        @test GaussChebyshevQuadrature(1) == MidpointQuadrature()
+        @test GaussChebyshevQuadrature(1) == GaussLegendreQuadrature(1)
+        @test MidpointQuadrature() == GaussLegendreQuadrature(1)
 
         # a one-node Radau rule is its prescribed endpoint carrying the whole weight
-        @test RadauLegendreQuadrature(1, :left)  == RiemannQuadratureLeft()
+        @test RadauLegendreQuadrature(1, :left) == RiemannQuadratureLeft()
         @test RadauLegendreQuadrature(1, :right) == RiemannQuadratureRight()
 
         for T in (Float32, Float64)
@@ -128,12 +123,13 @@
         # on 1/6 exactly, whereas the Clenshaw-Curtis cosine sum is one ulp below it.
         # This is the IT = T degradation that test_precision.jl quantifies, and it is why
         # BigFloat is the default working precision for the narrower element types.
-        let cc = ClenshawCurtisQuadrature(BigFloat, 3), ll = LobattoLegendreQuadrature(BigFloat, 3)
+        let cc = ClenshawCurtisQuadrature(BigFloat, 3),
+            ll = LobattoLegendreQuadrature(BigFloat, 3)
+
             @test order(cc) == order(ll)
             @test nodes(cc) == nodes(ll)
-            @test weights(cc) ≈ weights(ll)  atol = 2eps(big(1)/6)
+            @test weights(cc) ≈ weights(ll) atol = 2eps(big(1)/6)
             @test weights(ll) == [big(1)/6, big(2)/3, big(1)/6]
         end
     end
-
 end

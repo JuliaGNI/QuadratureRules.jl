@@ -1,7 +1,7 @@
 # The Chebyshev nodes of the given kind on [-1,+1], in their own arithmetic. Both are
 # generated in reverse index order so that the result is ascending.
 function _chebyshev_nodes(s, ::Val{1}, IT)
-    [ sin( IT(π) * (s-2i+1) / (2s) ) for i in s:-1:1 ]
+    [sin(IT(π) * (s-2i+1) / (2s)) for i in s:-1:1]
 end
 
 function _chebyshev_nodes(s, ::Val{2}, IT)
@@ -9,7 +9,7 @@ function _chebyshev_nodes(s, ::Val{2}, IT)
         throw(ErrorException("Chebyshev points of the second kind are not defined for one point."))
     end
 
-    [ cos( IT(π) * (i-1) / (s-1) ) for i in s:-1:1 ]
+    [cos(IT(π) * (i-1) / (s-1)) for i in s:-1:1]
 end
 
 @doc raw"""
@@ -68,8 +68,8 @@ julia> chebyshev_nodes(3, 1; interval = SymmetricInterval())
   0.8660254037844386
 ```
 """
-function chebyshev_nodes(::Type{T}, s::Integer, kind::Val; IT=_default_arithmetic(T),
-                         interval::QuadratureInterval=UnitInterval()) where {T}
+function chebyshev_nodes(::Type{T}, s::Integer, kind::Val; IT = _default_arithmetic(T),
+        interval::QuadratureInterval = UnitInterval()) where {T}
     T.(_nodes_from_symmetric(_chebyshev_nodes(s, kind, IT), interval))
 end
 
@@ -82,7 +82,7 @@ function _chebyshev_weights(s, ::Val{1}, IT)
     for i in eachindex(b)
         tj = zero(IT)
         th = IT(π) * (2i-1) / (2s)
-        for j in 1:div(s,2)
+        for j in 1:div(s, 2)
             tj += cos(2j*th) / IT(4j^2 - 1)
         end
         b[i] = (1 - 2tj) / IT(s)
@@ -131,13 +131,12 @@ julia> chebyshev_weights(3, 1; interval = SymmetricInterval())
  0.4444444444444444
 ```
 """
-function chebyshev_weights(::Type{T}, s::Integer, kind::Val; IT=_default_arithmetic(T),
-                           interval::QuadratureInterval=UnitInterval()) where {T}
+function chebyshev_weights(::Type{T}, s::Integer, kind::Val; IT = _default_arithmetic(T),
+        interval::QuadratureInterval = UnitInterval()) where {T}
     T.(_weights_from_unit(_chebyshev_weights(s, kind, IT), interval))
 end
 
 chebyshev_weights(s, kind; kwargs...) = chebyshev_weights(Float64, s, Val(kind); kwargs...)
-
 
 """
     gauss_chebyshev_nodes(s; kwargs...)
@@ -148,7 +147,9 @@ The `s` Gauss-Chebyshev nodes, i.e., the Chebyshev nodes of the first kind, cf.
 
 On the unit interval these are the nodes of [`GaussChebyshevQuadrature`](@ref).
 """
-gauss_chebyshev_nodes(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_nodes(T, s, Val(1); kwargs...)
+function gauss_chebyshev_nodes(::Type{T}, s::Integer; kwargs...) where {T}
+    chebyshev_nodes(T, s, Val(1); kwargs...)
+end
 gauss_chebyshev_nodes(s; kwargs...) = gauss_chebyshev_nodes(Float64, s; kwargs...)
 
 """
@@ -160,7 +161,9 @@ The `s` Gauss-Chebyshev weights, i.e., the weights of Fejér's first rule, cf.
 
 On the unit interval these are the weights of [`GaussChebyshevQuadrature`](@ref).
 """
-gauss_chebyshev_weights(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_weights(T, s, Val(1); kwargs...)
+function gauss_chebyshev_weights(::Type{T}, s::Integer; kwargs...) where {T}
+    chebyshev_weights(T, s, Val(1); kwargs...)
+end
 gauss_chebyshev_weights(s; kwargs...) = gauss_chebyshev_weights(Float64, s; kwargs...)
 
 """
@@ -175,7 +178,9 @@ These nodes coincide with [`clenshaw_curtis_nodes`](@ref), and correspondingly
 
 Requires `s ≥ 2`.
 """
-lobatto_chebyshev_nodes(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_nodes(T, s, Val(2); kwargs...)
+function lobatto_chebyshev_nodes(::Type{T}, s::Integer; kwargs...) where {T}
+    chebyshev_nodes(T, s, Val(2); kwargs...)
+end
 lobatto_chebyshev_nodes(s; kwargs...) = lobatto_chebyshev_nodes(Float64, s; kwargs...)
 
 """
@@ -190,7 +195,9 @@ weights of [`LobattoChebyshevQuadrature`](@ref).
 
 Requires `s ≥ 2`.
 """
-lobatto_chebyshev_weights(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_weights(T, s, Val(2); kwargs...)
+function lobatto_chebyshev_weights(::Type{T}, s::Integer; kwargs...) where {T}
+    chebyshev_weights(T, s, Val(2); kwargs...)
+end
 lobatto_chebyshev_weights(s; kwargs...) = lobatto_chebyshev_weights(Float64, s; kwargs...)
 
 @doc raw"""
@@ -247,7 +254,7 @@ true
 
 See also [`ClenshawCurtisQuadrature`](@ref) and [`ChebyshevQuadrature`](@ref).
 """
-function GaussChebyshevQuadrature(::Type{T}, s::Integer; IT=_default_arithmetic(T)) where {T}
+function GaussChebyshevQuadrature(::Type{T}, s::Integer; IT = _default_arithmetic(T)) where {T}
     c = _nodes_from_symmetric(_chebyshev_nodes(s, Val(1), IT), UnitInterval())
     b = _chebyshev_weights(s, Val(1), IT)
 
@@ -255,7 +262,6 @@ function GaussChebyshevQuadrature(::Type{T}, s::Integer; IT=_default_arithmetic(
 end
 
 GaussChebyshevQuadrature(s; kwargs...) = GaussChebyshevQuadrature(Float64, s; kwargs...)
-
 
 @doc raw"""
     LobattoChebyshevQuadrature(s; IT=BigFloat)
@@ -280,16 +286,15 @@ julia> LobattoChebyshevQuadrature(3)
 QuadratureRule{Float64, 3}(4, [0.0, 0.5, 1.0], [0.16666666666666666, 0.6666666666666666, 0.16666666666666666])
 ```
 """
-function LobattoChebyshevQuadrature(::Type{T}, s::Integer; IT=_default_arithmetic(T)) where {T}
+function LobattoChebyshevQuadrature(::Type{T}, s::Integer; IT = _default_arithmetic(T)) where {T}
     if s == 1
         throw(ErrorException("Lobatto-Chebyshev quadrature is not defined for one stage."))
     end
 
-    ClenshawCurtisQuadrature(T, s; IT=IT)
+    ClenshawCurtisQuadrature(T, s; IT = IT)
 end
 
 LobattoChebyshevQuadrature(s; kwargs...) = LobattoChebyshevQuadrature(Float64, s; kwargs...)
-
 
 """
     ChebyshevQuadrature(s, kind; kwargs...)
@@ -316,7 +321,13 @@ julia> ChebyshevQuadrature(8, 1; IT=Float64) ≈ ChebyshevQuadrature(8, 1)
 true
 ```
 """
-ChebyshevQuadrature(::Type{T}, s::Integer, ::Val{1}; kwargs...) where {T} = GaussChebyshevQuadrature(T, s; kwargs...)
-ChebyshevQuadrature(::Type{T}, s::Integer, ::Val{2}; kwargs...) where {T} = LobattoChebyshevQuadrature(T, s; kwargs...)
+function ChebyshevQuadrature(::Type{T}, s::Integer, ::Val{1}; kwargs...) where {T}
+    GaussChebyshevQuadrature(T, s; kwargs...)
+end
+function ChebyshevQuadrature(::Type{T}, s::Integer, ::Val{2}; kwargs...) where {T}
+    LobattoChebyshevQuadrature(T, s; kwargs...)
+end
 
-ChebyshevQuadrature(s, kind; kwargs...) = ChebyshevQuadrature(Float64, s, Val(kind); kwargs...)
+function ChebyshevQuadrature(s, kind; kwargs...)
+    ChebyshevQuadrature(Float64, s, Val(kind); kwargs...)
+end

@@ -2,7 +2,6 @@ import FastTransforms
 import QuadratureRules: scale_weights, unscale_weights, shift_nodes, unshift_nodes
 
 @testset "$(rpad("Clenshaw-Curtis",80))" begin
-
     @test_throws ErrorException ClenshawCurtisQuadrature(1)
     @test_throws ErrorException clenshaw_curtis_weights(1)
     @test_throws ErrorException clenshaw_curtis_weights(1; interval = SymmetricInterval())
@@ -16,11 +15,10 @@ import QuadratureRules: scale_weights, unscale_weights, shift_nodes, unshift_nod
         # an s-node interpolatory rule integrates polynomials up to degree s-1 exactly,
         # and one degree further for odd s; see test_order.jl
         let q = ClenshawCurtisQuadrature(BigFloat, s)
-            for k in 0:order(q)-1
-                @test sum(weights(q) .* nodes(q).^k) ≈ 1 / BigFloat(k+1)  atol=1E-60
+            for k in 0:(order(q) - 1)
+                @test sum(weights(q) .* nodes(q) .^ k) ≈ 1 / BigFloat(k+1) atol=1E-60
             end
         end
-
 
         μ = FastTransforms.chebyshevmoments1(Float64, s)
         b = scale_weights(reverse(FastTransforms.clenshawcurtisweights(μ)))
@@ -33,28 +31,40 @@ import QuadratureRules: scale_weights, unscale_weights, shift_nodes, unshift_nod
 
         # both compute the nodes in the working precision IT and round to T, so
         # they agree exactly and not merely approximately
-        @test clenshaw_curtis_nodes(Float64, s)  ==  nodes(ClenshawCurtisQuadrature(s))
-        @test clenshaw_curtis_nodes(Float32, s)  ==  nodes(ClenshawCurtisQuadrature(Float32, s))
-        @test clenshaw_curtis_nodes(Float64, s; IT=Float64) == nodes(ClenshawCurtisQuadrature(Float64, s; IT=Float64))
-        @test clenshaw_curtis_nodes(BigFloat, s) == nodes(ClenshawCurtisQuadrature(BigFloat, s))
-        @test clenshaw_curtis_nodes(Float64, s; interval = SymmetricInterval()) ≈ reverse(FastTransforms.clenshawcurtisnodes(Float64, s))
-        @test unshift_nodes(clenshaw_curtis_nodes(Float64, s)) ≈ clenshaw_curtis_nodes(Float64, s; interval = SymmetricInterval())
+        @test clenshaw_curtis_nodes(Float64, s) == nodes(ClenshawCurtisQuadrature(s))
+        @test clenshaw_curtis_nodes(Float32, s) ==
+              nodes(ClenshawCurtisQuadrature(Float32, s))
+        @test clenshaw_curtis_nodes(Float64, s; IT = Float64) ==
+              nodes(ClenshawCurtisQuadrature(Float64, s; IT = Float64))
+        @test clenshaw_curtis_nodes(BigFloat, s) ==
+              nodes(ClenshawCurtisQuadrature(BigFloat, s))
+        @test clenshaw_curtis_nodes(Float64, s; interval = SymmetricInterval()) ≈
+              reverse(FastTransforms.clenshawcurtisnodes(Float64, s))
+        @test unshift_nodes(clenshaw_curtis_nodes(Float64, s)) ≈
+              clenshaw_curtis_nodes(Float64, s; interval = SymmetricInterval())
 
-        @test clenshaw_curtis_nodes(s; interval = SymmetricInterval()) == clenshaw_curtis_nodes(Float64, s; interval = SymmetricInterval())
-        @test clenshaw_curtis_nodes(s)  == clenshaw_curtis_nodes(Float64, s)
+        @test clenshaw_curtis_nodes(s; interval = SymmetricInterval()) ==
+              clenshaw_curtis_nodes(Float64, s; interval = SymmetricInterval())
+        @test clenshaw_curtis_nodes(s) == clenshaw_curtis_nodes(Float64, s)
 
         # the same holds for the weights, which are primary on [0,1] here
         @test clenshaw_curtis_weights(Float64, s) ≈ b
-        @test clenshaw_curtis_weights(Float64, s)  ==  weights(ClenshawCurtisQuadrature(s))
-        @test clenshaw_curtis_weights(Float32, s)  ==  weights(ClenshawCurtisQuadrature(Float32, s))
-        @test clenshaw_curtis_weights(Float64, s; IT=Float64) == weights(ClenshawCurtisQuadrature(Float64, s; IT=Float64))
-        @test clenshaw_curtis_weights(BigFloat, s) == weights(ClenshawCurtisQuadrature(BigFloat, s))
+        @test clenshaw_curtis_weights(Float64, s) == weights(ClenshawCurtisQuadrature(s))
+        @test clenshaw_curtis_weights(Float32, s) ==
+              weights(ClenshawCurtisQuadrature(Float32, s))
+        @test clenshaw_curtis_weights(Float64, s; IT = Float64) ==
+              weights(ClenshawCurtisQuadrature(Float64, s; IT = Float64))
+        @test clenshaw_curtis_weights(BigFloat, s) ==
+              weights(ClenshawCurtisQuadrature(BigFloat, s))
 
-        @test clenshaw_curtis_weights(s)       == clenshaw_curtis_weights(Float64, s)
-        @test clenshaw_curtis_weights(s; interval = SymmetricInterval()) == clenshaw_curtis_weights(Float64, s; interval = SymmetricInterval())
+        @test clenshaw_curtis_weights(s) == clenshaw_curtis_weights(Float64, s)
+        @test clenshaw_curtis_weights(s; interval = SymmetricInterval()) ==
+              clenshaw_curtis_weights(Float64, s; interval = SymmetricInterval())
 
-        @test unscale_weights(clenshaw_curtis_weights(BigFloat, s)) == clenshaw_curtis_weights(BigFloat, s; interval = SymmetricInterval())
-        @test scale_weights(clenshaw_curtis_weights(Float64, s; interval = SymmetricInterval())) ≈ clenshaw_curtis_weights(Float64, s)
+        @test unscale_weights(clenshaw_curtis_weights(BigFloat, s)) ==
+              clenshaw_curtis_weights(BigFloat, s; interval = SymmetricInterval())
+        @test scale_weights(clenshaw_curtis_weights(Float64, s; interval = SymmetricInterval())) ≈
+              clenshaw_curtis_weights(Float64, s)
         @test sum(clenshaw_curtis_weights(Float64, s; interval = SymmetricInterval())) ≈ 2
 
         # all Clenshaw-Curtis weights are positive (Imhof, 1963); this is what
@@ -62,9 +72,11 @@ import QuadratureRules: scale_weights, unscale_weights, shift_nodes, unshift_nod
         @test all(w -> w > 0, weights(ClenshawCurtisQuadrature(s)))
 
         # the IT keyword selects the working precision; all choices must agree
-        @test ClenshawCurtisQuadrature(Float64, s; IT=Float64) ≈ ClenshawCurtisQuadrature(s)
-        @test LobattoChebyshevQuadrature(Float64, s; IT=Float64) ≈ LobattoChebyshevQuadrature(s)
-        @test eltype(ClenshawCurtisQuadrature(Float32, s; IT=Float32)) == Float32
+        @test ClenshawCurtisQuadrature(Float64, s; IT = Float64) ≈
+              ClenshawCurtisQuadrature(s)
+        @test LobattoChebyshevQuadrature(Float64, s; IT = Float64) ≈
+              LobattoChebyshevQuadrature(s)
+        @test eltype(ClenshawCurtisQuadrature(Float32, s; IT = Float32)) == Float32
     end
 
     # Reid's explicit closed form for the weights on [-1,+1] for even N (N = s-1),
@@ -73,10 +85,10 @@ import QuadratureRules: scale_weights, unscale_weights, shift_nodes, unshift_nod
     # without it the rule loses its degree-N exactness for even N.
     function reid_weights(N)
         w = zeros(N + 1)
-        w[1] = w[N+1] = 1 / (N^2 - 1)
-        for m in 1:N-1
-            t = sum(n -> 2 / (1 - 4n^2) * cos(2 * m * n * π / N), 1:(N÷2-1); init = 0.0)
-            w[m+1] = 2 / N * (1 + t + cos(m * π) / (1 - N^2))
+        w[1] = w[N + 1] = 1 / (N^2 - 1)
+        for m in 1:(N - 1)
+            t = sum(n -> 2 / (1 - 4n^2) * cos(2 * m * n * π / N), 1:(N ÷ 2 - 1); init = 0.0)
+            w[m + 1] = 2 / N * (1 + t + cos(m * π) / (1 - N^2))
         end
         return w
     end
@@ -94,10 +106,10 @@ import QuadratureRules: scale_weights, unscale_weights, shift_nodes, unshift_nod
     unit_to_symmetric(quad, f) = 2 * quad(ξ -> f(2ξ - 1))
 
     for n in 4:12, p in 0:min(3, n)
+
         quad = ClenshawCurtisQuadrature(n+1)
         m = n - p
         expected = isodd(m) ? 0.0 : 2 / (1 - m^2)
-        @test unit_to_symmetric(quad, x -> chebT(n+p, x)) ≈ expected  atol=1E-12
+        @test unit_to_symmetric(quad, x -> chebT(n+p, x)) ≈ expected atol=1E-12
     end
-
 end

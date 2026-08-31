@@ -16,9 +16,8 @@ its own arithmetic exactly, so that a symbolic `T` yields nodes and weights in c
 Should that assumption not hold for some element type, `IT=BigFloat` recovers the behaviour
 of the numeric tower for it.
 """
-_default_arithmetic(::Type{T}) where {T<:_FloatLike} = BigFloat
+_default_arithmetic(::Type{T}) where {T <: _FloatLike} = BigFloat
 _default_arithmetic(::Type{T}) where {T} = T
-
 
 @doc raw"""
 The Legendre polynomial ``P_j(x)`` of degree ``j`` on the interval ``[-1,+1]``, evaluated by
@@ -54,17 +53,16 @@ function _legendre(j::Int, x::T) where {T}
     p₀, p₁ = one(T), x
 
     for k in 2:j
-        p₀, p₁ = p₁, ( (2k-1) * p₁ * x - (k-1) * p₀ ) / k
+        p₀, p₁ = p₁, ((2k-1) * p₁ * x - (k-1) * p₀) / k
     end
 
     p₁
 end
 
 "Legendre polynomial P_s(x) of degree s on the interval [-1..+1]."
-function _legendre_polynomial(s, T=BigFloat)
+function _legendre_polynomial(s, T = BigFloat)
     _legendre(s, Polynomial(T[0, 1]))
 end
-
 
 """
 Refine the approximate roots `x₀` of the polynomial `p` with Newton's method.
@@ -75,13 +73,13 @@ the working precision. This is used to compute quadrature nodes in arbitrary
 precision from double precision initial guesses. All roots are assumed to be
 real and simple.
 """
-function _newton_roots(p::Polynomial{T}, x₀::AbstractVector; maxiter=100) where {T}
+function _newton_roots(p::Polynomial{T}, x₀::AbstractVector; maxiter = 100) where {T}
     dp = Polynomials.derivative(p)
-    x  = Vector{T}(undef, length(x₀))
+    x = Vector{T}(undef, length(x₀))
 
     for i in eachindex(x₀)
         xᵢ = T(x₀[i])
-        δ  = p(xᵢ) / dp(xᵢ)
+        δ = p(xᵢ) / dp(xᵢ)
         xᵢ -= δ
 
         for _ in 2:maxiter
@@ -97,7 +95,6 @@ function _newton_roots(p::Polynomial{T}, x₀::AbstractVector; maxiter=100) wher
     return x
 end
 
-
 """
 The roots of the polynomial `p`, all assumed to be real and simple.
 
@@ -111,10 +108,9 @@ caller sorts them.
 `x₀` is a thunk rather than a vector so that the initial guess, which the exact branch has no
 use for, is only computed where it is actually needed.
 """
-_roots(p::Polynomial{T}, x₀) where {T<:_FloatLike} = _newton_roots(p, x₀())
+_roots(p::Polynomial{T}, x₀) where {T <: _FloatLike} = _newton_roots(p, x₀())
 
 _roots(p::Polynomial, x₀) = Polynomials.roots(p)
-
 
 "Shift and scale nodes from the interval [-1,+1] to the interval [0,1]."
 function shift_nodes(c)
@@ -141,26 +137,25 @@ end
 # end, in the working precision, so that the two conventions agree exactly at equal working
 # precision and up to rounding across precisions.
 _nodes_from_symmetric(x, ::SymmetricInterval) = x
-_nodes_from_symmetric(x, ::UnitInterval)      = shift_nodes(x)
+_nodes_from_symmetric(x, ::UnitInterval) = shift_nodes(x)
 
-_nodes_from_unit(c, ::UnitInterval)      = c
+_nodes_from_unit(c, ::UnitInterval) = c
 _nodes_from_unit(c, ::SymmetricInterval) = unshift_nodes(c)
 
 _weights_from_symmetric(w, ::SymmetricInterval) = w
-_weights_from_symmetric(w, ::UnitInterval)      = scale_weights(w)
+_weights_from_symmetric(w, ::UnitInterval) = scale_weights(w)
 
-_weights_from_unit(b, ::UnitInterval)      = b
+_weights_from_unit(b, ::UnitInterval) = b
 _weights_from_unit(b, ::SymmetricInterval) = unscale_weights(b)
 
-
 "Scale nodes and weights from the interval [-1,+1] to the interval [0,1]."
-function shift!(b,c)
+function shift!(b, c)
     b .= b ./ 2
     c .= (c .+ 1) ./ 2
 end
 
 "Scale nodes and weights from the interval [0,1] to the interval [-1,+1]."
-function unshift!(b,c)
+function unshift!(b, c)
     b .= b .* 2
     c .= 2 .* c .- 1
 end

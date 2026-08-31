@@ -5,14 +5,15 @@ function _clenshaw_curtis_weights(s, IT)
         throw(ErrorException("Clenshaw-Curtis quadrature is not defined for one stage."))
     end
 
-    b(j,n) = fld(n,2) == j == cld(n,2) ? IT(1) : IT(2)
-    c(k,n) = mod(k,n) == 0 ? IT(1) : IT(2)
-    ϑ(k,n) = 2 * IT(π) * k / n
+    b(j, n) = fld(n, 2) == j == cld(n, 2) ? IT(1) : IT(2)
+    c(k, n) = mod(k, n) == 0 ? IT(1) : IT(2)
+    ϑ(k, n) = 2 * IT(π) * k / n
 
-    cctrm(k,j,n) = b(j,n) / IT( 4 * j^2 - 1 ) * cos(j * ϑ(k,n))
-    ccsum(k,n) = c(k,n) / IT(2n) * ( IT(1) - mapreduce(j -> cctrm(k,j,n), +, 1:div(n,2); init = zero(IT)) )
+    cctrm(k, j, n) = b(j, n) / IT(4 * j^2 - 1) * cos(j * ϑ(k, n))
+    ccsum(k, n) = c(k, n) / IT(2n) *
+                  (IT(1) - mapreduce(j -> cctrm(k, j, n), +, 1:div(n, 2); init = zero(IT)))
 
-    [ccsum(i-1,s-1) for i in 1:s]
+    [ccsum(i-1, s-1) for i in 1:s]
 end
 
 """
@@ -35,7 +36,9 @@ julia> clenshaw_curtis_nodes(5)
  1.0
 ```
 """
-clenshaw_curtis_nodes(::Type{T}, s::Integer; kwargs...) where {T} = chebyshev_nodes(T, s, Val(2); kwargs...)
+function clenshaw_curtis_nodes(::Type{T}, s::Integer; kwargs...) where {T}
+    chebyshev_nodes(T, s, Val(2); kwargs...)
+end
 clenshaw_curtis_nodes(s; kwargs...) = clenshaw_curtis_nodes(Float64, s; kwargs...)
 
 @doc raw"""
@@ -76,13 +79,12 @@ julia> clenshaw_curtis_weights(3; interval = SymmetricInterval())
  0.3333333333333333
 ```
 """
-function clenshaw_curtis_weights(::Type{T}, s::Integer; IT=_default_arithmetic(T),
-                                 interval::QuadratureInterval=UnitInterval()) where {T}
+function clenshaw_curtis_weights(::Type{T}, s::Integer; IT = _default_arithmetic(T),
+        interval::QuadratureInterval = UnitInterval()) where {T}
     T.(_weights_from_unit(_clenshaw_curtis_weights(s, IT), interval))
 end
 
 clenshaw_curtis_weights(s; kwargs...) = clenshaw_curtis_weights(Float64, s; kwargs...)
-
 
 @doc raw"""
     ClenshawCurtisQuadrature(s; IT=BigFloat)
@@ -153,7 +155,7 @@ See also [`LobattoChebyshevQuadrature`](@ref), which is the same rule, and
 [`GaussChebyshevQuadrature`](@ref), which is the analogous rule on the Chebyshev points
 of the first kind.
 """
-function ClenshawCurtisQuadrature(::Type{T}, s::Integer; IT=_default_arithmetic(T)) where {T}
+function ClenshawCurtisQuadrature(::Type{T}, s::Integer; IT = _default_arithmetic(T)) where {T}
     if s == 1
         throw(ErrorException("Clenshaw-Curtis quadrature is not defined for one stage."))
     end

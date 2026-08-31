@@ -9,7 +9,8 @@ function _lobatto_legendre_nodes(s, IT)
 
     D = Polynomials.derivative(Polynomial(IT[1, 0, -1])^(s-1), s-2)
     x = sort(_roots(D, () -> FastGaussQuadrature.gausslobatto(s)[1]))
-    x[begin] = -1; x[end] = 1
+    x[begin] = -1
+    x[end] = 1
 
     x
 end
@@ -59,8 +60,8 @@ julia> lobatto_legendre_nodes(3; interval = SymmetricInterval())
   1.0
 ```
 """
-function lobatto_legendre_nodes(::Type{T}, s::Integer; IT=_default_arithmetic(T),
-                                interval::QuadratureInterval=UnitInterval()) where {T}
+function lobatto_legendre_nodes(::Type{T}, s::Integer; IT = _default_arithmetic(T),
+        interval::QuadratureInterval = UnitInterval()) where {T}
     T.(_nodes_from_symmetric(_lobatto_legendre_nodes(s, IT), interval))
 end
 
@@ -72,7 +73,7 @@ lobatto_legendre_nodes(s; kwargs...) = lobatto_legendre_nodes(Float64, s; kwargs
 function _lobatto_legendre_weights(x::AbstractVector{IT}) where {IT}
     s = length(x)
 
-    [ 2 / ( s*(s-1) * _legendre(s-1, x[i])^2 )  for i in 1:s ]
+    [2 / (s * (s-1) * _legendre(s-1, x[i])^2) for i in 1:s]
 end
 
 @doc raw"""
@@ -118,8 +119,8 @@ julia> lobatto_legendre_weights(3; interval = SymmetricInterval())
  0.3333333333333333
 ```
 """
-function lobatto_legendre_weights(::Type{T}, s::Integer; IT=_default_arithmetic(T),
-                                  interval::QuadratureInterval=UnitInterval()) where {T}
+function lobatto_legendre_weights(::Type{T}, s::Integer; IT = _default_arithmetic(T),
+        interval::QuadratureInterval = UnitInterval()) where {T}
     w = _lobatto_legendre_weights(_lobatto_legendre_nodes(s, IT))
 
     T.(_weights_from_symmetric(w, interval))
@@ -127,13 +128,11 @@ end
 
 lobatto_legendre_weights(s; kwargs...) = lobatto_legendre_weights(Float64, s; kwargs...)
 
-
 function _lobatto_legendre_fast(s, T)
     c, b = FastGaussQuadrature.gausslobatto(s)
-    shift!(b,c)
+    shift!(b, c)
     QuadratureRule(2s-2, c, b, T)
 end
-
 
 @doc raw"""
     LobattoLegendreQuadrature(s; IT=BigFloat, fast=false)
@@ -172,7 +171,7 @@ QuadratureRule{Float64, 3}(4, [0.0, 0.5, 1.0], [0.16666666666666666, 0.666666666
 
 The three-node rule is Simpson's rule, and it is exact up to degree ``2 \cdot 3 - 3 = 3``.
 """
-function LobattoLegendreQuadrature(::Type{T}, s::Integer; IT=_default_arithmetic(T), fast=false) where {T}
+function LobattoLegendreQuadrature(::Type{T}, s::Integer; IT = _default_arithmetic(T), fast = false) where {T}
     if s == 1
         throw(ErrorException("Lobatto quadrature is not defined for one stage."))
     end

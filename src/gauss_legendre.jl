@@ -52,8 +52,8 @@ julia> gauss_legendre_nodes(2; interval = SymmetricInterval())
   0.5773502691896257
 ```
 """
-function gauss_legendre_nodes(::Type{T}, s::Integer; IT=_default_arithmetic(T),
-                              interval::QuadratureInterval=UnitInterval()) where {T}
+function gauss_legendre_nodes(::Type{T}, s::Integer; IT = _default_arithmetic(T),
+        interval::QuadratureInterval = UnitInterval()) where {T}
     T.(_nodes_from_symmetric(_gauss_legendre_nodes(s, IT), interval))
 end
 
@@ -69,11 +69,11 @@ function _gauss_legendre_weights(x::AbstractVector{IT}) where {IT}
     D = Polynomials.derivative(P)
 
     inti(i) = begin
-        I = Polynomials.integrate( ( P ÷ Polynomial(IT[-x[i], 1]) )^2 )
+        I = Polynomials.integrate((P ÷ Polynomial(IT[-x[i], 1]))^2)
         I(1) - I(-1)
     end
 
-    [ inti(i) / D(x[i])^2  for i in 1:s ]
+    [inti(i) / D(x[i])^2 for i in 1:s]
 end
 
 @doc raw"""
@@ -119,8 +119,8 @@ julia> gauss_legendre_weights(2; interval = SymmetricInterval())
  1.0
 ```
 """
-function gauss_legendre_weights(::Type{T}, s::Integer; IT=_default_arithmetic(T),
-                                interval::QuadratureInterval=UnitInterval()) where {T}
+function gauss_legendre_weights(::Type{T}, s::Integer; IT = _default_arithmetic(T),
+        interval::QuadratureInterval = UnitInterval()) where {T}
     w = _gauss_legendre_weights(_gauss_legendre_nodes(s, IT))
 
     T.(_weights_from_symmetric(w, interval))
@@ -128,10 +128,9 @@ end
 
 gauss_legendre_weights(s; kwargs...) = gauss_legendre_weights(Float64, s; kwargs...)
 
-
 function _gauss_legendre_fast(s, T)
     c, b = FastGaussQuadrature.gausslegendre(s)
-    shift!(b,c)
+    shift!(b, c)
     QuadratureRule(2s, c, b, T)
 end
 
@@ -179,7 +178,7 @@ julia> GaussLegendreQuadrature(3)(x -> x^5)   # exact up to degree 5
 
 See also [`LobattoLegendreQuadrature`](@ref), [`gauss_legendre_nodes`](@ref).
 """
-function GaussLegendreQuadrature(::Type{T}, s::Integer; IT=_default_arithmetic(T), fast=false) where {T}
+function GaussLegendreQuadrature(::Type{T}, s::Integer; IT = _default_arithmetic(T), fast = false) where {T}
     if fast
         return _gauss_legendre_fast(s, T)
     end

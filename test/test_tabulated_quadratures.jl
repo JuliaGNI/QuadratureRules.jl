@@ -1,12 +1,11 @@
 @testset "$(rpad("Tabulated Quadrature Rules",80))" begin
-
     @test typeof(RiemannQuadratureLeft()) <: QuadratureRule
     @test typeof(RiemannQuadratureRight()) <: QuadratureRule
     @test typeof(MidpointQuadrature()) <: QuadratureRule
     @test typeof(TrapezoidalQuadrature()) <: QuadratureRule
 
     for quad in (RiemannQuadratureLeft, RiemannQuadratureRight,
-                 MidpointQuadrature, TrapezoidalQuadrature)
+        MidpointQuadrature, TrapezoidalQuadrature)
         @test sum(weights(quad())) == 1
         @test eltype(quad()) == Float64
         @test eltype(quad(BigFloat)) == BigFloat
@@ -15,34 +14,33 @@
 
         # a rule of order p integrates polynomials up to degree p-1 exactly
         let q = quad(BigFloat)
-            for k in 0:order(q)-1
-                @test sum(weights(q) .* nodes(q).^k) == 1 / BigFloat(k+1)
+            for k in 0:(order(q) - 1)
+                @test sum(weights(q) .* nodes(q) .^ k) == 1 / BigFloat(k+1)
             end
         end
     end
 
-    @test nodes(RiemannQuadratureLeft())    == [0.0]
-    @test weights(RiemannQuadratureLeft())  == [1.0]
-    @test order(RiemannQuadratureLeft())    == 1
+    @test nodes(RiemannQuadratureLeft()) == [0.0]
+    @test weights(RiemannQuadratureLeft()) == [1.0]
+    @test order(RiemannQuadratureLeft()) == 1
 
-    @test nodes(RiemannQuadratureRight())   == [1.0]
+    @test nodes(RiemannQuadratureRight()) == [1.0]
     @test weights(RiemannQuadratureRight()) == [1.0]
-    @test order(RiemannQuadratureRight())   == 1
+    @test order(RiemannQuadratureRight()) == 1
 
-    @test nodes(MidpointQuadrature())       == [0.5]
-    @test weights(MidpointQuadrature())     == [1.0]
-    @test order(MidpointQuadrature())       == 2
+    @test nodes(MidpointQuadrature()) == [0.5]
+    @test weights(MidpointQuadrature()) == [1.0]
+    @test order(MidpointQuadrature()) == 2
 
-    @test nodes(TrapezoidalQuadrature())    == [0.0, 1.0]
-    @test weights(TrapezoidalQuadrature())  == [0.5, 0.5]
-    @test order(TrapezoidalQuadrature())    == 2
+    @test nodes(TrapezoidalQuadrature()) == [0.0, 1.0]
+    @test weights(TrapezoidalQuadrature()) == [0.5, 0.5]
+    @test order(TrapezoidalQuadrature()) == 2
 
     # the tabulated rules are the low-node members of the generated families, and since
     # an interpolatory rule is determined by its nodes they agree exactly
-    @test MidpointQuadrature()    == GaussLegendreQuadrature(1)
-    @test MidpointQuadrature()    == GaussChebyshevQuadrature(1)
+    @test MidpointQuadrature() == GaussLegendreQuadrature(1)
+    @test MidpointQuadrature() == GaussChebyshevQuadrature(1)
     @test TrapezoidalQuadrature() == LobattoLegendreQuadrature(2)
     @test TrapezoidalQuadrature() == ClenshawCurtisQuadrature(2)
     @test TrapezoidalQuadrature() == LobattoChebyshevQuadrature(2)
-
 end

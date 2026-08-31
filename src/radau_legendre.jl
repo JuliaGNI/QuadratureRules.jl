@@ -11,7 +11,9 @@ end
 # The right nodes are the reflection of the left ones. Reflecting rather than evaluating the
 # mirrored closed form is what makes the two variants exact mirror images: the recurrence for
 # P_{s-1}(-x) does not reproduce P_{s-1}(x) bit for bit.
-_radau_legendre_nodes(s, ::Val{:right}, IT) = -reverse(_radau_legendre_nodes(s, Val(:left), IT))
+function _radau_legendre_nodes(s, ::Val{:right}, IT)
+    -reverse(_radau_legendre_nodes(s, Val(:left), IT))
+end
 
 # The left Radau-Legendre weights on [-1,+1] belonging to the precomputed left nodes `x`, in
 # their own arithmetic. Taking the nodes as an argument lets _radau_legendre share the closed
@@ -19,7 +21,7 @@ _radau_legendre_nodes(s, ::Val{:right}, IT) = -reverse(_radau_legendre_nodes(s, 
 function _radau_legendre_weights(x::AbstractVector{IT}) where {IT}
     s = length(x)
 
-    [ (1 - x[i]) / ( s^2 * _legendre(s-1, x[i])^2 )  for i in 1:s ]
+    [(1 - x[i]) / (s^2 * _legendre(s-1, x[i])^2) for i in 1:s]
 end
 
 # Nodes and weights on [-1,+1] from a single root find, the right variant obtained by
@@ -115,12 +117,14 @@ julia> radau_legendre_nodes(2, :left; interval = SymmetricInterval())
 ```
 """
 function radau_legendre_nodes(::Type{T}, s::Integer, endpoint::Val;
-                              IT=_default_arithmetic(T),
-                              interval::QuadratureInterval=UnitInterval()) where {T}
+        IT = _default_arithmetic(T),
+        interval::QuadratureInterval = UnitInterval()) where {T}
     T.(_nodes_from_symmetric(_radau_legendre_nodes(s, endpoint, IT), interval))
 end
 
-radau_legendre_nodes(s, endpoint; kwargs...) = radau_legendre_nodes(Float64, s, Val(endpoint); kwargs...)
+function radau_legendre_nodes(s, endpoint; kwargs...)
+    radau_legendre_nodes(Float64, s, Val(endpoint); kwargs...)
+end
 
 @doc raw"""
     radau_legendre_weights(s, endpoint; kwargs...)
@@ -166,30 +170,31 @@ julia> radau_legendre_weights(2, :left; interval = SymmetricInterval())
 ```
 """
 function radau_legendre_weights(::Type{T}, s::Integer, endpoint::Val;
-                                IT=_default_arithmetic(T),
-                                interval::QuadratureInterval=UnitInterval()) where {T}
+        IT = _default_arithmetic(T),
+        interval::QuadratureInterval = UnitInterval()) where {T}
     _, w = _radau_legendre(s, endpoint, IT)
 
     T.(_weights_from_symmetric(w, interval))
 end
 
-radau_legendre_weights(s, endpoint; kwargs...) = radau_legendre_weights(Float64, s, Val(endpoint); kwargs...)
-
+function radau_legendre_weights(s, endpoint; kwargs...)
+    radau_legendre_weights(Float64, s, Val(endpoint); kwargs...)
+end
 
 function _radau_legendre_fast(s, T, ::Val{:left})
     c, b = FastGaussQuadrature.gaussradau(s)
-    shift!(b,c)
+    shift!(b, c)
     QuadratureRule(2s-1, c, b, T)
 end
 
 function _radau_legendre_fast(s, T, ::Val{:right})
     c, b = FastGaussQuadrature.gaussradau(s)
     c .= -c
-    reverse!(c); reverse!(b)
-    shift!(b,c)
+    reverse!(c)
+    reverse!(b)
+    shift!(b, c)
     QuadratureRule(2s-1, c, b, T)
 end
-
 
 @doc raw"""
     RadauLegendreQuadrature(s, endpoint; IT=BigFloat, fast=false)
@@ -241,7 +246,8 @@ julia> RadauLegendreQuadrature(3, :right)(x -> x^4)   # exact up to degree 2*3-2
 
 See also [`GaussLegendreQuadrature`](@ref) and [`LobattoLegendreQuadrature`](@ref).
 """
-function RadauLegendreQuadrature(::Type{T}, s::Integer, endpoint::Val; IT=_default_arithmetic(T), fast=false) where {T}
+function RadauLegendreQuadrature(::Type{T}, s::Integer, endpoint::Val;
+        IT = _default_arithmetic(T), fast = false) where {T}
     if fast
         return _radau_legendre_fast(s, T, endpoint)
     end
@@ -251,4 +257,6 @@ function RadauLegendreQuadrature(::Type{T}, s::Integer, endpoint::Val; IT=_defau
     return QuadratureRule(2s-1, shift_nodes(x), scale_weights(w), T)
 end
 
-RadauLegendreQuadrature(s, endpoint; kwargs...) = RadauLegendreQuadrature(Float64, s, Val(endpoint); kwargs...)
+function RadauLegendreQuadrature(s, endpoint; kwargs...)
+    RadauLegendreQuadrature(Float64, s, Val(endpoint); kwargs...)
+end

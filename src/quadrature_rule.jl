@@ -41,7 +41,7 @@ julia> quad(x -> x^2)
 
 See also [`nodes`](@ref), [`weights`](@ref), [`order`](@ref), [`nnodes`](@ref).
 """
-struct QuadratureRule{T,N}
+struct QuadratureRule{T, N}
     order::Int
     nodes::Vector{T}
     weights::Vector{T}
@@ -64,7 +64,7 @@ QuadratureRule{Float64, 2}(2, [0.0, 1.0], [0.5, 0.5])
 
 `nodes` and `weights` must have the same length and the same element type.
 """
-function QuadratureRule(order, nodes::AbstractVector{T}, weights::AbstractVector{T}, TT=T) where {T}
+function QuadratureRule(order, nodes::AbstractVector{T}, weights::AbstractVector{T}, TT = T) where {T}
     @assert length(nodes) == length(weights)
     QuadratureRule{TT, length(nodes)}(order, nodes, weights)
 end
@@ -98,7 +98,6 @@ function (quad::QuadratureRule)(f::Function)
     sum(w * f(x) for (w, x) in zip(quad.weights, quad.nodes))
 end
 
-
 """
     nnodes(quad::QuadratureRule)
 
@@ -112,7 +111,7 @@ julia> nnodes(GaussLegendreQuadrature(3))
 3
 ```
 """
-nnodes(::QuadratureRule{T,N}) where {T,N} = N
+nnodes(::QuadratureRule{T, N}) where {T, N} = N
 
 @doc raw"""
     nodes(quad::QuadratureRule)
@@ -193,7 +192,9 @@ julia> for i in eachindex(quad)
 """
 Base.eachindex(quad::QuadratureRule) = eachindex(quad.nodes, quad.weights)
 
-Base.hash(quad::QuadratureRule, h::UInt) = hash(quad.order, hash(quad.nodes, hash(quad.weights, hash(:QuadratureRule, h))))
+function Base.hash(quad::QuadratureRule, h::UInt)
+    hash(quad.order, hash(quad.nodes, hash(quad.weights, hash(:QuadratureRule, h))))
+end
 
 """
     ==(quad1::QuadratureRule, quad2::QuadratureRule)
@@ -202,10 +203,12 @@ Compare two quadrature rules by value, i.e., check that their orders, nodes and 
 agree. Rules of different element type may compare equal; use [`isequal`](@ref) to
 distinguish them.
 """
-Base.:(==)(quad1::QuadratureRule, quad2::QuadratureRule) = (
-                   quad1.order == quad2.order
-                && quad1.nodes == quad2.nodes
-                && quad1.weights == quad2.weights)
+function Base.:(==)(quad1::QuadratureRule, quad2::QuadratureRule)
+    (
+        quad1.order == quad2.order
+        && quad1.nodes == quad2.nodes
+        && quad1.weights == quad2.weights)
+end
 
 """
     isequal(quad1::QuadratureRule, quad2::QuadratureRule)
@@ -214,10 +217,13 @@ Check that two quadrature rules are equal by value *and* of the same type, that 
 that they agree in their element type `T` and their number of nodes `N` in addition
 to their orders, nodes and weights.
 """
-Base.isequal(quad1::QuadratureRule{T1,N1}, quad2::QuadratureRule{T2,N2}) where {T1,N1,T2,N2} = (
-                quad1 == quad2
-                && T1 == T2
-                && N1 == N2)
+function Base.isequal(quad1::QuadratureRule{T1, N1}, quad2::QuadratureRule{
+        T2, N2}) where {T1, N1, T2, N2}
+    (
+        quad1 == quad2
+        && T1 == T2
+        && N1 == N2)
+end
 
 """
     isapprox(quad1::QuadratureRule, quad2::QuadratureRule; kwargs...)
@@ -228,10 +234,12 @@ weights. All keyword arguments are forwarded to `isapprox` for the nodes and wei
 This is the appropriate comparison for rules computed by different algorithms or in
 different working precisions, e.g. with and without `fast=true`.
 """
-Base.isapprox(quad1::QuadratureRule, quad2::QuadratureRule; kwargs...) = (
-                            quad1.order == quad2.order
-                && isapprox(quad1.nodes,   quad2.nodes;   kwargs...)
-                && isapprox(quad1.weights, quad2.weights; kwargs...))
+function Base.isapprox(quad1::QuadratureRule, quad2::QuadratureRule; kwargs...)
+    (
+        quad1.order == quad2.order
+        && isapprox(quad1.nodes, quad2.nodes; kwargs...)
+        && isapprox(quad1.weights, quad2.weights; kwargs...))
+end
 
 """
     eltype(quad::QuadratureRule)

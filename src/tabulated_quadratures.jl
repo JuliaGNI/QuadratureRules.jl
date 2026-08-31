@@ -16,7 +16,7 @@ julia> RiemannQuadratureLeft()
 QuadratureRule{Float64, 1}(1, [0.0], [1.0])
 ```
 """
-function RiemannQuadratureLeft(T=Float64)
+function RiemannQuadratureLeft(T = Float64)
     QuadratureRule(1, T[0], T[1])
 end
 
@@ -37,7 +37,7 @@ julia> RiemannQuadratureRight()
 QuadratureRule{Float64, 1}(1, [1.0], [1.0])
 ```
 """
-function RiemannQuadratureRight(T=Float64)
+function RiemannQuadratureRight(T = Float64)
     QuadratureRule(1, T[1], T[1])
 end
 
@@ -59,8 +59,8 @@ julia> MidpointQuadrature()
 QuadratureRule{Float64, 1}(2, [0.5], [1.0])
 ```
 """
-function MidpointQuadrature(T=Float64)
-    QuadratureRule(2, T[1//2], T[1])
+function MidpointQuadrature(T = Float64)
+    QuadratureRule(2, T[1 // 2], T[1])
 end
 
 @doc raw"""
@@ -81,6 +81,6 @@ julia> TrapezoidalQuadrature()
 QuadratureRule{Float64, 2}(2, [0.0, 1.0], [0.5, 0.5])
 ```
 """
-function TrapezoidalQuadrature(T=Float64)
-    QuadratureRule(2, T[0, 1], T[1//2, 1//2])
+function TrapezoidalQuadrature(T = Float64)
+    QuadratureRule(2, T[0, 1], T[1 // 2, 1 // 2])
 end
