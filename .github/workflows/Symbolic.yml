@@ -3,7 +3,7 @@
 # CI.yml is byte-identical in all 37 repositories under Packages/ and Experiments/ — that is what
 # makes the required-status-check list static and keeps branch protection from silently going stale.
 # A repository that needs an extra job therefore gets an extra file, never a local edit to CI.yml.
-# See ~/Research/Knowledge/AI/githooks/install-workflows.sh.
+# See ~/Research/Environment/Harness/githooks/install-workflows.sh.
 #
 # WHY THESE TESTS ARE NOT IN THE TEST TARGET.
 #
