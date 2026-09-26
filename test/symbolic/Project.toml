@@ -1,10 +1,10 @@
 # Environment for test/test_symbolic.jl, which needs SymPyPythonCall and, through it, a private
-# Python installation with sympy. Keeping that out of the package's test target lets
-# `Pkg.test()` run without the Python stack; the symbolic job in .github/workflows/CI.yml runs
-# the symbolic tests in this environment instead.
+# Python installation with sympy. It serves only the separate job in
+# .github/workflows/Symbolic.yml. `Pkg.test()` runs the same file in its `slow` group, from
+# test/Project.toml.
 #
-# The deps are those of test/test_symbolic.jl alone, deliberately not a copy of the package's
-# test target: a copy would have to be kept in step with it by hand.
+# The deps are those of test/test_symbolic.jl alone, deliberately not a copy of
+# test/Project.toml: a copy would have to be kept in step with it by hand.
 #
 # QuadratureRules itself is not resolved here — `Pkg.develop(PackageSpec(path=pwd()))` adds it
 # from the checkout, as it does for docs/Project.toml. A committed `[sources]` entry would
