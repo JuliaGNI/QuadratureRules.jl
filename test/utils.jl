@@ -1,3 +1,7 @@
+using QuadratureRules
+using Random
+using Test
+
 import QuadratureRules: scale_weights, unscale_weights, shift_nodes, unshift_nodes, shift!,
                         unshift!
 import QuadratureRules: _default_arithmetic
@@ -25,6 +29,8 @@ struct NotANumber end
 
     # everything else is taken to do its own arithmetic exactly and is computed in itself
     @test _default_arithmetic(NotANumber) == NotANumber
+
+    Random.seed!(1234)
 
     b = rand(5)
     b̃ = copy(b)

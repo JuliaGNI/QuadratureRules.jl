@@ -8,6 +8,16 @@ Julia reading of `0.x`: a bump of the *minor* version may break.
 
 ## [Unreleased]
 
+### Changed
+
+- **Test suite reorganized to shared layout.** Test dependencies move to `test/Project.toml`,
+  test files are renamed after the source files they test (test_X.jl -> X.jl; order and
+  precision under test/integration/), and `runtests.jl` groups them with `SafeTestsets`
+  into core and slow groups. `Pkg.test()` now runs `test/test_symbolic.jl` in the slow group
+  and so installs SymPyPythonCall and its Python stack. Code quality checks added:
+  `test/quality/aqua.jl` (core) and `test/quality/doctests.jl` (slow). Random draws in two
+  files are seeded for reproducibility.
+
 ## [0.2.1] – 2026-08-13
 
 A documentation release, with one performance fix. Nothing about the API changes, and every

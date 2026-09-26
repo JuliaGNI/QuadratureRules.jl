@@ -1,3 +1,6 @@
+using QuadratureRules
+using Test
+
 import FastTransforms
 import QuadratureRules: scale_weights, unscale_weights, shift_nodes, unshift_nodes
 
@@ -48,7 +51,7 @@ import QuadratureRules: scale_weights, unscale_weights, shift_nodes, unshift_nod
 
         # Gauss-Chebyshev is Fejér's first rule: an interpolatory rule on the s
         # Chebyshev points of the first kind, hence exact up to degree s-1, and one
-        # degree further for odd s; see test_order.jl
+        # degree further for odd s; see test/integration/order.jl
         @test order(GaussChebyshevQuadrature(s)) == (isodd(s) ? s+1 : s)
 
         let q = GaussChebyshevQuadrature(BigFloat, s)

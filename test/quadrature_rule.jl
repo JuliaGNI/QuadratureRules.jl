@@ -1,4 +1,10 @@
+using QuadratureRules
+using Random
+using Test
+
 import GeometricBase
+
+Random.seed!(1234)
 
 @testset "$(rpad("QuadratureRule",80))" begin
     o = 2

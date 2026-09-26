@@ -1,3 +1,6 @@
+using QuadratureRules
+using Test
+
 import FastTransforms
 import QuadratureRules: scale_weights, unscale_weights, shift_nodes, unshift_nodes
 
@@ -13,7 +16,7 @@ import QuadratureRules: scale_weights, unscale_weights, shift_nodes, unshift_nod
         @test order(ClenshawCurtisQuadrature(s)) == (isodd(s) ? s+1 : s)
 
         # an s-node interpolatory rule integrates polynomials up to degree s-1 exactly,
-        # and one degree further for odd s; see test_order.jl
+        # and one degree further for odd s; see test/integration/order.jl
         let q = ClenshawCurtisQuadrature(BigFloat, s)
             for k in 0:(order(q) - 1)
                 @test sum(weights(q) .* nodes(q) .^ k) ≈ 1 / BigFloat(k+1) atol=1E-60

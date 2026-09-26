@@ -1,3 +1,6 @@
+using QuadratureRules
+using Test
+
 import QuadratureRules: scale_weights, unscale_weights, unshift_nodes
 
 @testset "$(rpad("Tanh-Sinh",80))" begin
@@ -95,7 +98,8 @@ import QuadratureRules: scale_weights, unscale_weights, unshift_nodes
     # Unlike every other rule in this package, tanh-sinh has no degree of exactness: it does
     # not integrate even a constant exactly, the weight sum differing from one by the
     # truncation error. Its reported order is therefore 0, and it is absent from the RULES
-    # lists of test_order.jl and test_precision.jl, which assume a positive polynomial order.
+    # lists of test/integration/order.jl and test/integration/precision.jl, which assume a
+    # positive polynomial order.
     @testset "$(rpad("no polynomial exactness",60))" begin
         for n in 1:6
             @test order(TanhSinhQuadrature(n)) == 0
