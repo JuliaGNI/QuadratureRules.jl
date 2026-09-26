@@ -1,3 +1,5 @@
+using QuadratureRules
+using Test
 
 @testset "$(rpad("Order",80))" begin
 

@@ -1,22 +1,23 @@
-using QuadratureRules
-using Test
+using SafeTestsets
 
-include("test_utils.jl")
-include("test_quadrature_rule.jl")
-include("test_gauss_chebyshev.jl")
-include("test_gauss_legendre.jl")
-include("test_lobatto_chebyshev.jl")
-include("test_lobatto_legendre.jl")
-include("test_radau_legendre.jl")
-include("test_clenshaw_curtis.jl")
-include("test_tanh_sinh.jl")
-include("test_tabulated_quadratures.jl")
-include("test_order.jl")
-include("test_precision.jl")
+const GROUPS = isempty(ARGS) ? ["core", "slow"] : ARGS
 
-# test_symbolic.jl is deliberately not included here. It needs SymPyPythonCall, which brings a
-# private Python installation with it, so it is not part of this package's test target but of
-# test/symbolic/Project.toml, and runs on its own:
-#
-#     julia --project=test/symbolic -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
-#     julia --project=test/symbolic test/test_symbolic.jl
+if "core" in GROUPS
+    @safetestset "Aqua" include("quality/aqua.jl")
+    @safetestset "Utility functions" include("utils.jl")
+    @safetestset "Quadrature rule" include("quadrature_rule.jl")
+    @safetestset "Gauss-Chebyshev" include("gauss_chebyshev.jl")
+    @safetestset "Gauss-Legendre" include("gauss_legendre.jl")
+    @safetestset "Lobatto-Chebyshev" include("lobatto_chebyshev.jl")
+    @safetestset "Lobatto-Legendre" include("lobatto_legendre.jl")
+    @safetestset "Radau-Legendre" include("radau_legendre.jl")
+    @safetestset "Clenshaw-Curtis" include("clenshaw_curtis.jl")
+    @safetestset "Tanh-sinh" include("tanh_sinh.jl")
+    @safetestset "Tabulated quadrature rules" include("tabulated_quadratures.jl")
+    @safetestset "Order" include("integration/order.jl")
+    @safetestset "Working precision" include("integration/precision.jl")
+end
+if "slow" in GROUPS
+    @safetestset "Doctests" include("quality/doctests.jl")
+    @safetestset "Symbolic" include("test_symbolic.jl")
+end

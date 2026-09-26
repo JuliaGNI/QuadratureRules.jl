@@ -1,3 +1,6 @@
+using QuadratureRules
+using Test
+
 import QuadratureRules: scale_weights, shift_nodes
 
 @testset "$(rpad("Working Precision",80))" begin

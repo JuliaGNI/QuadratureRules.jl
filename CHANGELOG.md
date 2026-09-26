@@ -8,6 +8,10 @@ Julia reading of `0.x`: a bump of the *minor* version may break.
 
 ## [Unreleased]
 
+### Changed
+
+- **Test suite reorganized to shared layout.** Test dependencies move to `test/Project.toml`, tests are structured to mirror `src/`, and `runtests.jl` groups them with `SafeTestsets` into core and slow runs. The symbolic test suite is now part of `Pkg.test()` in the slow group (previously unreachable). Code quality checks added: `test/quality/aqua.jl` (core) and `test/quality/doctests.jl` (slow). Random draws in utility functions are seeded for reproducibility.
+
 ## [0.2.1] – 2026-08-13
 
 A documentation release, with one performance fix. Nothing about the API changes, and every

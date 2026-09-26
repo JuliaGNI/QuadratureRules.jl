@@ -1,3 +1,6 @@
+using QuadratureRules
+using Test
+
 import QuadratureRules: scale_weights, unscale_weights, unshift_nodes
 
 @testset "$(rpad("Tanh-Sinh",80))" begin

@@ -1,3 +1,6 @@
+using QuadratureRules
+using Test
+
 import FastGaussQuadrature
 import QuadratureRules: scale_weights, unscale_weights, shift_nodes, unshift_nodes
 

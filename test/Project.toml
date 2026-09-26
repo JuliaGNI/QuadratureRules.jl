@@ -1,0 +1,25 @@
+[deps]
+Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+FastGaussQuadrature = "442a2c76-b920-505d-bb47-c5924d526838"
+FastTransforms = "057dd010-8810-581a-b7be-e3fc3b93f78c"
+GeometricBase = "9a0b12b7-583b-4f04-aa1f-d8551b6addc9"
+QuadratureRules = "a08977f5-a20d-4b99-b11f-f5ea535e0575"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
+SymPyPythonCall = "bc8888f7-b21e-4b7c-a06a-5d9c9496438c"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[sources]
+QuadratureRules = {path = ".."}
+
+[compat]
+Aqua = "0.8"
+Documenter = "1"
+FastGaussQuadrature = "1"
+FastTransforms = "0.17"
+GeometricBase = "0.14.8"
+Random = "1"
+SafeTestsets = "0.1"
+SymPyPythonCall = "0.5"
+Test = "1"
