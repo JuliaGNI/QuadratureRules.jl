@@ -92,7 +92,7 @@ using Test
             # From level 4 the truncation error falls below the 1E-60 tolerance that
             # `exact_to` uses throughout this file, so the moment machinery can no longer
             # tell the rule from an exact one. That is another reason why the accuracy of
-            # tanh-sinh is tested by its convergence rate in test_tanh_sinh.jl instead.
+            # tanh-sinh is tested by its convergence rate in test/tanh_sinh.jl instead.
             n ≤ 3 && @test !exact_to(quad, 0)
         end
     end
@@ -123,8 +123,9 @@ using Test
         # weights are no longer correctly rounded and the two constructions of Simpson's
         # rule need not agree bit for bit: the Lobatto closed form 2/(s(s-1)Pₛ₋₁²) lands
         # on 1/6 exactly, whereas the Clenshaw-Curtis cosine sum is one ulp below it.
-        # This is the IT = T degradation that test_precision.jl quantifies, and it is why
-        # BigFloat is the default working precision for the narrower element types.
+        # This is the IT = T degradation that test/integration/precision.jl quantifies,
+        # and it is why BigFloat is the default working precision for the narrower
+        # element types.
         let cc = ClenshawCurtisQuadrature(BigFloat, 3),
             ll = LobattoLegendreQuadrature(BigFloat, 3)
 
