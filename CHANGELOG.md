@@ -17,6 +17,10 @@ Julia reading of `0.x`: a bump of the *minor* version may break.
   and so installs SymPyPythonCall and its Python stack. Code quality checks added:
   `test/quality/aqua.jl` (core) and `test/quality/doctests.jl` (slow). Random draws in two
   files are seeded for reproducibility.
+- **Explicit-imports guard.** `test/quality/explicit_imports.jl` (core) runs
+  `ExplicitImports.test_explicit_imports` on the package, so that a stale explicit import fails
+  the tests. Seven `# fatou-ignore docstring-argument-mismatch` comments suppress a fatou false
+  positive: fatou does not see that a `::Type{T}` argument binds the documented `T`.
 
 ## [0.2.1] – 2026-08-13
 

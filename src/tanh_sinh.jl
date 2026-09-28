@@ -197,6 +197,7 @@ end
 
 tanh_sinh_weights(n; kwargs...) = tanh_sinh_weights(Float64, n; kwargs...)
 
+# fatou-ignore docstring-argument-mismatch
 @doc raw"""
     TanhSinhQuadrature(n; IT=BigFloat)
     TanhSinhQuadrature(T, n; IT=BigFloat)

@@ -12,6 +12,7 @@ function _chebyshev_nodes(s, ::Val{2}, IT)
     [cos(IT(π) * (i-1) / (s-1)) for i in s:-1:1]
 end
 
+# fatou-ignore docstring-argument-mismatch
 @doc raw"""
     chebyshev_nodes(s, kind; kwargs...)
     chebyshev_nodes(T, s, ::Val{kind}; IT=_default_arithmetic(T), interval=UnitInterval())
@@ -200,6 +201,7 @@ function lobatto_chebyshev_weights(::Type{T}, s::Integer; kwargs...) where {T}
 end
 lobatto_chebyshev_weights(s; kwargs...) = lobatto_chebyshev_weights(Float64, s; kwargs...)
 
+# fatou-ignore docstring-argument-mismatch
 @doc raw"""
     GaussChebyshevQuadrature(s; IT=BigFloat)
     GaussChebyshevQuadrature(T, s; IT=_default_arithmetic(T))
