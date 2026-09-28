@@ -2,8 +2,8 @@ using ExplicitImports
 using QuadratureRules
 using Test
 
-# Stale explicit imports, qualified accesses to names their module does not own, and
-# self-qualified accesses fail this test.
+# Stale explicit imports, explicit imports and qualified accesses through a module that does
+# not own the name, and self-qualified accesses fail this test.
 test_explicit_imports(
     QuadratureRules;
     # QuadratureRules has no implicit import; the check is off because this guard
