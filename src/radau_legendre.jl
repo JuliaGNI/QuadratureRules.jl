@@ -38,6 +38,7 @@ function _radau_legendre(s, ::Val{:right}, IT)
     -reverse(x), reverse(w)
 end
 
+# fatou-ignore docstring-argument-mismatch
 @doc raw"""
     radau_legendre_nodes(s, endpoint; kwargs...)
     radau_legendre_nodes(T, s, ::Val{endpoint}; IT=_default_arithmetic(T),

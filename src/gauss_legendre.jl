@@ -4,6 +4,7 @@ function _gauss_legendre_nodes(s, IT)
     sort(_roots(_legendre_polynomial(s, IT), () -> FastGaussQuadrature.gausslegendre(s)[1]))
 end
 
+# fatou-ignore docstring-argument-mismatch
 @doc raw"""
     gauss_legendre_nodes(s; kwargs...)
     gauss_legendre_nodes(T, s; IT=_default_arithmetic(T), interval=UnitInterval())
@@ -134,6 +135,7 @@ function _gauss_legendre_fast(s, T)
     QuadratureRule(2s, c, b, T)
 end
 
+# fatou-ignore docstring-argument-mismatch
 @doc raw"""
     GaussLegendreQuadrature(s; IT=BigFloat, fast=false)
     GaussLegendreQuadrature(T, s; IT=_default_arithmetic(T), fast=false)

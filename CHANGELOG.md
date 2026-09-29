@@ -22,6 +22,10 @@ Julia reading of `0.x`: a bump of the *minor* version may break.
   QuadratureRules, so the root `Project.toml` bounds already apply there; a second copy can only
   narrow them, and the tests would then run on versions narrower than the package claims.
   Test-only bounds are unchanged.
+- **Explicit-imports guard.** `test/quality/explicit_imports.jl` (core) runs
+  `ExplicitImports.test_explicit_imports` on the package, so that a stale explicit import fails
+  the tests. Seven `# fatou-ignore docstring-argument-mismatch` comments suppress a fatou false
+  positive: fatou does not see that a `::Type{T}` argument binds the documented `T`.
 
 ## [0.2.1] – 2026-08-13
 

@@ -86,6 +86,7 @@ end
 
 clenshaw_curtis_weights(s; kwargs...) = clenshaw_curtis_weights(Float64, s; kwargs...)
 
+# fatou-ignore docstring-argument-mismatch
 @doc raw"""
     ClenshawCurtisQuadrature(s; IT=BigFloat)
     ClenshawCurtisQuadrature(T, s; IT=_default_arithmetic(T))
