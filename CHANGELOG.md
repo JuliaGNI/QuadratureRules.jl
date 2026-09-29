@@ -17,6 +17,11 @@ Julia reading of `0.x`: a bump of the *minor* version may break.
   and so installs SymPyPythonCall and its Python stack. Code quality checks added:
   `test/quality/aqua.jl` (core) and `test/quality/doctests.jl` (slow). Random draws in two
   files are seeded for reproducibility.
+- **`test/Project.toml` no longer bounds the package's own dependencies.** Its `[compat]`
+  entries for FastGaussQuadrature and GeometricBase are removed. The test environment contains
+  QuadratureRules, so the root `Project.toml` bounds already apply there; a second copy can only
+  narrow them, and the tests would then run on versions narrower than the package claims.
+  Test-only bounds are unchanged.
 - **Explicit-imports guard.** `test/quality/explicit_imports.jl` (core) runs
   `ExplicitImports.test_explicit_imports` on the package, so that a stale explicit import fails
   the tests. Seven `# fatou-ignore docstring-argument-mismatch` comments suppress a fatou false
