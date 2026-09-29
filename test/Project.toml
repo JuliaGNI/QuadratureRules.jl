@@ -16,9 +16,7 @@ QuadratureRules = {path = ".."}
 [compat]
 Aqua = "0.8"
 Documenter = "1"
-FastGaussQuadrature = "1"
 FastTransforms = "0.17"
-GeometricBase = "0.14.8"
 Random = "1"
 SafeTestsets = "0.1"
 SymPyPythonCall = "0.5"
