@@ -8,7 +8,7 @@ fixed; the fix goes in `CHANGELOG.md`.
 - location: `test/symbolic/Project.toml:9`
 - evidence: the comment says that `Pkg.develop(PackageSpec(path=pwd()))` adds QuadratureRules
   "from the checkout, as it does for docs/Project.toml". `docs/Project.toml` has
-  `[sources] QuadratureRules = {path = ".."}`, on `origin/main` too, so the docs environment does
-  not need that `Pkg.develop`.
+  `[sources] QuadratureRules = {path = ".."}`, so the docs environment does not need that
+  `Pkg.develop`.
 - kind: docs
 - found: 2026-10-01
