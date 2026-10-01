@@ -10,6 +10,14 @@ Julia reading of `0.x`: a bump of the *minor* version may break.
 
 ### Changed
 
+- **Julia 1.11 and GeometricBase 0.15.0 are the new floors.** GeometricBase 0.15 declares its
+  stubs public and requires Julia 1.11. The `julia` bound of `Project.toml` and
+  `test/symbolic/Project.toml` is `"1.11"`, and the GeometricBase bound is `"0.15.0"`.
+- **The explicit-imports guard runs every check.** `test/quality/explicit_imports.jl` calls
+  `test_explicit_imports(QuadratureRules)` with no keyword argument, so an implicit import, or
+  an explicit import or qualified access of a name that is not public, fails the tests. The
+  four names imported from GeometricBase (`nnodes`, `nodes`, `order`, `weights`) are public
+  from GeometricBase 0.15.
 - **Test suite reorganized to shared layout.** Test dependencies move to `test/Project.toml`,
   test files are renamed after the source files they test (test_X.jl -> X.jl; order and
   precision under test/integration/), and `runtests.jl` groups them with `SafeTestsets`
