@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) with the usual
 Julia reading of `0.x`: a bump of the *minor* version may break.
 
+## [Unreleased]
+
+### Changed
+
+- **CI uploads coverage from the `Julia 1 - ubuntu-latest` job, and a test job saves the Julia
+  cache only when it succeeds.** Coverage used to come from the `Julia min` job. A cancelled or
+  failed job no longer saves a partial cache that the next run restores.
+
 ## [0.2.2] – 2026-10-01
 
 ### Changed
