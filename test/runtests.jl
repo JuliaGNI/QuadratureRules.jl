@@ -19,6 +19,8 @@ if "core" in GROUPS
     @safetestset "Working precision" include("integration/precision.jl")
 end
 if "slow" in GROUPS
-    @safetestset "Doctests" include("quality/doctests.jl")
     @safetestset "Symbolic" include("test_symbolic.jl")
+end
+if "doctests" in GROUPS
+    @safetestset "Doctests" include("quality/doctests.jl")
 end

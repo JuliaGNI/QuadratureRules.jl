@@ -13,6 +13,10 @@ Julia reading of `0.x`: a bump of the *minor* version may break.
 - **CI uploads coverage from the `Julia 1 - ubuntu-latest` job, and a test job saves the Julia
   cache only when it succeeds.** Coverage used to come from the `Julia min` job. A cancelled or
   failed job no longer saves a partial cache that the next run restores.
+- `Pkg.test()` no longer runs the doctests. `test/quality/doctests.jl` is now the group
+  `doctests`, which an empty `ARGS` does not run; `Pkg.test(test_args = ["doctests"])` runs it.
+  In CI the Doctests job stays their runner, so the test matrix no longer runs them a second
+  time.
 
 ## [0.2.2] – 2026-10-01
 
