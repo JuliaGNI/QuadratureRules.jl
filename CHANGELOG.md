@@ -17,6 +17,13 @@ Julia reading of `0.x`: a bump of the *minor* version may break.
   `doctests`, which an empty `ARGS` does not run; `Pkg.test(test_args = ["doctests"])` runs it.
   In CI the Doctests job stays their runner, so the test matrix no longer runs them a second
   time.
+- **Three test files leave the top level of `test/`.** `test/gauss_chebyshev.jl` becomes
+  `test/chebyshev.jl`, which tests `src/chebyshev.jl`; `test/lobatto_chebyshev.jl` moves to
+  `test/integration/lobatto_chebyshev.jl`, because `test/chebyshev.jl` is taken and it also
+  tests the Clenshaw-Curtis rule; and `test/test_symbolic.jl`, which tests every family, moves
+  to `test/integration/test_symbolic.jl`. The test convention keeps a test file at the top
+  level of `test/` only where it mirrors `src/<name>.jl`. The symbolic CI job and
+  `test/symbolic/Project.toml` name the new path.
 
 ## [0.2.2] – 2026-10-01
 
