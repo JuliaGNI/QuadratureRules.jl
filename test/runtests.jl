@@ -7,9 +7,9 @@ if "core" in GROUPS
     @safetestset "ExplicitImports" include("quality/explicit_imports.jl")
     @safetestset "Utility functions" include("utils.jl")
     @safetestset "Quadrature rule" include("quadrature_rule.jl")
-    @safetestset "Gauss-Chebyshev" include("gauss_chebyshev.jl")
+    @safetestset "Gauss-Chebyshev" include("chebyshev.jl")
     @safetestset "Gauss-Legendre" include("gauss_legendre.jl")
-    @safetestset "Lobatto-Chebyshev" include("lobatto_chebyshev.jl")
+    @safetestset "Lobatto-Chebyshev" include("integration/lobatto_chebyshev.jl")
     @safetestset "Lobatto-Legendre" include("lobatto_legendre.jl")
     @safetestset "Radau-Legendre" include("radau_legendre.jl")
     @safetestset "Clenshaw-Curtis" include("clenshaw_curtis.jl")
@@ -19,7 +19,7 @@ if "core" in GROUPS
     @safetestset "Working precision" include("integration/precision.jl")
 end
 if "slow" in GROUPS
-    @safetestset "Symbolic" include("test_symbolic.jl")
+    @safetestset "Symbolic" include("integration/test_symbolic.jl")
 end
 if "doctests" in GROUPS
     @safetestset "Doctests" include("quality/doctests.jl")
