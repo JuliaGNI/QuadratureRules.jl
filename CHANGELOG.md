@@ -10,6 +10,11 @@ Julia reading of `0.x`: a bump of the *minor* version may break.
 
 ### Changed
 
+- **Julia 1.12 is the floor** (`[compat] julia = "1.12"`, from 1.11). A breaking change under
+  this package's pre-1.0 convention: a caller on Julia 1.11 can no longer install this version.
+  The `julia` bound of `Project.toml` and `test/symbolic/Project.toml` is `"1.12"`. The package
+  had no version-conditional code and no test bound justified by a Julia 1.11 measurement, so
+  nothing in the code or the tests changes.
 - **CI uploads coverage from the `Julia 1 - ubuntu-latest` job, and a test job saves the Julia
   cache only when it succeeds.** Coverage used to come from the `Julia min` job. A cancelled or
   failed job no longer saves a partial cache that the next run restores.
