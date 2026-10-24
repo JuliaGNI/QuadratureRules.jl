@@ -6,12 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) with the usual
 Julia reading of `0.x`: a bump of the *minor* version may break.
 
-## [Unreleased]
+## [0.2.3] – 2026-10-24
 
 ### Changed
 
-- **Julia 1.12 is the floor** (`[compat] julia = "1.12"`, from 1.11). A breaking change under
-  this package's pre-1.0 convention: a caller on Julia 1.11 can no longer install this version.
+- **Julia 1.12 is the floor** (`[compat] julia = "1.12"`, from 1.11). A patch release, because no
+  API changes: a caller on Julia 1.11 can no longer install this version.
   The `julia` bound of `Project.toml` and `test/symbolic/Project.toml` is `"1.12"`. The package
   had no version-conditional code and no test bound justified by a Julia 1.11 measurement, so
   nothing in the code or the tests changes.
