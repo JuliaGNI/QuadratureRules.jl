@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) with the usual
 Julia reading of `0.x`: a bump of the *minor* version may break.
 
+## [Unreleased]
+
+### Changed
+
+- **The test environment raises two floors and adds a third, so that `Project.toml` and
+  `test/Project.toml` resolve together at their lower bounds and the tests pass there**, as the
+  CI Downgrade job checks. The package's own `[compat]` does not change.
+  - `PythonCall = "0.9.37"` is a new test dependency that only sets a floor; the tests reach
+    PythonCall through SymPyPythonCall. Below 0.9.37, PythonCall cannot find the Python library
+    of the conda-forge Python that CondaPkg installs, which no longer bundles libpython, so
+    SymPyPythonCall fails to load.
+  - `Documenter = "1.11.2"` (from `"1"`). PythonCall 0.9.37 requires CondaPkg 0.2.38, which
+    requires JSON 1, and Documenter accepts JSON 1 from 1.11.1. Documenter 1.11.1 then fails to
+    precompile with JSON 1 (a function as a `Dict` key); 1.11.2 fixes that.
+  - `Aqua = "0.8.14"` (from `"0.8"`). Aqua 0.8.14 adapts to the method-table changes of
+    Julia 1.12; below it, the piracy check errors on Julia 1.12.
+
 ## [0.2.3] – 2026-10-24
 
 ### Changed
