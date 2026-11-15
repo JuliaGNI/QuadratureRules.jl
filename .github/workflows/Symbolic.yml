@@ -1,9 +1,9 @@
 # Symbolic tests, in their own workflow rather than as a second job in CI.yml.
 #
-# CI.yml is byte-identical in all 37 repositories under Packages/ and Experiments/ — that is what
-# makes the required-status-check list static and keeps branch protection from silently going stale.
+# CI.yml is a byte-identical copy of the ResearchHarness template — that is what makes the
+# required-status-check list static and keeps branch protection from silently going stale.
 # A repository that needs an extra job therefore gets an extra file, never a local edit to CI.yml.
-# See ~/Research/Environment/Harness/githooks/install-workflows.sh.
+# `harness workflows --apply` installs CI.yml and leaves this file alone.
 #
 # WHY THESE TESTS ARE NOT IN THE TEST TARGET.
 #
@@ -16,7 +16,8 @@
 # dropping this upload would lose real coverage rather than a duplicate report. Codecov merges the
 # reports of all jobs of a commit.
 #
-# This job is deliberately NOT a required status check — its name does not begin with `Julia `.
+# This job is deliberately NOT a required status check: the repository has no `test/ci-groups.toml`,
+# so `harness ci-protection` requires only the fixed checks of CI.yml.
 
 name: Symbolic
 
