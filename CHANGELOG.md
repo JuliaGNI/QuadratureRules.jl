@@ -10,6 +10,12 @@ Julia reading of `0.x`: a bump of the *minor* version may break.
 
 ### Changed
 
+- **The header of the `Symbolic.yml` workflow is correct again.** It named an installer script
+  that does not exist and the directories of a local checkout, and it gave the job name as the
+  reason that the job is not a required check. It now says that `CI.yml` is a byte-identical
+  copy of the ResearchHarness template, that `harness workflows --apply` leaves `Symbolic.yml`
+  alone, and that the job is not required because the repository has no `test/ci-groups.toml`.
+  Comments only; the workflow does not change.
 - **The test environment raises two floors and adds a third, so that `Project.toml` and
   `test/Project.toml` resolve together at their lower bounds and the tests pass there**, as the
   CI Downgrade job checks. The package's own `[compat]` does not change.
